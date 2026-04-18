@@ -5,44 +5,47 @@ export type RangePreset =
   | "last-12-months";
 
 const SHANGHAI_OFFSET_HOURS = 8;
+const SHANGHAI_OFFSET_MS = SHANGHAI_OFFSET_HOURS * 60 * 60 * 1000;
+
+function getShanghaiCalendarDate(now: Date) {
+  return new Date(now.getTime() + SHANGHAI_OFFSET_MS);
+}
+
+function getShanghaiStart(year: number, month: number, day: number) {
+  return new Date(Date.UTC(year, month, day, -SHANGHAI_OFFSET_HOURS, 0, 0, 0));
+}
+
+function getShanghaiEnd(year: number, month: number, day: number) {
+  return new Date(Date.UTC(year, month, day, 23 - SHANGHAI_OFFSET_HOURS, 59, 59, 999));
+}
 
 export function getRangeBounds(preset: RangePreset, now: Date, timezone: string) {
   if (timezone !== "Asia/Shanghai") {
     throw new Error("v1 supports Asia/Shanghai range math only");
   }
 
-  const shanghaiNow = new Date(now.getTime() + SHANGHAI_OFFSET_HOURS * 60 * 60 * 1000);
+  const shanghaiNow = getShanghaiCalendarDate(now);
+  const year = shanghaiNow.getUTCFullYear();
+  const month = shanghaiNow.getUTCMonth();
+  const day = shanghaiNow.getUTCDate();
 
   if (preset === "this-month") {
-    const from = new Date(
-      Date.UTC(
-        shanghaiNow.getUTCFullYear(),
-        shanghaiNow.getUTCMonth(),
-        1,
-        -SHANGHAI_OFFSET_HOURS,
-        0,
-        0,
-        0,
-      ),
-    );
-    const to = new Date(
-      Date.UTC(
-        shanghaiNow.getUTCFullYear(),
-        shanghaiNow.getUTCMonth() + 1,
-        0,
-        23 - SHANGHAI_OFFSET_HOURS,
-        59,
-        59,
-        999,
-      ),
-    );
+    const from = getShanghaiStart(year, month, 1);
+    const to = getShanghaiEnd(year, month + 1, 0);
 
     return { from, to };
   }
 
-  const days = preset === "last-7-days" ? 7 : preset === "last-30-days" ? 30 : 365;
-  const from = new Date(now);
-  from.setUTCDate(from.getUTCDate() - (days - 1));
+  if (preset === "last-12-months") {
+    const from = getShanghaiStart(year, month - 11, 1);
+    const to = getShanghaiEnd(year, month + 1, 0);
 
-  return { from, to: new Date(now) };
+    return { from, to };
+  }
+
+  const days = preset === "last-7-days" ? 7 : 30;
+  const from = getShanghaiStart(year, month, day - (days - 1));
+  const to = getShanghaiEnd(year, month, day);
+
+  return { from, to };
 }
