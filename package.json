@@ -8,7 +8,7 @@
     "lint": "eslint . --max-warnings=0",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed": "node --env-file=.env.example --import tsx prisma/seed.ts",
     "test:unit": "vitest run",
     "test:e2e": "playwright test"
   },
