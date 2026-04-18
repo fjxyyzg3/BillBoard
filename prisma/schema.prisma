@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  LOCKED
+}
+
+enum HouseholdRole {
+  OWNER
+  MEMBER
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  displayName     String           @map("display_name")
+  passwordHash    String           @map("password_hash")
+  status          UserStatus       @default(ACTIVE)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  householdMember HouseholdMember?
+  accounts        Account[]
+  sessions        Session[]
+}
+
+model Household {
+  id           String            @id @default(cuid())
+  name         String
+  baseCurrency String            @default("CNY") @map("base_currency")
+  timezone     String            @default("Asia/Shanghai")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  members      HouseholdMember[]
+  transactions Transaction[]
+}
+
+model HouseholdMember {
+  id                  String        @id @default(cuid())
+  householdId         String        @map("household_id")
+  userId              String        @unique @map("user_id")
+  role                HouseholdRole
+  memberName          String        @map("member_name")
+  joinedAt            DateTime      @default(now()) @map("joined_at")
+  household           Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actorTransactions   Transaction[] @relation("ActorTransactions")
+  createdTransactions Transaction[] @relation("CreatedTransactions")
+
+  @@unique([householdId, memberName])
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  type         CategoryType
+  name         String
+  sortOrder    Int           @map("sort_order")
+  isActive     Boolean       @default(true) @map("is_active")
+  transactions Transaction[]
+
+  @@unique([type, name], name: "type_name")
+}
+
+model Transaction {
+  id                String          @id @default(cuid())
+  householdId       String          @map("household_id")
+  type              TransactionType
+  actorMemberId     String          @map("actor_member_id")
+  createdByMemberId String          @map("created_by_member_id")
+  categoryId        String          @map("category_id")
+  amountFen         Int             @map("amount_fen")
+  occurredAt        DateTime        @map("occurred_at")
+  note              String?
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  deletedAt         DateTime?       @map("deleted_at")
+  household         Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  category          Category        @relation(fields: [categoryId], references: [id])
+  actorMember       HouseholdMember @relation("ActorTransactions", fields: [actorMemberId], references: [id])
+  createdByMember   HouseholdMember @relation("CreatedTransactions", fields: [createdByMemberId], references: [id])
+
+  @@index([householdId, occurredAt])
+  @@index([actorMemberId, occurredAt])
+  @@index([categoryId, occurredAt])
+  @@unique([id, householdId], name: "id_householdId")
+}
+
+model LoginThrottle {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  attemptCount Int       @default(0) @map("attempt_count")
+  lockedUntil  DateTime? @map("locked_until")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refreshToken      String? @db.Text @map("refresh_token")
+  accessToken       String? @db.Text @map("access_token")
+  expiresAt         Int?    @map("expires_at")
+  tokenType         String? @map("token_type")
+  scope             String?
+  idToken           String? @db.Text @map("id_token")
+  sessionState      String? @map("session_state")
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sessionToken])
+}
