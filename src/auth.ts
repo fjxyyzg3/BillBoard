@@ -4,6 +4,7 @@ import NextAuth from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "@/auth.config";
+import { applyFailedAttempt, isLocked, type LoginGuardState } from "@/lib/auth/login-guard";
 import { db } from "@/lib/db";
 
 export type AppSessionUser = NonNullable<Session["user"]> & {
@@ -30,6 +31,23 @@ type AppToken = JWT & {
   householdId?: string;
 };
 
+async function recordFailedAttempt(email: string, state: LoginGuardState | null, now: Date) {
+  const nextState = applyFailedAttempt(state, now);
+
+  await db.loginThrottle.upsert({
+    where: { email },
+    update: {
+      attemptCount: nextState.attemptCount,
+      lockedUntil: nextState.lockedUntil,
+    },
+    create: {
+      email,
+      attemptCount: nextState.attemptCount,
+      lockedUntil: nextState.lockedUntil,
+    },
+  });
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   secret: authSecret,
@@ -45,20 +63,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .trim()
           .toLowerCase();
         const password = String(credentials?.password ?? "");
+        const now = new Date();
+        const loginThrottle = await db.loginThrottle.findUnique({
+          where: { email },
+        });
+        const throttleState = loginThrottle
+          ? {
+              attemptCount: loginThrottle.attemptCount,
+              lockedUntil: loginThrottle.lockedUntil,
+            }
+          : null;
+
+        if (isLocked(throttleState, now)) {
+          return null;
+        }
+
         const user = await db.user.findUnique({
           where: { email },
           include: { householdMember: true },
         });
 
         if (!user || !user.householdMember || user.status !== "ACTIVE") {
+          await recordFailedAttempt(email, throttleState, now);
           return null;
         }
 
         const valid = await argon2.verify(user.passwordHash, password);
 
         if (!valid) {
+          await recordFailedAttempt(email, throttleState, now);
           return null;
         }
+
+        await db.loginThrottle.deleteMany({
+          where: { email },
+        });
 
         return {
           id: user.id,

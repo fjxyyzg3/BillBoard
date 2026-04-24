@@ -21,4 +21,18 @@ describe("authConfig", () => {
 
     expect(source).toContain('pages: { signIn: "/login" }');
   });
+
+  it("trusts host headers for standalone auth requests", () => {
+    const source = readFileSync(path.resolve(process.cwd(), "src/auth.config.ts"), "utf8");
+
+    expect(source).toContain("trustHost: true");
+  });
+
+  it("wires login throttling into the credentials flow", () => {
+    const source = readFileSync(path.resolve(process.cwd(), "src/auth.ts"), "utf8");
+
+    expect(source).toContain("db.loginThrottle");
+    expect(source).toContain("applyFailedAttempt");
+    expect(source).toContain("isLocked");
+  });
 });
