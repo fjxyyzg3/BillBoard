@@ -1,9 +1,8 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import argon2 from "argon2";
 import type { Session } from "next-auth";
 import NextAuth from "next-auth";
+import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
-import GitHub from "next-auth/providers/github";
 import { db } from "@/lib/db";
 
 export type AppSessionUser = NonNullable<Session["user"]> & {
@@ -16,6 +15,8 @@ type AuthorizedUser = {
   id: string;
   email: string;
   name: string;
+  memberId: string;
+  householdId: string;
 };
 
 const authSecret =
@@ -23,16 +24,16 @@ const authSecret =
   process.env.NEXTAUTH_SECRET ??
   (process.env.NODE_ENV === "production" ? undefined : "development-auth-secret");
 
+type AppToken = JWT & {
+  memberId?: string;
+  householdId?: string;
+};
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
   secret: authSecret,
-  session: { strategy: "database" },
+  session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID ?? "unused-client-id",
-      clientSecret: process.env.AUTH_GITHUB_SECRET ?? "unused-client-secret",
-    }),
     Credentials({
       credentials: {
         email: { label: "Email", type: "email" },
@@ -62,33 +63,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.displayName,
+          memberId: user.householdMember.id,
+          householdId: user.householdMember.householdId,
         } satisfies AuthorizedUser;
       },
     }),
   ],
   callbacks: {
     authorized: ({ auth }) => Boolean(auth?.user),
-    session: async ({ session, user }) => {
+    jwt: async ({ token, user }) => {
+      if (!user) {
+        return token;
+      }
+
+      const authorizedUser = user as AuthorizedUser;
+      const appToken = token as AppToken;
+
+      appToken.sub = authorizedUser.id;
+      appToken.email = authorizedUser.email;
+      appToken.name = authorizedUser.name;
+      appToken.memberId = authorizedUser.memberId;
+      appToken.householdId = authorizedUser.householdId;
+
+      return appToken;
+    },
+    session: async ({ session, token }) => {
       if (!session.user) {
         return session;
       }
 
-      const member = await db.householdMember.findUnique({
-        where: { userId: user.id },
-      });
-
-      if (!member) {
+      if (
+        !token.sub ||
+        typeof token.email !== "string" ||
+        typeof token.name !== "string" ||
+        typeof token.memberId !== "string" ||
+        typeof token.householdId !== "string"
+      ) {
         return session;
       }
 
-      const databaseUser = user as typeof user & { displayName?: string };
-      const sessionUser = session.user as AppSessionUser;
-
-      sessionUser.id = user.id;
-      sessionUser.email = user.email;
-      sessionUser.name = databaseUser.displayName ?? user.name;
-      sessionUser.memberId = member.id;
-      sessionUser.householdId = member.householdId;
+      Object.assign(session.user, {
+        id: token.sub,
+        email: token.email,
+        name: token.name,
+        memberId: token.memberId,
+        householdId: token.householdId,
+      } satisfies AppSessionUser);
 
       return session;
     },
