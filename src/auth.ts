@@ -71,6 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           ? {
               attemptCount: loginThrottle.attemptCount,
               lockedUntil: loginThrottle.lockedUntil,
+              updatedAt: loginThrottle.updatedAt,
             }
           : null;
 
