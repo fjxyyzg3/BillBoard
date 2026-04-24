@@ -14,7 +14,6 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@auth/prisma-adapter": "^2.11.2",
     "@prisma/client": "^6.16.3",
     "argon2": "^0.44.0",
     "next": "^16.2.4",

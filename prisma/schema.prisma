@@ -36,8 +36,6 @@ model User {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   householdMember HouseholdMember?
-  accounts        Account[]
-  sessions        Session[]
 }
 
 model Household {
@@ -106,30 +104,4 @@ model LoginThrottle {
   attemptCount Int       @default(0) @map("attempt_count")
   lockedUntil  DateTime? @map("locked_until")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-}
-
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String  @map("provider_account_id")
-  refreshToken      String? @db.Text @map("refresh_token")
-  accessToken       String? @db.Text @map("access_token")
-  expiresAt         Int?    @map("expires_at")
-  tokenType         String? @map("token_type")
-  scope             String?
-  idToken           String? @db.Text @map("id_token")
-  sessionState      String? @map("session_state")
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
-}
-
-model Session {
-  sessionToken String   @unique @map("session_token")
-  userId       String   @map("user_id")
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([sessionToken])
 }
