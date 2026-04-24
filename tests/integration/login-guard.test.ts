@@ -11,4 +11,17 @@ describe("applyFailedAttempt", () => {
     expect(state?.attemptCount).toBe(5);
     expect(state?.lockedUntil?.toISOString()).toBe("2026-04-18T00:15:00.000Z");
   });
+
+  it("resets the attempt counter after an expired lockout", () => {
+    const state = applyFailedAttempt(
+      {
+        attemptCount: 5,
+        lockedUntil: new Date("2026-04-18T00:15:00.000Z"),
+      },
+      new Date("2026-04-18T00:16:00.000Z"),
+    );
+
+    expect(state.attemptCount).toBe(1);
+    expect(state.lockedUntil).toBeNull();
+  });
 });
