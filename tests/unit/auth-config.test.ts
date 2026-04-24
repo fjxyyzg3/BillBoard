@@ -17,7 +17,7 @@ describe("authConfig", () => {
   });
 
   it("configures the custom login page", () => {
-    const source = readFileSync(path.resolve(process.cwd(), "src/auth.ts"), "utf8");
+    const source = readFileSync(path.resolve(process.cwd(), "src/auth.config.ts"), "utf8");
 
     expect(source).toContain('pages: { signIn: "/login" }');
   });

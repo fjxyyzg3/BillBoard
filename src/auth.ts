@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import NextAuth from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
+import { authConfig } from "@/auth.config";
 import { db } from "@/lib/db";
 
 export type AppSessionUser = NonNullable<Session["user"]> & {
@@ -30,9 +31,9 @@ type AppToken = JWT & {
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   secret: authSecret,
   session: { strategy: "jwt" },
-  pages: { signIn: "/login" },
   providers: [
     Credentials({
       credentials: {
@@ -70,7 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    authorized: ({ auth }) => Boolean(auth?.user),
+    ...authConfig.callbacks,
     jwt: async ({ token, user }) => {
       if (!user) {
         return token;
