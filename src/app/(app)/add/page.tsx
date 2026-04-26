@@ -1,3 +1,4 @@
+import { buildAppHref } from "@/lib/app-navigation";
 import { TransactionForm } from "@/components/transaction-form";
 import { requireAppSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -35,10 +36,26 @@ function readSuccessDetail(
   return `${searchParams.type === "expense" ? "Expense" : "Income"}: ${formatSuccessAmount(amountFen)}`;
 }
 
+function buildSharedParams(
+  searchParams:
+    | {
+        perspective?: string;
+        range?: string;
+      }
+    | undefined,
+) {
+  return {
+    perspective: searchParams?.perspective,
+    range: searchParams?.range,
+  };
+}
+
 type AddPageProps = {
   searchParams?: Promise<{
     amountFen?: string;
     created?: string;
+    perspective?: string;
+    range?: string;
     type?: string;
   }>;
 };
@@ -46,6 +63,12 @@ type AddPageProps = {
 export default async function AddPage({ searchParams }: AddPageProps) {
   const user = await requireAppSession();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const sharedParams = buildSharedParams(resolvedSearchParams);
+  const sharedParamReader = {
+    get(key: string) {
+      return key === "perspective" ? sharedParams.perspective ?? null : sharedParams.range ?? null;
+    },
+  };
   const [categories, householdMembers] = await Promise.all([
     db.category.findMany({
       where: { isActive: true },
@@ -75,6 +98,9 @@ export default async function AddPage({ searchParams }: AddPageProps) {
         }))}
         currentMemberId={user.memberId}
         householdMembers={householdMembers}
+        homeHref={buildAppHref("/home", sharedParamReader)}
+        nextAddHref={buildAppHref("/add", sharedParamReader)}
+        sharedFilters={sharedParams}
         successDetail={readSuccessDetail(resolvedSearchParams)}
         successMessage={resolvedSearchParams?.created === "1" ? "Transaction saved" : undefined}
       />

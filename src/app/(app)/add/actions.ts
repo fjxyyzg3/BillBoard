@@ -11,6 +11,27 @@ export type CreateTransactionActionState = {
   message?: string;
 };
 
+function getSharedFilterParams(formData: FormData) {
+  const params = new URLSearchParams();
+  const perspective = String(formData.get("perspective") ?? "");
+  const range = String(formData.get("range") ?? "");
+
+  if (perspective === "me" || perspective === "spouse") {
+    params.set("perspective", perspective);
+  }
+
+  if (
+    range === "this-month" ||
+    range === "last-7-days" ||
+    range === "last-30-days" ||
+    range === "last-12-months"
+  ) {
+    params.set("range", range);
+  }
+
+  return params;
+}
+
 export async function submitTransaction(
   _previousState: CreateTransactionActionState,
   formData: FormData,
@@ -30,11 +51,11 @@ export async function submitTransaction(
       user,
     );
 
-    const params = new URLSearchParams({
-      amountFen: String(transaction.amountFen),
-      created: "1",
-      type: transaction.type === "INCOME" ? "income" : "expense",
-    });
+    const params = getSharedFilterParams(formData);
+
+    params.set("amountFen", String(transaction.amountFen));
+    params.set("created", "1");
+    params.set("type", transaction.type === "INCOME" ? "income" : "expense");
 
     redirect(`/add?${params.toString()}`);
   } catch (error) {

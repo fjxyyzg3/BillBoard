@@ -29,7 +29,7 @@ test("home expense drill-down preserves shared filters", async ({ page }) => {
   await page.getByLabel("Who").selectOption({ label: requireEnv("SEED_USER_B_NAME") });
   await page.getByLabel("Note").fill(note);
   await page.getByRole("button", { name: "Save transaction" }).click();
-  await expect(page).toHaveURL(/\/add\?/);
+  await expect(page.getByText("Transaction saved")).toBeVisible();
   const addUrl = new URL(page.url());
   expect(addUrl.pathname).toBe("/add");
   expect(addUrl.searchParams.get("created")).toBe("1");

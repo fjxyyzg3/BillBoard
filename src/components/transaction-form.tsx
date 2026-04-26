@@ -19,8 +19,14 @@ type HouseholdMemberOption = {
 
 type TransactionFormProps = {
   categories: TransactionCategory[];
+  homeHref: string;
   householdMembers: HouseholdMemberOption[];
   currentMemberId: string;
+  nextAddHref: string;
+  sharedFilters: {
+    perspective?: string;
+    range?: string;
+  };
   successDetail?: string;
   successMessage?: string;
 };
@@ -38,8 +44,11 @@ function getFirstCategoryId(
 
 export function TransactionForm({
   categories,
+  homeHref,
   householdMembers,
   currentMemberId,
+  nextAddHref,
+  sharedFilters,
   successDetail,
   successMessage,
 }: TransactionFormProps) {
@@ -68,6 +77,10 @@ export function TransactionForm({
 
   return (
     <form action={formAction} className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      {sharedFilters.perspective ? (
+        <input name="perspective" type="hidden" value={sharedFilters.perspective} />
+      ) : null}
+      {sharedFilters.range ? <input name="range" type="hidden" value={sharedFilters.range} /> : null}
       <div className="space-y-2">
         <span className="text-sm font-medium text-stone-700">Type</span>
         <div className="grid grid-cols-2 rounded-xl border border-stone-300 bg-stone-50 p-1">
@@ -161,13 +174,13 @@ export function TransactionForm({
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Link
               className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-center text-sm font-medium text-stone-700 transition hover:border-stone-500 hover:text-stone-900"
-              href="/add"
+              href={nextAddHref}
             >
               Add another
             </Link>
             <Link
               className="rounded-xl bg-stone-900 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-stone-700"
-              href="/home"
+              href={homeHref}
             >
               Return home
             </Link>

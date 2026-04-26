@@ -30,12 +30,11 @@ test("users can create an income and confirm what was saved", async ({ page }) =
   await page.getByLabel("Note").fill(note);
   await page.getByRole("button", { name: "Save transaction" }).click();
 
-  await expect(page).toHaveURL(/\/add\?/);
+  await expect(page.getByText("Transaction saved")).toBeVisible();
   const addUrl = new URL(page.url());
   expect(addUrl.pathname).toBe("/add");
   expect(addUrl.searchParams.get("created")).toBe("1");
   expect(addUrl.searchParams.get("type")).toBe("income");
-  await expect(page.getByText("Transaction saved")).toBeVisible();
   await expect(page.getByText("Income: 4,321.09")).toBeVisible();
   await expect(page.getByRole("link", { name: "Add another" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Return home" })).toBeVisible();

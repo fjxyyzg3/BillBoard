@@ -47,6 +47,6 @@ fi
 
 docker cp "${container_id}:${container_dump}" "$dump_file" >/dev/null
 docker compose -f docker-compose.yml exec -T db rm -f "$container_dump"
-find "$output_dir" -name "*.dump" -type f -mtime +14 -delete
+find "$output_dir" -maxdepth 1 -name "billboard-*.dump" -type f -mtime +14 -delete
 
 echo "$dump_file"
