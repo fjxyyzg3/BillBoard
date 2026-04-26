@@ -407,6 +407,49 @@ describe("records helpers", () => {
     expect(updated.note).toBe("Corrected reimbursement");
   });
 
+  it("clears an existing note when a record update submits an empty note", async () => {
+    const { expenseCategory } = await getSeedCategories();
+    const household = await createHouseholdFixture();
+
+    const original = await createTransaction(
+      {
+        type: "expense",
+        amount: "18.60",
+        categoryId: expenseCategory.id,
+        actorMemberId: household.spouseMember.id,
+        occurredAt: "2026-04-23T08:15",
+        note: "Hot pot",
+      },
+      {
+        householdId: household.householdId,
+        memberId: household.ownerMember.id,
+      },
+    );
+    createdTransactionIds.push(original.id);
+
+    await updateTransaction(
+      original.id,
+      {
+        type: "expense",
+        amount: "18.60",
+        categoryId: expenseCategory.id,
+        actorMemberId: household.spouseMember.id,
+        occurredAt: "2026-04-23T08:15",
+        note: "",
+      },
+      {
+        householdId: household.householdId,
+        memberId: household.ownerMember.id,
+      },
+    );
+
+    const updated = await db.transaction.findUniqueOrThrow({
+      where: { id: original.id },
+    });
+
+    expect(updated.note).toBeNull();
+  });
+
   it("soft deletes household transactions and removes them from listings", async () => {
     const { expenseCategory } = await getSeedCategories();
     const household = await createHouseholdFixture();

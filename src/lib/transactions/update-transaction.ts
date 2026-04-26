@@ -81,7 +81,7 @@ export async function updateTransaction(
       categoryId: category.id,
       amountFen: parsed.amount,
       occurredAt: parsed.occurredAt,
-      note: parsed.note,
+      note: parsed.note ?? null,
     },
     select: { id: true },
   });
