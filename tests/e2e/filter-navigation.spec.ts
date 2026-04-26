@@ -12,7 +12,7 @@ test("shared filters persist while navigating between app pages", async ({ page 
   await expect(page).toHaveURL(/perspective=spouse/);
   await expect(page).toHaveURL(/range=last-30-days/);
 
-  await page.getByRole("link", { name: "Add" }).click();
+  await page.getByRole("link", { name: "Add", exact: true }).click();
   await expect(page).toHaveURL(/\/add\?/);
   await expect(page).toHaveURL(/perspective=spouse/);
   await expect(page).toHaveURL(/range=last-30-days/);
