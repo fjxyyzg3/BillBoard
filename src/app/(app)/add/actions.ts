@@ -18,9 +18,9 @@ export async function submitTransaction(
   _previousState: CreateTransactionActionState,
   formData: FormData,
 ): Promise<CreateTransactionActionState> {
-  const user = await requireAppSession();
-
   try {
+    const user = await requireAppSession();
+
     await createTransaction(
       {
         type: String(formData.get("type") ?? ""),
@@ -33,6 +33,10 @@ export async function submitTransaction(
       user,
     );
   } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      redirect("/login");
+    }
+
     if (error instanceof ZodError) {
       return {
         status: "error",

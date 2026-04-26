@@ -10,6 +10,7 @@ import {
   CategoryPicker,
   type TransactionCategory,
 } from "@/components/category-picker";
+import { getCurrentShanghaiDateTimeLocal } from "@/lib/transactions/datetime";
 
 type HouseholdMemberOption = {
   id: string;
@@ -30,12 +31,6 @@ function getFirstCategoryId(
   return categories.find((category) => category.type === type)?.id ?? "";
 }
 
-function getLocalDateTimeValue() {
-  const now = new Date();
-
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-}
-
 export function TransactionForm({
   categories,
   householdMembers,
@@ -43,7 +38,7 @@ export function TransactionForm({
   successMessage,
 }: TransactionFormProps) {
   const defaultType = "expense" as const;
-  const occurredAtDefault = getLocalDateTimeValue();
+  const occurredAtDefault = getCurrentShanghaiDateTimeLocal();
   const [state, formAction, isPending] = useActionState(
     submitTransaction,
     initialCreateTransactionState,

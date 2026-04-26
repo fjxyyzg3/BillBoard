@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseAmountInput } from "@/lib/money";
+import { parseShanghaiDateTimeLocal } from "@/lib/transactions/datetime";
 
 const transactionTypes = ["income", "expense"] as const;
 
@@ -31,9 +32,9 @@ export const createTransactionSchema = z.object({
       return z.NEVER;
     }
 
-    const occurredAt = new Date(value);
-
-    if (Number.isNaN(occurredAt.getTime())) {
+    try {
+      return parseShanghaiDateTimeLocal(value);
+    } catch {
       context.addIssue({
         code: "custom",
         message: "Choose a valid date and time",
@@ -41,8 +42,6 @@ export const createTransactionSchema = z.object({
 
       return z.NEVER;
     }
-
-    return occurredAt;
   }),
   note: z.string().trim().optional().transform((value) => value || undefined),
 });
