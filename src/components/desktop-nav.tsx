@@ -10,7 +10,11 @@ const items = [
   { href: "/records", label: "Records" },
 ] as const;
 
-export function DesktopNav() {
+type DesktopNavProps = {
+  versionLabel: string;
+};
+
+export function DesktopNav({ versionLabel }: DesktopNavProps) {
   const pathname = usePathname();
   const { buildHref, navigateTo } = useAppFilters();
 
@@ -20,7 +24,7 @@ export function DesktopNav() {
         <p className="text-lg font-semibold text-stone-900">BillBoard</p>
         <p className="mt-1 text-sm text-stone-500">Household accounting</p>
       </div>
-      <nav className="space-y-2 px-4 py-6">
+      <nav className="flex-1 space-y-2 px-4 py-6">
         {items.map((item) => {
           const isActive = pathname === item.href;
 
@@ -54,6 +58,7 @@ export function DesktopNav() {
           );
         })}
       </nav>
+      <p className="px-6 pb-6 text-xs text-stone-400">{versionLabel}</p>
     </aside>
   );
 }

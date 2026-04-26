@@ -10,12 +10,19 @@ const items = [
   { href: "/records", label: "Records" },
 ] as const;
 
-export function BottomNav() {
+type BottomNavProps = {
+  versionLabel: string;
+};
+
+export function BottomNav({ versionLabel }: BottomNavProps) {
   const pathname = usePathname();
   const { buildHref, navigateTo } = useAppFilters();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-white/95 backdrop-blur md:hidden">
+      <p className="border-b border-stone-100 px-4 py-1 text-center text-[0.625rem] leading-none text-stone-400">
+        {versionLabel}
+      </p>
       <ul className="mx-auto grid max-w-6xl grid-cols-3">
         {items.map((item) => {
           const isActive = pathname === item.href;
