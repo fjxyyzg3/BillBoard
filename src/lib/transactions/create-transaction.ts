@@ -68,7 +68,7 @@ export async function createTransaction(input: unknown, sessionUser: SessionUser
       occurredAt: parsed.occurredAt,
       note: parsed.note,
     },
-    select: { id: true },
+    select: { amountFen: true, id: true, type: true },
   });
 
   return transaction;

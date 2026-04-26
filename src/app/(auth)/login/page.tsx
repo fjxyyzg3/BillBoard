@@ -30,8 +30,24 @@ export default function LoginPage() {
           window.location.href = "/home";
         }}
       >
-        <input name="email" type="email" required className="w-full rounded-xl border px-3 py-2" />
-        <input name="password" type="password" required className="w-full rounded-xl border px-3 py-2" />
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-stone-700">Email</span>
+          <input
+            className="w-full rounded-xl border px-3 py-2"
+            name="email"
+            required
+            type="email"
+          />
+        </label>
+        <label className="block space-y-2">
+          <span className="text-sm font-medium text-stone-700">Password</span>
+          <input
+            className="w-full rounded-xl border px-3 py-2"
+            name="password"
+            required
+            type="password"
+          />
+        </label>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
         <button className="w-full rounded-xl bg-stone-900 px-4 py-3 text-white" type="submit">
           Log in

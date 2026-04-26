@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ZodError } from "zod";
 import { requireAppSession } from "@/lib/auth/session";
 import { createTransaction } from "@/lib/transactions/create-transaction";
@@ -10,10 +11,6 @@ export type CreateTransactionActionState = {
   message?: string;
 };
 
-export const initialCreateTransactionState: CreateTransactionActionState = {
-  status: "idle",
-};
-
 export async function submitTransaction(
   _previousState: CreateTransactionActionState,
   formData: FormData,
@@ -21,7 +18,7 @@ export async function submitTransaction(
   try {
     const user = await requireAppSession();
 
-    await createTransaction(
+    const transaction = await createTransaction(
       {
         type: String(formData.get("type") ?? ""),
         amount: String(formData.get("amount") ?? ""),
@@ -32,7 +29,19 @@ export async function submitTransaction(
       },
       user,
     );
+
+    const params = new URLSearchParams({
+      amountFen: String(transaction.amountFen),
+      created: "1",
+      type: transaction.type === "INCOME" ? "income" : "expense",
+    });
+
+    redirect(`/add?${params.toString()}`);
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
     if (error instanceof Error && error.message === "Unauthorized") {
       redirect("/login");
     }
@@ -49,6 +58,4 @@ export async function submitTransaction(
       message: error instanceof Error ? error.message : "Could not save the transaction",
     };
   }
-
-  redirect("/add?created=1");
 }

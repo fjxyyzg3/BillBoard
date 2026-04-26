@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
-  initialCreateTransactionState,
   submitTransaction,
+  type CreateTransactionActionState,
 } from "@/app/(app)/add/actions";
 import {
   CategoryPicker,
@@ -21,7 +21,12 @@ type TransactionFormProps = {
   categories: TransactionCategory[];
   householdMembers: HouseholdMemberOption[];
   currentMemberId: string;
+  successDetail?: string;
   successMessage?: string;
+};
+
+const initialCreateTransactionState: CreateTransactionActionState = {
+  status: "idle",
 };
 
 function getFirstCategoryId(
@@ -35,6 +40,7 @@ export function TransactionForm({
   categories,
   householdMembers,
   currentMemberId,
+  successDetail,
   successMessage,
 }: TransactionFormProps) {
   const defaultType = "expense" as const;
@@ -148,7 +154,10 @@ export function TransactionForm({
 
       {successMessage && state.status === "idle" ? (
         <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-          <p className="text-sm text-emerald-700">{successMessage}</p>
+          <div className="space-y-1">
+            <p className="text-sm text-emerald-700">{successMessage}</p>
+            {successDetail ? <p className="text-sm text-emerald-700">{successDetail}</p> : null}
+          </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Link
               className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-center text-sm font-medium text-stone-700 transition hover:border-stone-500 hover:text-stone-900"
