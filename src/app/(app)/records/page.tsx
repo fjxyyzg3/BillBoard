@@ -109,36 +109,34 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
     }),
   ]);
 
-  const [records, selectedRecord] = await Promise.all([
-    listRecords({
-      householdId: user.householdId,
-      currentMemberId: user.memberId,
-      timezone: household.timezone,
-      rangePreset,
-      perspective,
-      type: typeFilter,
-      categoryId: categoryIdFilter,
-    }),
-    selectedRecordId
-      ? db.transaction.findFirst({
-          where: {
-            id: selectedRecordId,
-            householdId: user.householdId,
-            deletedAt: null,
-          },
-          select: {
-            id: true,
-            amountFen: true,
-            actorMemberId: true,
-            categoryId: true,
-            note: true,
-            occurredAt: true,
-            type: true,
-            createdByMember: { select: { memberName: true } },
-          },
-        })
-      : Promise.resolve(null),
-  ]);
+  const records = await listRecords({
+    householdId: user.householdId,
+    currentMemberId: user.memberId,
+    timezone: household.timezone,
+    rangePreset,
+    perspective,
+    type: typeFilter,
+    categoryId: categoryIdFilter,
+  });
+  const selectedRecord = selectedRecordId && records.some((record) => record.id === selectedRecordId)
+    ? await db.transaction.findFirst({
+        where: {
+          id: selectedRecordId,
+          householdId: user.householdId,
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          amountFen: true,
+          actorMemberId: true,
+          categoryId: true,
+          note: true,
+          occurredAt: true,
+          type: true,
+          createdByMember: { select: { memberName: true } },
+        },
+      })
+    : null;
 
   const categoryOptions = categories.map((category) => ({
     id: category.id,

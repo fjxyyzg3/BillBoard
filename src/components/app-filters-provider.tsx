@@ -52,11 +52,7 @@ export function AppFiltersProvider({ children }: { children: ReactNode }) {
   function setRangePreset(nextRangePreset: RangePreset) {
     const nextParams = new URLSearchParams(queryRef.current);
 
-    if (nextRangePreset === "this-month") {
-      nextParams.delete("range");
-    } else {
-      nextParams.set("range", nextRangePreset);
-    }
+    nextParams.set("range", nextRangePreset);
 
     updateQuery(nextParams);
   }

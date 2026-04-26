@@ -47,7 +47,7 @@ export async function submitRecordUpdate(
   _previousState: RecordEditorActionState,
   formData: FormData,
 ): Promise<RecordEditorActionState> {
-  const returnTo = getRecordsHref(formData.get("returnTo"));
+  const returnTo = removeQueryParam(getRecordsHref(formData.get("returnTo")), "record");
 
   try {
     const user = await requireAppSession();
