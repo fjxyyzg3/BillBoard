@@ -1,65 +1,80 @@
-# CLAUDE.md
+# AGENTS.md
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+本文件定义当前仓库的 AI 编码助手规则。代码和代码注释使用英文；聊天、计划、设计说明、验证记录、提交说明草稿使用中文。引用命令输出、错误信息、API、文件名、代码标识符时保留原文。
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+## 1. 实现前先思考
 
-## 1. Think Before Coding
+禁止假设，禁止掩盖不确定性，必须说明关键权衡。
 
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
+- 开始实现前，先列明假设。
+- 需求存在多种解释时，先列出解释并询问。
+- 存在更简单方案时，先说明更简单方案。
+- 上下文不足时，停止实现，说明缺口并询问。
 
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
+## 2. 简单优先
 
-## 2. Simplicity First
+使用解决问题的最小代码，禁止推测性扩展。
 
-**Minimum code that solves the problem. Nothing speculative.**
+- 禁止添加用户未要求的功能。
+- 禁止为单次使用场景创建抽象。
+- 禁止添加未要求的配置项或扩展点。
+- 禁止为不可达场景增加错误处理。
+- 代码能明显缩短时，先简化再提交。
 
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
+自检标准：资深工程师认为方案过度复杂时，必须简化。
 
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+## 3. 外科手术式修改
 
-## 3. Surgical Changes
+只修改完成当前请求所需的内容，只清理本次改动引入的问题。
 
-**Touch only what you must. Clean up only your own mess.**
+- 禁止顺手改进相邻代码、注释或格式。
+- 禁止重构无关代码。
+- 必须匹配既有风格。
+- 发现无关死代码时，仅在回复中说明，禁止删除。
+- 移除本次改动造成的未使用导入、变量、函数。
+- 禁止删除本次改动前已存在的死代码，除非用户明确要求。
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
+检验标准：每一行改动都必须直接对应用户请求。
 
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
+## 4. 目标驱动执行
 
-The test: Every changed line should trace directly to the user's request.
+把任务转化为验证目标，并循环到验证完成。
 
-## 4. Goal-Driven Execution
+- “添加校验” -> 先写无效输入测试，再让测试通过。
+- “修复 bug” -> 先写复现测试，再让测试通过。
+- “重构 X” -> 重构前后都运行相关测试。
 
-**Define success criteria. Loop until verified.**
+多步骤任务必须先给出简短计划：
 
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
+```text
+1. [步骤] -> verify: [检查方式]
+2. [步骤] -> verify: [检查方式]
+3. [步骤] -> verify: [检查方式]
 ```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+含糊目标必须先澄清，再执行。
 
----
+## 5. 版本号与提交
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+项目使用三段式版本号：`vX.Y.Z`。提交信息带 `v` 前缀；项目版本字段不带 `v` 前缀。
+
+- `X` 为主版本号。仅在用户明确指定时修改。
+- `Y` 为功能版本号。每次 feature 提交递增 `Y`，并将 `Z` 置为 `0`。
+- `Z` 为修复版本号。每次 bugfix 提交递增 `Z`。
+- 非 feature 或 bugfix 提交，提交前先确认版本递增方式。
+- 每次提交必须同步更新项目版本字段：`package.json` 的 `version`。
+- lockfile 含根项目版本字段时，必须同步更新。
+- 项目版本字段缺失时，先补充字段，再提交。
+
+提交信息格式：
+
+```text
+v0.1.0 一句话描述
+
+详细描述，最多 256 个字符。多段描述的总长度仍不得超过 256 个字符。
+```
+
+提交前必须检查：
+- 提交类型与版本号递增一致。
+- 项目版本字段与提交信息版本号一致。
+- 详细描述不超过 256 个字符。
