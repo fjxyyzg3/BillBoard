@@ -76,6 +76,20 @@ function parseTypeFilter(value: string | null) {
   return undefined;
 }
 
+function parseDrillDownDate(value: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString() !== value) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 export default async function RecordsPage({ searchParams }: RecordsPageProps) {
   const user = await requireAppSession();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
@@ -90,6 +104,8 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
   const perspective = parsePerspective(currentParams.get("perspective"));
   const typeFilter = parseTypeFilter(currentParams.get("type"));
   const categoryIdFilter = currentParams.get("category")?.trim() || undefined;
+  const drillDownFrom = parseDrillDownDate(currentParams.get("from"));
+  const drillDownTo = parseDrillDownDate(currentParams.get("to"));
   const selectedRecordId = currentParams.get("record")?.trim() || undefined;
 
   const [household, categories, householdMembers] = await Promise.all([
@@ -112,9 +128,11 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
   const records = await listRecords({
     householdId: user.householdId,
     currentMemberId: user.memberId,
+    from: drillDownFrom && drillDownTo ? drillDownFrom : undefined,
     timezone: household.timezone,
     rangePreset,
     perspective,
+    to: drillDownFrom && drillDownTo ? drillDownTo : undefined,
     type: typeFilter,
     categoryId: categoryIdFilter,
   });

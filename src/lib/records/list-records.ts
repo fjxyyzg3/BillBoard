@@ -22,14 +22,16 @@ export type RecordListItem = {
 };
 
 type ListRecordsInput = {
+  from?: Date;
   householdId: string;
   currentMemberId: string;
-  timezone: string;
-  rangePreset: RangePreset;
-  perspective: Perspective;
-  type?: RecordTypeFilter;
-  categoryId?: string;
   now?: Date;
+  perspective: Perspective;
+  categoryId?: string;
+  rangePreset: RangePreset;
+  timezone: string;
+  to?: Date;
+  type?: RecordTypeFilter;
 };
 
 const transactionTypeMap = {
@@ -50,6 +52,7 @@ function toRecordType(type: TransactionType): RecordTypeFilter {
 }
 
 export async function listRecords({
+  from,
   householdId,
   currentMemberId,
   timezone,
@@ -58,6 +61,7 @@ export async function listRecords({
   type,
   categoryId,
   now = new Date(),
+  to,
 }: ListRecordsInput): Promise<RecordListItem[]> {
   const householdMembers = await db.householdMember.findMany({
     where: { householdId },
@@ -75,12 +79,12 @@ export async function listRecords({
     return [];
   }
 
-  const { from, to } = getRangeBounds(rangePreset, now, timezone);
+  const rangeBounds = from && to ? { from, to } : getRangeBounds(rangePreset, now, timezone);
   const transactions = await db.transaction.findMany({
     where: {
       householdId,
       deletedAt: null,
-      occurredAt: { gte: from, lte: to },
+      occurredAt: { gte: rangeBounds.from, lte: rangeBounds.to },
       actorMemberId: { in: actorMemberIds },
       ...(type ? { type: transactionTypeMap[type] } : {}),
       ...(categoryId ? { categoryId } : {}),

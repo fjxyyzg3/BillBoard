@@ -7,6 +7,7 @@ const {
   householdFindUniqueOrThrowMock,
   householdMemberFindManyMock,
   listRecordsMock,
+  queryDashboardMock,
   redirectMock,
   replaceMock,
   requireAppSessionMock,
@@ -20,6 +21,7 @@ const {
   householdFindUniqueOrThrowMock: vi.fn(),
   householdMemberFindManyMock: vi.fn(),
   listRecordsMock: vi.fn(),
+  queryDashboardMock: vi.fn(),
   redirectMock: vi.fn((path: string) => {
     throw new Error(`REDIRECT:${path}`);
   }),
@@ -71,6 +73,10 @@ vi.mock("@/lib/records/list-records", () => ({
   listRecords: listRecordsMock,
 }));
 
+vi.mock("@/lib/reports/query-dashboard", () => ({
+  queryDashboard: queryDashboardMock,
+}));
+
 vi.mock("@/lib/transactions/update-transaction", () => ({
   updateTransaction: updateTransactionMock,
 }));
@@ -107,6 +113,25 @@ function primePageMocks() {
     { id: "member-2", memberName: "Spouse" },
   ]);
   listRecordsMock.mockResolvedValue([]);
+  queryDashboardMock.mockResolvedValue({
+    categories: { items: [], totalExpenseFen: 0 },
+    range: {
+      from: new Date("2026-04-19T16:00:00.000Z"),
+      preset: "last-7-days",
+      to: new Date("2026-04-26T15:59:59.999Z"),
+    },
+    recentTransactions: [],
+    summary: {
+      expenseFen: 0,
+      incomeFen: 0,
+      netFen: 0,
+      transactionCount: 0,
+    },
+    trend: {
+      granularity: "day",
+      points: [],
+    },
+  });
   transactionFindFirstMock.mockResolvedValue(null);
 }
 
@@ -146,6 +171,42 @@ describe("AppFiltersProvider range semantics", () => {
     capturedContext.setRangePreset("this-month");
 
     expect(replaceMock).toHaveBeenCalledWith("/records?range=this-month", { scroll: false });
+  });
+
+  it("clears a stale drill-down window when the range changes", async () => {
+    let capturedContext:
+      | (Awaited<typeof import("@/components/app-filters-provider")> extends infer T
+          ? T extends { useAppFilters: () => infer U }
+            ? U
+            : never
+          : never)
+      | null = null;
+    useSearchParamsMock.mockReturnValue(
+      new URLSearchParams(
+        "range=last-7-days&from=2026-04-24T16%3A00%3A00.000Z&to=2026-04-25T15%3A59%3A59.999Z&type=expense&record=record-1",
+      ),
+    );
+
+    const { AppFiltersProvider, useAppFilters } = await import("@/components/app-filters-provider");
+
+    function Probe() {
+      capturedContext = useAppFilters();
+      return createElement("div");
+    }
+
+    renderToStaticMarkup(
+      createElement(AppFiltersProvider, null, createElement(Probe)),
+    );
+
+    if (!capturedContext) {
+      throw new Error("Expected app filters context");
+    }
+
+    capturedContext.setRangePreset("last-30-days");
+
+    expect(replaceMock).toHaveBeenCalledWith("/records?range=last-30-days&type=expense", {
+      scroll: false,
+    });
   });
 });
 
@@ -220,6 +281,80 @@ describe("Records page", () => {
 
     expect(markup).not.toContain("data-testid=\"record-drawer\"");
     expect(transactionEditorDrawerMock).not.toHaveBeenCalled();
+  });
+
+  it("passes a drill-down bucket window through to the records query", async () => {
+    const { default: RecordsPage } = await import("@/app/(app)/records/page");
+
+    renderToStaticMarkup(
+      await RecordsPage({
+        searchParams: Promise.resolve({
+          from: "2026-04-24T16:00:00.000Z",
+          range: "last-7-days",
+          to: "2026-04-25T15:59:59.999Z",
+        }),
+      }),
+    );
+
+    expect(listRecordsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: new Date("2026-04-24T16:00:00.000Z"),
+        to: new Date("2026-04-25T15:59:59.999Z"),
+      }),
+    );
+  });
+});
+
+describe("Home page trend drill-down", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    requireAppSessionMock.mockReset();
+    queryDashboardMock.mockReset();
+    primePageMocks();
+  });
+
+  it("links each trend bucket to records with an exact drill-down window", async () => {
+    queryDashboardMock.mockResolvedValue({
+      categories: { items: [], totalExpenseFen: 0 },
+      range: {
+        from: new Date("2026-04-19T16:00:00.000Z"),
+        preset: "last-7-days",
+        to: new Date("2026-04-26T15:59:59.999Z"),
+      },
+      recentTransactions: [],
+      summary: {
+        expenseFen: 2500,
+        incomeFen: 500000,
+        netFen: 497500,
+        transactionCount: 2,
+      },
+      trend: {
+        granularity: "day",
+        points: [
+          {
+            bucketEnd: new Date("2026-04-25T15:59:59.999Z"),
+            bucketKey: "2026-04-25",
+            bucketStart: new Date("2026-04-24T16:00:00.000Z"),
+            expenseFen: 2500,
+            incomeFen: 500000,
+            label: "Apr 25",
+            netFen: 497500,
+            transactionCount: 2,
+          },
+        ],
+      },
+    });
+
+    const { default: HomePage } = await import("@/app/(app)/home/page");
+    const markup = renderToStaticMarkup(
+      await HomePage({
+        searchParams: Promise.resolve({ range: "last-7-days" }),
+      }),
+    );
+
+    expect(markup).toContain(
+      "/records?range=last-7-days&amp;from=2026-04-24T16%3A00%3A00.000Z&amp;to=2026-04-25T15%3A59%3A59.999Z",
+    );
   });
 });
 

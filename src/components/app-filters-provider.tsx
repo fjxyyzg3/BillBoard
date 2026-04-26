@@ -53,6 +53,9 @@ export function AppFiltersProvider({ children }: { children: ReactNode }) {
     const nextParams = new URLSearchParams(queryRef.current);
 
     nextParams.set("range", nextRangePreset);
+    nextParams.delete("from");
+    nextParams.delete("to");
+    nextParams.delete("record");
 
     updateQuery(nextParams);
   }
