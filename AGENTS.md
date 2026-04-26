@@ -2,6 +2,14 @@
 
 本文件定义当前仓库的 AI 编码助手规则。代码和代码注释使用英文；聊天、计划、设计说明、验证记录、提交说明草稿使用中文。引用命令输出、错误信息、API、文件名、代码标识符时保留原文。
 
+## 0. 当前仓库注意事项
+
+- 设计目标：`BillBoard` 是两人家庭记账应用，核心体验是快速记录、按家庭成员视角查看、按时间范围复盘。所有改动必须服务这些目标，避免新增无关页面、复杂配置或泛化场景。
+- 产品风格：保持现有移动优先、清爽直接、英文 UI 文案的应用形态。新增交互优先减少记账阻力和查看成本，不做营销化、装饰化设计。
+- 业务约束：金额以整数分 `amountFen` 处理；交易按 `Asia/Shanghai` 做日期和范围计算；有效记录查询必须排除软删除数据；家庭数据访问必须基于当前 session 的 `householdId` 和 `memberId` 校验。
+- 验证方法：按改动范围选择最小充分验证。通用代码先跑 `npm run lint`；纯函数和组件逻辑跑 `npm run test:unit`；涉及 Prisma、server actions、认证或查询逻辑跑 `npm run test:integration`；涉及登录、导航、表单提交或端到端用户流程跑 `npm run test:e2e`。
+- 测试环境：集成测试和 e2e 依赖 PostgreSQL 与 seed 数据；本地数据库用 `docker compose -f docker-compose.dev.yml up -d db`，seed 用 `npm run prisma:seed`。Playwright 默认使用 `http://127.0.0.1:3000` 并启动 `npm run dev`。
+
 ## 1. 实现前先思考
 
 禁止假设，禁止掩盖不确定性，必须说明关键权衡。
@@ -65,6 +73,8 @@
 - 每次提交必须同步更新项目版本字段：`package.json` 的 `version`。
 - lockfile 含根项目版本字段时，必须同步更新。
 - 项目版本字段缺失时，先补充字段，再提交。
+- 开发完成后必须跑完整验证：`npm run lint`、`npm run test:unit`、`npm run test:integration`、`npm run test:e2e`。全部通过后，可以直接在 `master` 提交并合并远端 `master`；未全通过禁止提交或合并。
+- 提交前检查当前分支与 `origin/master` 的提交差异。如果多个差异提交属于同一个 feature 或 bugfix，必须整理成一条符合版本号规则的提交；不同目的的提交禁止强行合并。
 
 提交信息格式：
 
