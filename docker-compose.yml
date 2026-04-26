@@ -1,0 +1,72 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-billboard}:${POSTGRES_PASSWORD:-billboard}@db:5432/${POSTGRES_DB:-billboard}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-before-launch}
+    restart: unless-stopped
+
+  bootstrap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: tools
+    command: >-
+      sh -lc "npx prisma migrate deploy && node --import tsx prisma/seed.ts"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-billboard}:${POSTGRES_PASSWORD:-billboard}@db:5432/${POSTGRES_DB:-billboard}?schema=public
+      SEED_HOUSEHOLD_NAME: ${SEED_HOUSEHOLD_NAME:-Household}
+      SEED_USER_A_EMAIL: ${SEED_USER_A_EMAIL:-}
+      SEED_USER_A_PASSWORD: ${SEED_USER_A_PASSWORD:-}
+      SEED_USER_A_NAME: ${SEED_USER_A_NAME:-Me}
+      SEED_USER_B_EMAIL: ${SEED_USER_B_EMAIL:-}
+      SEED_USER_B_PASSWORD: ${SEED_USER_B_PASSWORD:-}
+      SEED_USER_B_NAME: ${SEED_USER_B_NAME:-Spouse}
+    profiles:
+      - bootstrap
+    restart: "no"
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-billboard}
+      POSTGRES_USER: ${POSTGRES_USER:-billboard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-billboard}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-billboard} -d ${POSTGRES_DB:-billboard}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  proxy:
+    image: caddy:2.10
+    depends_on:
+      web:
+        condition: service_started
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    volumes:
+      - ./ops/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:
