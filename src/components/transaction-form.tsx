@@ -1,0 +1,142 @@
+"use client";
+
+import { useActionState, useState } from "react";
+import {
+  initialCreateTransactionState,
+  submitTransaction,
+} from "@/app/(app)/add/actions";
+import {
+  CategoryPicker,
+  type TransactionCategory,
+} from "@/components/category-picker";
+
+type HouseholdMemberOption = {
+  id: string;
+  memberName: string;
+};
+
+type TransactionFormProps = {
+  categories: TransactionCategory[];
+  householdMembers: HouseholdMemberOption[];
+  currentMemberId: string;
+  successMessage?: string;
+};
+
+function getLocalDateTimeValue() {
+  const now = new Date();
+
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
+export function TransactionForm({
+  categories,
+  householdMembers,
+  currentMemberId,
+  successMessage,
+}: TransactionFormProps) {
+  const defaultType = "expense" as const;
+  const occurredAtDefault = getLocalDateTimeValue();
+  const [state, formAction, isPending] = useActionState(
+    submitTransaction,
+    initialCreateTransactionState,
+  );
+  const [selectedType, setSelectedType] = useState<TransactionCategory["type"]>(defaultType);
+
+  return (
+    <form action={formAction} className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="space-y-2">
+        <span className="text-sm font-medium text-stone-700">Type</span>
+        <div className="grid grid-cols-2 rounded-xl border border-stone-300 bg-stone-50 p-1">
+          {(["expense", "income"] as const).map((type) => {
+            const isActive = selectedType === type;
+
+            return (
+              <label
+                className={`cursor-pointer rounded-lg px-3 py-2 text-center text-sm font-medium transition ${
+                  isActive ? "bg-stone-900 text-white" : "text-stone-600"
+                }`}
+                key={type}
+              >
+                <input
+                  checked={isActive}
+                  className="sr-only"
+                  name="type"
+                  onChange={() => setSelectedType(type)}
+                  type="radio"
+                  value={type}
+                />
+                {type === "expense" ? "Expense" : "Income"}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      <label className="space-y-2">
+        <span className="text-sm font-medium text-stone-700">Amount</span>
+        <input
+          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          inputMode="decimal"
+          name="amount"
+          placeholder="0.00"
+          required
+          type="text"
+        />
+      </label>
+
+      <CategoryPicker
+        categories={categories}
+        selectedType={selectedType}
+      />
+
+      <label className="space-y-2">
+        <span className="text-sm font-medium text-stone-700">Who</span>
+        <select
+          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          defaultValue={currentMemberId}
+          name="actorMemberId"
+          required
+        >
+          {householdMembers.map((member) => (
+            <option key={member.id} value={member.id}>
+              {member.memberName}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="space-y-2">
+        <span className="text-sm font-medium text-stone-700">When</span>
+        <input
+          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          defaultValue={occurredAtDefault}
+          name="occurredAt"
+          required
+          type="datetime-local"
+        />
+      </label>
+
+      <label className="space-y-2">
+        <span className="text-sm font-medium text-stone-700">Note</span>
+        <textarea
+          className="min-h-24 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          name="note"
+          placeholder="Optional"
+        />
+      </label>
+
+      {successMessage && state.status === "idle" ? (
+        <p className="text-sm text-emerald-700">{successMessage}</p>
+      ) : null}
+      {state.status === "error" ? <p className="text-sm text-rose-700">{state.message}</p> : null}
+
+      <button
+        className="w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-400"
+        disabled={isPending}
+        type="submit"
+      >
+        {isPending ? "Saving..." : "Save transaction"}
+      </button>
+    </form>
+  );
+}
