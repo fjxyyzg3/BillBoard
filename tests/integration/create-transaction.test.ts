@@ -231,4 +231,16 @@ describe("transaction form follow-up UI requirements", () => {
 
     expect(source).toContain("autoFocus");
   });
+
+  it("offers add-another and return-home actions after a successful save", () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "src/components/transaction-form.tsx"),
+      "utf8",
+    );
+
+    expect(source).toContain("Add another");
+    expect(source).toContain('href="/add"');
+    expect(source).toContain("Return home");
+    expect(source).toContain('href="/home"');
+  });
 });

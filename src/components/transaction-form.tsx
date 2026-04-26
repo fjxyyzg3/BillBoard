@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
   initialCreateTransactionState,
@@ -151,7 +152,23 @@ export function TransactionForm({
       </label>
 
       {successMessage && state.status === "idle" ? (
-        <p className="text-sm text-emerald-700">{successMessage}</p>
+        <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <p className="text-sm text-emerald-700">{successMessage}</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Link
+              className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-center text-sm font-medium text-stone-700 transition hover:border-stone-500 hover:text-stone-900"
+              href="/add"
+            >
+              Add another
+            </Link>
+            <Link
+              className="rounded-xl bg-stone-900 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-stone-700"
+              href="/home"
+            >
+              Return home
+            </Link>
+          </div>
+        </div>
       ) : null}
       {state.status === "error" ? <p className="text-sm text-rose-700">{state.message}</p> : null}
 
