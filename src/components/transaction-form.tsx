@@ -22,6 +22,13 @@ type TransactionFormProps = {
   successMessage?: string;
 };
 
+function getFirstCategoryId(
+  categories: TransactionCategory[],
+  type: TransactionCategory["type"],
+) {
+  return categories.find((category) => category.type === type)?.id ?? "";
+}
+
 function getLocalDateTimeValue() {
   const now = new Date();
 
@@ -41,6 +48,21 @@ export function TransactionForm({
     initialCreateTransactionState,
   );
   const [selectedType, setSelectedType] = useState<TransactionCategory["type"]>(defaultType);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    getFirstCategoryId(categories, defaultType),
+  );
+
+  function handleTypeChange(type: TransactionCategory["type"]) {
+    setSelectedType(type);
+
+    const categoryStillMatches = categories.some(
+      (category) => category.id === selectedCategoryId && category.type === type,
+    );
+
+    if (!categoryStillMatches) {
+      setSelectedCategoryId(getFirstCategoryId(categories, type));
+    }
+  }
 
   return (
     <form action={formAction} className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
@@ -61,7 +83,7 @@ export function TransactionForm({
                   checked={isActive}
                   className="sr-only"
                   name="type"
-                  onChange={() => setSelectedType(type)}
+                  onChange={() => handleTypeChange(type)}
                   type="radio"
                   value={type}
                 />
@@ -75,6 +97,7 @@ export function TransactionForm({
       <label className="space-y-2">
         <span className="text-sm font-medium text-stone-700">Amount</span>
         <input
+          autoFocus
           className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
           inputMode="decimal"
           name="amount"
@@ -86,6 +109,8 @@ export function TransactionForm({
 
       <CategoryPicker
         categories={categories}
+        onSelect={setSelectedCategoryId}
+        selectedCategoryId={selectedCategoryId}
         selectedType={selectedType}
       />
 

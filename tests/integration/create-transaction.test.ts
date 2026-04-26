@@ -1,4 +1,8 @@
 import { existsSync } from "node:fs";
+import path from "node:path";
+import { readFileSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 if (existsSync(".env")) {
   process.loadEnvFile?.(".env");
@@ -10,6 +14,7 @@ if (existsSync(".env.example")) {
 
 import { CategoryType, HouseholdRole, TransactionType } from "@prisma/client";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { CategoryPicker } from "@/components/category-picker";
 
 type SessionUser = {
   householdId: string;
@@ -196,5 +201,34 @@ describe("createTransaction", () => {
         },
       ),
     ).rejects.toThrow("Actor member must belong to the current household");
+  });
+});
+
+describe("transaction form follow-up UI requirements", () => {
+  it("renders categories as quick-tap buttons instead of a select", () => {
+    const markup = renderToStaticMarkup(
+      createElement(CategoryPicker, {
+        categories: [
+          { id: "expense-1", name: "Dining", type: "expense" },
+          { id: "expense-2", name: "Groceries", type: "expense" },
+          { id: "income-1", name: "Salary", type: "income" },
+        ],
+        onSelect: () => {},
+        selectedCategoryId: "expense-1",
+        selectedType: "expense",
+      }),
+    );
+
+    expect(markup).not.toContain("<select");
+    expect(markup).toContain('type="button"');
+  });
+
+  it("autofocuses the amount field on page open", () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), "src/components/transaction-form.tsx"),
+      "utf8",
+    );
+
+    expect(source).toContain("autoFocus");
   });
 });
