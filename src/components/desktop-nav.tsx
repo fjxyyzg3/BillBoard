@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAppFilters } from "@/components/app-filters-provider";
 
 const items = [
   { href: "/home", label: "Home" },
@@ -11,6 +12,7 @@ const items = [
 
 export function DesktopNav() {
   const pathname = usePathname();
+  const { buildHref, navigateTo } = useAppFilters();
 
   return (
     <aside className="hidden w-64 shrink-0 border-r border-stone-200 bg-white md:flex md:flex-col">
@@ -31,7 +33,21 @@ export function DesktopNav() {
                   ? "bg-stone-900 text-white"
                   : "text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
               }`}
-              href={item.href}
+              href={buildHref(item.href)}
+              onClick={(event) => {
+                if (
+                  event.button !== 0 ||
+                  event.altKey ||
+                  event.ctrlKey ||
+                  event.metaKey ||
+                  event.shiftKey
+                ) {
+                  return;
+                }
+
+                event.preventDefault();
+                navigateTo(item.href);
+              }}
             >
               {item.label}
             </Link>

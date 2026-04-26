@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { resolvePerspective } from "@/lib/perspective";
+import { parsePerspective, resolvePerspective } from "@/lib/perspective";
+
+describe("parsePerspective", () => {
+  it("defaults to household for missing values", () => {
+    expect(parsePerspective(null)).toBe("household");
+  });
+
+  it("defaults to household for invalid values", () => {
+    expect(parsePerspective("invalid")).toBe("household");
+  });
+
+  it("keeps supported perspective values", () => {
+    expect(parsePerspective("me")).toBe("me");
+    expect(parsePerspective("spouse")).toBe("spouse");
+  });
+});
 
 describe("resolvePerspective", () => {
   it("returns all household members for household perspective", () => {
