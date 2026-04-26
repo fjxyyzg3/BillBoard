@@ -9,6 +9,7 @@
 - 业务约束：金额以整数分 `amountFen` 处理；交易按 `Asia/Shanghai` 做日期和范围计算；有效记录查询必须排除软删除数据；家庭数据访问必须基于当前 session 的 `householdId` 和 `memberId` 校验。
 - 验证方法：按改动范围选择最小充分验证。通用代码先跑 `npm run lint`；纯函数和组件逻辑跑 `npm run test:unit`；涉及 Prisma、server actions、认证或查询逻辑跑 `npm run test:integration`；涉及登录、导航、表单提交或端到端用户流程跑 `npm run test:e2e`。
 - 测试环境：集成测试和 e2e 依赖 PostgreSQL 与 seed 数据；本地数据库用 `docker compose -f docker-compose.dev.yml up -d db`，seed 用 `npm run prisma:seed`。Playwright 默认使用 `http://127.0.0.1:3000` 并启动 `npm run dev`。
+- 启动服务测试：当用户要求启动服务进行测试时，服务必须使用当时机器的局域网 IP 绑定，确保局域网环境可以访问；如框架支持同时指定 host，优先显式传入对应 host 参数。
 
 ## 1. 实现前先思考
 
@@ -67,6 +68,7 @@
 项目使用三段式版本号：`vX.Y.Z`。提交信息带 `v` 前缀；项目版本字段不带 `v` 前缀。
 
 - `X` 为主版本号。仅在用户明确指定时修改。
+- 当版本号小于 `1.0.0` 时，框架、数据结构、数据库相关改动无需考虑对旧版本的兼容性问题；默认以当前代码和数据模型为准直接演进。
 - `Y` 为功能版本号。每次 feature 提交递增 `Y`，并将 `Z` 置为 `0`。
 - `Z` 为修复版本号。每次 bugfix 提交递增 `Z`。
 - 非 feature 或 bugfix 提交，提交前先确认版本递增方式。
