@@ -239,8 +239,8 @@ describe("transaction form follow-up UI requirements", () => {
     );
 
     expect(source).toContain("Add another");
-    expect(source).toContain('href="/add"');
+    expect(source).toContain("href={nextAddHref}");
     expect(source).toContain("Return home");
-    expect(source).toContain('href="/home"');
+    expect(source).toContain("href={homeHref}");
   });
 });
