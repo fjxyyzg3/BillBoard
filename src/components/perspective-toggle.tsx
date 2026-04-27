@@ -13,15 +13,17 @@ export function PerspectiveToggle() {
   const { perspective, setPerspective } = useAppFilters();
 
   return (
-    <div className="inline-grid grid-cols-3 rounded-2xl bg-stone-100 p-1 text-sm">
+    <div className="inline-grid max-w-full grid-cols-3 rounded-full bg-[#e8e8ed] p-1 text-sm text-[var(--ios-muted)]">
       {items.map((item) => {
         const isActive = perspective === item.value;
 
         return (
           <button
             aria-pressed={isActive}
-            className={`rounded-xl px-3 py-2 transition ${
-              isActive ? "bg-white font-medium text-stone-900 shadow-sm" : "text-stone-500"
+            className={`min-h-10 rounded-full px-4 text-center font-medium transition ${
+              isActive
+                ? "bg-white text-[var(--ios-text)] shadow-[0_1px_4px_rgba(0,0,0,0.14)]"
+                : "hover:text-[var(--ios-text)]"
             }`}
             key={item.value}
             onClick={() => {

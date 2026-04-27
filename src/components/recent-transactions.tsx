@@ -31,7 +31,7 @@ function formatOccurredAt(date: Date) {
 
 export function RecentTransactions({ getRecordHref, items }: RecentTransactionsProps) {
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white shadow-sm">
+    <section className="ios-panel overflow-hidden">
       <div className="border-b border-stone-100 px-5 py-4">
         <h2 className="text-lg font-semibold text-stone-900">Recent transactions</h2>
         <p className="text-sm text-stone-500">Jump straight into the records that shaped this view.</p>
@@ -46,13 +46,13 @@ export function RecentTransactions({ getRecordHref, items }: RecentTransactionsP
           {items.map((transaction) => (
             <li key={transaction.id}>
               <Link
-                className="flex flex-col gap-3 px-5 py-4 transition hover:bg-stone-50 sm:flex-row sm:items-start sm:justify-between"
+                className="flex min-w-0 flex-col gap-3 px-5 py-4 transition hover:bg-black/[0.03] sm:flex-row sm:items-start sm:justify-between"
                 href={getRecordHref(transaction)}
                 scroll={false}
               >
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-semibold text-stone-900">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="ios-amount text-base text-stone-900">
                       {transaction.type === "income" ? "+" : "-"}
                       {formatFen(transaction.amountFen)}
                     </span>
@@ -65,15 +65,15 @@ export function RecentTransactions({ getRecordHref, items }: RecentTransactionsP
                     >
                       {transaction.type === "income" ? "Income" : "Expense"}
                     </span>
-                    <span className="text-sm text-stone-600">{transaction.categoryName}</span>
+                    <span className="min-w-0 text-sm text-stone-600">{transaction.categoryName}</span>
                   </div>
-                  <p className="text-sm text-stone-600">{getNoteExcerpt(transaction.note)}</p>
+                  <p className="min-w-0 text-sm text-stone-600">{getNoteExcerpt(transaction.note)}</p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
                     <span>Actor: {transaction.actorMemberName}</span>
                     <span>Created by: {transaction.createdByMemberName}</span>
                   </div>
                 </div>
-                <p className="text-sm text-stone-500">{formatOccurredAt(transaction.occurredAt)}</p>
+                <p className="shrink-0 text-sm text-stone-500">{formatOccurredAt(transaction.occurredAt)}</p>
               </Link>
             </li>
           ))}

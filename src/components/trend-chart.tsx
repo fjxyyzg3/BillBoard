@@ -16,8 +16,8 @@ export function TrendChart({ getPointHref, granularity, points }: TrendChartProp
 
   if (points.length === 0) {
     return (
-      <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-        <div className="space-y-1">
+      <section className="ios-panel p-5 min-w-0">
+        <div className="min-w-0 space-y-1">
           <h2 className="text-lg font-semibold text-stone-900">Trend</h2>
           <p className="text-sm text-stone-500">No activity yet for the selected filters.</p>
         </div>
@@ -26,15 +26,15 @@ export function TrendChart({ getPointHref, granularity, points }: TrendChartProp
   }
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1">
+    <section className="ios-panel p-5 min-w-0">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
           <h2 className="text-lg font-semibold text-stone-900">Trend</h2>
           <p className="text-sm text-stone-500">
             {granularity === "month" ? "Monthly" : "Daily"} income and expense totals.
           </p>
         </div>
-        <div className="flex items-center gap-4 text-xs text-stone-500">
+        <div className="flex shrink-0 items-center gap-4 text-xs text-stone-500">
           <span className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
             Income

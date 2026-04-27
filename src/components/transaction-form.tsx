@@ -76,21 +76,23 @@ export function TransactionForm({
   }
 
   return (
-    <form action={formAction} className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+    <form action={formAction} className="ios-panel space-y-5 p-4 sm:p-5">
       {sharedFilters.perspective ? (
         <input name="perspective" type="hidden" value={sharedFilters.perspective} />
       ) : null}
       {sharedFilters.range ? <input name="range" type="hidden" value={sharedFilters.range} /> : null}
       <div className="space-y-2">
-        <span className="text-sm font-medium text-stone-700">Type</span>
-        <div className="grid grid-cols-2 rounded-xl border border-stone-300 bg-stone-50 p-1">
+        <span className="text-sm font-medium text-[var(--ios-text)]">Type</span>
+        <div className="grid grid-cols-2 rounded-full bg-[#e8e8ed] p-1 text-sm">
           {(["expense", "income"] as const).map((type) => {
             const isActive = selectedType === type;
 
             return (
               <label
-                className={`cursor-pointer rounded-lg px-3 py-2 text-center text-sm font-medium transition ${
-                  isActive ? "bg-stone-900 text-white" : "text-stone-600"
+                className={`cursor-pointer rounded-full px-3 py-2 text-center font-medium transition ${
+                  isActive
+                    ? "bg-white text-[var(--ios-text)] shadow-[0_3px_10px_rgba(0,0,0,0.12)]"
+                    : "text-[var(--ios-muted)]"
                 }`}
                 key={type}
               >
@@ -110,10 +112,10 @@ export function TransactionForm({
       </div>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-stone-700">Amount</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">Amount</span>
         <input
           autoFocus
-          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          className="ios-field w-full"
           inputMode="decimal"
           name="amount"
           placeholder="0.00"
@@ -130,9 +132,9 @@ export function TransactionForm({
       />
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-stone-700">Who</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">Who</span>
         <select
-          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          className="ios-field w-full"
           defaultValue={currentMemberId}
           name="actorMemberId"
           required
@@ -146,9 +148,9 @@ export function TransactionForm({
       </label>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-stone-700">When</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">When</span>
         <input
-          className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          className="ios-field w-full"
           defaultValue={occurredAtDefault}
           name="occurredAt"
           required
@@ -157,16 +159,16 @@ export function TransactionForm({
       </label>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-stone-700">Note</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">Note</span>
         <textarea
-          className="min-h-24 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition focus:border-stone-500"
+          className="ios-field min-h-24 w-full"
           name="note"
           placeholder="Optional"
         />
       </label>
 
       {successMessage && state.status === "idle" ? (
-        <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+        <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
           <div className="space-y-1">
             <p className="text-sm text-emerald-700">{successMessage}</p>
             {successDetail ? <p className="text-sm text-emerald-700">{successDetail}</p> : null}
@@ -190,7 +192,7 @@ export function TransactionForm({
       {state.status === "error" ? <p className="text-sm text-rose-700">{state.message}</p> : null}
 
       <button
-        className="w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-400"
+        className="w-full rounded-2xl bg-[var(--ios-blue)] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,122,255,0.22)] transition hover:bg-[#006ee6] disabled:cursor-not-allowed disabled:bg-[#9ecbff] disabled:shadow-none"
         disabled={isPending}
         type="submit"
       >

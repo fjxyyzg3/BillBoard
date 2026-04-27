@@ -9,7 +9,7 @@ type SummaryCardProps = {
 };
 
 const toneClasses = {
-  expense: "text-stone-900",
+  expense: "text-[var(--ios-red)]",
   income: "text-emerald-700",
   neutral: "text-stone-900",
 } as const;
@@ -23,20 +23,22 @@ export function SummaryCard({
 }: SummaryCardProps) {
   const content = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
           <p className="text-sm font-medium text-stone-600">{title}</p>
-          <p className={`text-2xl font-semibold ${toneClasses[tone]}`}>{value}</p>
+          <p className={`ios-amount text-[clamp(1.15rem,5vw,1.65rem)] ${toneClasses[tone]}`}>
+            {value}
+          </p>
         </div>
-        {href ? <span className="text-sm text-stone-400">View</span> : null}
+        {href ? <span className="shrink-0 text-sm text-stone-400">View</span> : null}
       </div>
-      <p className="text-sm text-stone-500">{detail}</p>
+      <p className="min-w-0 text-sm text-stone-500">{detail}</p>
     </>
   );
 
   if (!href) {
     return (
-      <article className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      <article className="ios-panel min-w-0 space-y-4 p-4" data-testid="summary-card">
         {content}
       </article>
     );
@@ -44,7 +46,8 @@ export function SummaryCard({
 
   return (
     <Link
-      className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300 hover:shadow"
+      className="ios-panel min-w-0 space-y-4 p-4 transition hover:bg-black/[0.03]"
+      data-testid="summary-card"
       href={href}
     >
       {content}

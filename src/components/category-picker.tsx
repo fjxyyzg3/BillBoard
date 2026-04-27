@@ -30,10 +30,10 @@ export function CategoryPicker({
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {availableCategories.map((category) => (
           <button
-            className={`rounded-xl border px-3 py-3 text-sm font-medium transition ${
+            className={`min-h-12 rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
               selectedCategoryId === category.id
-                ? "border-stone-900 bg-stone-900 text-white"
-                : "border-stone-300 bg-white text-stone-700 hover:border-stone-500"
+                ? "border-[var(--ios-blue)] bg-[var(--ios-blue-soft)] text-[var(--ios-blue)] shadow-[0_8px_22px_rgba(0,122,255,0.12)]"
+                : "border-black/10 bg-white text-[var(--ios-text)] hover:border-black/20 hover:bg-black/[0.03]"
             }`}
             key={category.id}
             onClick={() => onSelect(category.id)}

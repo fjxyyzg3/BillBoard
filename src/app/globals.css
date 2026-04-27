@@ -1,7 +1,81 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  --ios-bg: #f5f5f7;
+  --ios-card: #ffffff;
+  --ios-text: #1d1d1f;
+  --ios-muted: #6e6e73;
+  --ios-border: rgba(0, 0, 0, 0.08);
+  --ios-blue: #007aff;
+  --ios-blue-soft: #e8f2ff;
+  --ios-green: #248a3d;
+  --ios-red: #d70015;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 body {
-  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: var(--ios-bg);
+  color: var(--ios-text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(0, 122, 255, 0.28);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .ios-panel {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 1.375rem;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+  }
+
+  .ios-field {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    color: #1d1d1f;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0.75rem 1rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    width: 100%;
+  }
+
+  .ios-field:focus {
+    border-color: var(--ios-blue);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+  }
+
+  .ios-field:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  .ios-field:focus-visible {
+    outline: 3px solid rgba(0, 122, 255, 0.28);
+    outline-offset: 2px;
+  }
+
+  .ios-amount {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    line-height: 1.25;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
 }

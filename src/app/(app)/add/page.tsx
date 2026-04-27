@@ -84,9 +84,12 @@ export default async function AddPage({ searchParams }: AddPageProps) {
 
   return (
     <section className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">Add transaction</h1>
-        <p className="text-sm text-stone-500">
+      <header className="space-y-1">
+        <p className="text-sm font-medium text-[var(--ios-muted)]">Quick entry</p>
+        <h1 className="text-3xl font-semibold tracking-normal text-[var(--ios-text)]">
+          Add transaction
+        </h1>
+        <p className="text-sm text-[var(--ios-muted)]">
           Capture household income and expenses without leaving the app shell.
         </p>
       </header>

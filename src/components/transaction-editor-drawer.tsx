@@ -85,17 +85,17 @@ export function TransactionEditorDrawer({
 
   return (
     <div className="fixed inset-0 z-40">
-      <Link aria-label="Close editor" className="absolute inset-0 bg-stone-950/30" href={closeHref} />
-      <aside className="absolute inset-y-0 right-0 z-10 flex w-full max-w-md flex-col overflow-y-auto bg-white p-6 shadow-2xl">
+      <Link aria-label="Close editor" className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" href={closeHref} />
+      <aside className="absolute inset-x-0 bottom-0 z-10 flex max-h-[92vh] flex-col overflow-y-auto rounded-t-[1.75rem] bg-white p-5 shadow-2xl md:inset-y-4 md:left-auto md:right-4 md:w-full md:max-w-md md:rounded-[1.75rem] md:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-stone-900">Edit record</h2>
-            <p className="text-sm text-stone-500">
+            <h2 className="text-xl font-semibold text-[var(--ios-text)]">Edit record</h2>
+            <p className="text-sm text-[var(--ios-muted)]">
               {record.occurredAtLabel} • created by {record.createdByMemberName}
             </p>
           </div>
           <Link
-            className="rounded-full border border-stone-200 px-3 py-1 text-sm text-stone-600 transition hover:border-stone-400 hover:text-stone-900"
+            className="rounded-full bg-[#f2f2f7] px-3 py-1 text-sm font-medium text-[var(--ios-blue)] transition hover:bg-[#e8e8ed]"
             href={closeHref}
           >
             Close
@@ -107,15 +107,17 @@ export function TransactionEditorDrawer({
           <input name="returnTo" type="hidden" value={returnTo} />
 
           <div className="space-y-2">
-            <span className="text-sm font-medium text-stone-700">Type</span>
-            <div className="grid grid-cols-2 rounded-xl border border-stone-300 bg-stone-50 p-1">
+            <span className="text-sm font-medium text-[var(--ios-text)]">Type</span>
+            <div className="grid grid-cols-2 rounded-full bg-[#e8e8ed] p-1 text-sm">
               {(["expense", "income"] as const).map((type) => {
                 const isActive = selectedType === type;
 
                 return (
                   <label
-                    className={`cursor-pointer rounded-lg px-3 py-2 text-center text-sm font-medium transition ${
-                      isActive ? "bg-stone-900 text-white" : "text-stone-600"
+                    className={`cursor-pointer rounded-full px-3 py-2 text-center font-medium transition ${
+                      isActive
+                        ? "bg-white text-[var(--ios-text)] shadow-[0_3px_10px_rgba(0,0,0,0.12)]"
+                        : "text-[var(--ios-muted)]"
                     }`}
                     key={type}
                   >
@@ -135,9 +137,9 @@ export function TransactionEditorDrawer({
           </div>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-stone-700">Amount</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">Amount</span>
             <input
-              className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900"
+              className="ios-field w-full"
               defaultValue={formatFen(record.amountFen)}
               inputMode="decimal"
               name="amount"
@@ -147,9 +149,9 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-stone-700">Category</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">Category</span>
             <select
-              className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900"
+              className="ios-field w-full"
               name="categoryId"
               onChange={(event) => {
                 setSelectedCategoryId(event.target.value);
@@ -166,9 +168,9 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-stone-700">Who</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">Who</span>
             <select
-              className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900"
+              className="ios-field w-full"
               defaultValue={record.actorMemberId}
               name="actorMemberId"
               required
@@ -182,9 +184,9 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-stone-700">When</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">When</span>
             <input
-              className="w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900"
+              className="ios-field w-full"
               defaultValue={record.occurredAtLocal}
               name="occurredAt"
               required
@@ -193,9 +195,9 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-stone-700">Note</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">Note</span>
             <textarea
-              className="min-h-28 w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900"
+              className="ios-field min-h-28 w-full"
               defaultValue={record.note ?? ""}
               name="note"
               placeholder="Optional"
@@ -206,7 +208,7 @@ export function TransactionEditorDrawer({
 
           <div className="space-y-3 border-t border-stone-200 pt-4">
             <button
-              className="w-full rounded-xl bg-stone-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-400"
+              className="w-full rounded-2xl bg-[var(--ios-blue)] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,122,255,0.22)] transition hover:bg-[#006ee6] disabled:cursor-not-allowed disabled:bg-[#9ecbff] disabled:shadow-none"
               disabled={isUpdating || isDeleting}
               type="submit"
             >
@@ -227,7 +229,7 @@ export function TransactionEditorDrawer({
           <input name="transactionId" type="hidden" value={record.id} />
           <input name="returnTo" type="hidden" value={returnTo} />
           <button
-            className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isUpdating || isDeleting}
             type="submit"
           >

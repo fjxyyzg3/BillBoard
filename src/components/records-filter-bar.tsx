@@ -55,9 +55,9 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="space-y-2">
-        <span className="text-sm font-medium text-stone-700">Type</span>
+        <span className="text-sm font-medium text-[var(--ios-muted)]">Type</span>
         <select
-          className="w-full rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900"
+          className="ios-field w-full"
           onChange={(event) => {
             const nextType = parseType(event.target.value) ?? "";
             const nextCategoryId =
@@ -81,9 +81,9 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
       </label>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-stone-700">Category</span>
+        <span className="text-sm font-medium text-[var(--ios-muted)]">Category</span>
         <select
-          className="w-full rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900"
+          className="ios-field w-full"
           onChange={(event) => {
             replaceFilters(selectedType ?? "", event.target.value);
           }}

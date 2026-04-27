@@ -14,10 +14,10 @@ export function TimeRangeSelector() {
   const { rangePreset, setRangePreset } = useAppFilters();
 
   return (
-    <label className="flex items-center gap-2 text-sm text-stone-600">
-      <span>Range</span>
+    <label className="flex min-w-0 items-center gap-2 text-sm text-[var(--ios-muted)]">
+      <span className="shrink-0 font-medium">Range</span>
       <select
-        className="rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900"
+        className="ios-field min-h-10 rounded-full py-2 pr-9"
         onChange={(event) => {
           setRangePreset(event.target.value as RangePreset);
         }}

@@ -172,6 +172,7 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
     <section className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ios-muted)]">History</p>
           <h1 className="text-2xl font-semibold">Records</h1>
           <p className="text-sm text-stone-500">
             Review household history, filter it quickly, and adjust records in place.
@@ -187,7 +188,7 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+      <div className="ios-panel overflow-hidden">
         {records.length === 0 ? (
           <div className="p-6">
             <p className="text-sm text-stone-600">
@@ -204,14 +205,18 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
               return (
                 <li key={record.id}>
                   <Link
-                    className="block px-4 py-4 transition hover:bg-stone-50 sm:px-6"
+                    className="block px-4 py-4 transition hover:bg-black/[0.03] sm:px-5"
                     href={buildRecordsHref(rowParams)}
                     scroll={false}
                   >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-lg font-semibold text-stone-900">
+                          <span
+                            className={`ios-amount text-lg ${
+                              record.type === "income" ? "text-[var(--ios-green)]" : "text-[var(--ios-text)]"
+                            }`}
+                          >
                             {record.type === "income" ? "+" : "-"}
                             {formatFen(record.amountFen)}
                           </span>

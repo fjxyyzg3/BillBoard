@@ -88,7 +88,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <section className="space-y-6">
       <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">Home</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ios-muted)]">
+            Household overview
+          </p>
+          <h1 className="text-3xl font-semibold tracking-[-0.01em] text-[var(--ios-text)]">Home</h1>
           <p className="text-sm text-stone-500">
             Household reporting updates instantly with the selected range and perspective.
           </p>
@@ -96,7 +99,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <TimeRangeSelector />
           <Link
-            className="inline-flex items-center justify-center rounded-2xl bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-700"
+            className="inline-flex items-center justify-center rounded-full bg-[var(--ios-blue)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600"
             href={addHref}
           >
             Add transaction
@@ -112,7 +115,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-testid="summary-grid">
         <SummaryCard
           detail="Review income records for this view"
           href={buildPageHref("/records", sharedParams, { type: "income" })}
