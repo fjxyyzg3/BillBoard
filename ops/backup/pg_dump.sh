@@ -14,14 +14,15 @@ postgres_user="${POSTGRES_USER:-billboard}"
 timestamp="$(date +"%Y%m%d-%H%M%S")"
 container_dump="/tmp/billboard-${timestamp}.dump"
 dump_file="${output_dir%/}/billboard-${timestamp}.dump"
+compose_cmd=(bash ops/podman/compose.sh -f podman-compose.yml)
 
 cd "$repo_root"
 mkdir -p "$output_dir"
 
-docker compose -f docker-compose.yml up -d db >/dev/null
+"${compose_cmd[@]}" up -d db >/dev/null
 
 attempts=0
-until docker compose -f docker-compose.yml exec -T db pg_isready -U "$postgres_user" -d "$postgres_db" >/dev/null 2>&1; do
+until "${compose_cmd[@]}" exec -T db pg_isready -U "$postgres_user" -d "$postgres_db" >/dev/null 2>&1; do
   attempts=$((attempts + 1))
   if [ "$attempts" -ge 30 ]; then
     echo "database did not become ready within 30 seconds" >&2
@@ -30,7 +31,7 @@ until docker compose -f docker-compose.yml exec -T db pg_isready -U "$postgres_u
   sleep 1
 done
 
-docker compose -f docker-compose.yml exec -T db pg_dump \
+"${compose_cmd[@]}" exec -T db pg_dump \
   -U "$postgres_user" \
   -d "$postgres_db" \
   --clean \
@@ -38,15 +39,15 @@ docker compose -f docker-compose.yml exec -T db pg_dump \
   --format=custom \
   --file="$container_dump"
 
-container_id="$(docker compose -f docker-compose.yml ps -q db)"
+container_id="$("${compose_cmd[@]}" ps -q db)"
 
 if [ "$container_id" = "" ]; then
   echo "could not resolve the db container id" >&2
   exit 1
 fi
 
-docker cp "${container_id}:${container_dump}" "$dump_file" >/dev/null
-docker compose -f docker-compose.yml exec -T db rm -f "$container_dump"
+podman cp "${container_id}:${container_dump}" "$dump_file" >/dev/null
+"${compose_cmd[@]}" exec -T db rm -f "$container_dump"
 find "$output_dir" -maxdepth 1 -name "billboard-*.dump" -type f -mtime +14 -delete
 
 echo "$dump_file"

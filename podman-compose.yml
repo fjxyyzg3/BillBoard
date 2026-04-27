@@ -2,7 +2,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     depends_on:
       db:
         condition: service_healthy
@@ -15,7 +15,7 @@ services:
   bootstrap:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
       target: tools
     command: >-
       sh -lc "npx prisma migrate deploy && node --import tsx prisma/seed.ts"
