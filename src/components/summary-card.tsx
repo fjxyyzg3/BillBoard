@@ -6,6 +6,7 @@ type SummaryCardProps = {
   title: string;
   tone?: "income" | "expense" | "neutral";
   value: string;
+  viewLabel?: string;
 };
 
 const toneClasses = {
@@ -20,6 +21,7 @@ export function SummaryCard({
   title,
   tone = "neutral",
   value,
+  viewLabel,
 }: SummaryCardProps) {
   const content = (
     <>
@@ -30,7 +32,7 @@ export function SummaryCard({
             {value}
           </p>
         </div>
-        {href ? <span className="shrink-0 text-sm text-stone-400">View</span> : null}
+        {href && viewLabel ? <span className="shrink-0 text-sm text-stone-400">{viewLabel}</span> : null}
       </div>
       <p className="min-w-0 text-sm text-stone-500">{detail}</p>
     </>

@@ -1,16 +1,20 @@
 "use client";
 
 import { useAppFilters } from "@/components/app-filters-provider";
+import type { Messages } from "@/lib/i18n";
 import type { Perspective } from "@/lib/perspective";
 
-const items: Array<{ value: Perspective; label: string }> = [
-  { value: "household", label: "Household" },
-  { value: "me", label: "Me" },
-  { value: "spouse", label: "Spouse" },
-];
+type PerspectiveToggleProps = {
+  labels: Messages["perspective"];
+};
 
-export function PerspectiveToggle() {
+export function PerspectiveToggle({ labels }: PerspectiveToggleProps) {
   const { perspective, setPerspective } = useAppFilters();
+  const items: Array<{ value: Perspective; label: string }> = [
+    { value: "household", label: labels.household },
+    { value: "me", label: labels.me },
+    { value: "spouse", label: labels.spouse },
+  ];
 
   return (
     <div className="inline-grid max-w-full grid-cols-3 rounded-full bg-[#e8e8ed] p-1 text-sm text-[var(--ios-muted)]">

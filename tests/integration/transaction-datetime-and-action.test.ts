@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ZodError } from "zod";
 import { createTransactionSchema } from "@/lib/transactions/schema";
 
 const {
@@ -92,5 +93,49 @@ describe("submitTransaction", () => {
 
     expect(redirectMock).toHaveBeenCalledWith("/login");
     expect(createTransactionMock).not.toHaveBeenCalled();
+  });
+
+  it("localizes validation messages from the submitted locale", async () => {
+    requireAppSessionMock.mockResolvedValue({
+      householdId: "household-1",
+      id: "user-1",
+      memberId: "member-1",
+    });
+    createTransactionMock.mockRejectedValue(
+      new ZodError([
+        { code: "custom", message: "Enter a valid amount with up to two decimals", path: ["amount"] },
+      ]),
+    );
+
+    const { initialCreateTransactionState, submitTransaction } = await import(
+      "@/app/(app)/add/actions"
+    );
+    const formData = new FormData();
+    formData.set("locale", "zh-CN");
+
+    await expect(submitTransaction(initialCreateTransactionState, formData)).resolves.toEqual({
+      status: "error",
+      message: "请输入有效金额",
+    });
+  });
+
+  it("uses the localized save fallback for unknown thrown values", async () => {
+    requireAppSessionMock.mockResolvedValue({
+      householdId: "household-1",
+      id: "user-1",
+      memberId: "member-1",
+    });
+    createTransactionMock.mockRejectedValue("database unavailable");
+
+    const { initialCreateTransactionState, submitTransaction } = await import(
+      "@/app/(app)/add/actions"
+    );
+    const formData = new FormData();
+    formData.set("locale", "zh-CN");
+
+    await expect(submitTransaction(initialCreateTransactionState, formData)).resolves.toEqual({
+      status: "error",
+      message: "无法保存记录",
+    });
   });
 });

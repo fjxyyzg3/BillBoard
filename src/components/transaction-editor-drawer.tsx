@@ -8,6 +8,7 @@ import {
   submitRecordUpdate,
 } from "@/app/(app)/records/actions";
 import { IosSelect } from "@/components/ios-select";
+import { getCategoryDisplayName, type Locale, type Messages } from "@/lib/i18n";
 import { formatFen } from "@/lib/money";
 
 type CategoryOption = {
@@ -26,10 +27,9 @@ type EditableRecord = {
   amountFen: number;
   actorMemberId: string;
   categoryId: string;
-  createdByMemberName: string;
+  createdByLabel: string;
   note: string | null;
   occurredAtLocal: string;
-  occurredAtLabel: string;
   type: "income" | "expense";
 };
 
@@ -37,6 +37,14 @@ type TransactionEditorDrawerProps = {
   categories: CategoryOption[];
   closeHref: string;
   householdMembers: HouseholdMemberOption[];
+  labels: {
+    common: Messages["common"];
+    editor: Pick<
+      Messages["editor"],
+      "deleteConfirm" | "deleteRecord" | "deleting" | "saveChanges" | "title"
+    >;
+  };
+  locale: Locale;
   record: EditableRecord;
   returnTo: string;
 };
@@ -61,6 +69,8 @@ export function TransactionEditorDrawer({
   categories,
   closeHref,
   householdMembers,
+  labels,
+  locale,
   record,
   returnTo,
 }: TransactionEditorDrawerProps) {
@@ -79,7 +89,7 @@ export function TransactionEditorDrawer({
   const visibleCategories = categories.filter((category) => category.type === selectedType);
   const categoryOptions = visibleCategories.map((category) => ({
     value: category.id,
-    label: category.name,
+    label: getCategoryDisplayName(category.name, locale),
   }));
   const householdMemberOptions = householdMembers.map((member) => ({
     value: member.id,
@@ -94,29 +104,30 @@ export function TransactionEditorDrawer({
 
   return (
     <div className="fixed inset-0 z-40">
-      <Link aria-label="Close editor" className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" href={closeHref} />
+      <Link aria-label={labels.common.close} className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" href={closeHref} />
       <aside className="absolute inset-x-0 bottom-0 z-10 flex max-h-[92vh] flex-col overflow-y-auto rounded-t-[1.75rem] bg-white p-5 shadow-2xl md:inset-y-4 md:left-auto md:right-4 md:w-full md:max-w-md md:rounded-[1.75rem] md:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-[var(--ios-text)]">Edit record</h2>
+            <h2 className="text-xl font-semibold text-[var(--ios-text)]">{labels.editor.title}</h2>
             <p className="text-sm text-[var(--ios-muted)]">
-              {record.occurredAtLabel} • created by {record.createdByMemberName}
+              {record.createdByLabel}
             </p>
           </div>
           <Link
             className="rounded-full bg-[#f2f2f7] px-3 py-1 text-sm font-medium text-[var(--ios-blue)] transition hover:bg-[#e8e8ed]"
             href={closeHref}
           >
-            Close
+            {labels.common.close}
           </Link>
         </div>
 
         <form action={updateAction} className="mt-6 space-y-4">
+          <input name="locale" type="hidden" value={locale} />
           <input name="transactionId" type="hidden" value={record.id} />
           <input name="returnTo" type="hidden" value={returnTo} />
 
           <div className="space-y-2">
-            <span className="text-sm font-medium text-[var(--ios-text)]">Type</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.type}</span>
             <div className="grid grid-cols-2 rounded-full bg-[#e8e8ed] p-1 text-sm">
               {(["expense", "income"] as const).map((type) => {
                 const isActive = selectedType === type;
@@ -138,7 +149,7 @@ export function TransactionEditorDrawer({
                       type="radio"
                       value={type}
                     />
-                    {type === "expense" ? "Expense" : "Income"}
+                    {type === "expense" ? labels.common.expense : labels.common.income}
                   </label>
                 );
               })}
@@ -146,7 +157,7 @@ export function TransactionEditorDrawer({
           </div>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--ios-text)]">Amount</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.amount}</span>
             <input
               className="ios-field w-full"
               defaultValue={formatFen(record.amountFen)}
@@ -158,7 +169,9 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--ios-text)]">Category</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">
+              {labels.common.category}
+            </span>
             <IosSelect
               name="categoryId"
               onChange={(event) => {
@@ -171,7 +184,7 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--ios-text)]">Who</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.who}</span>
             <IosSelect
               defaultValue={record.actorMemberId}
               name="actorMemberId"
@@ -181,7 +194,7 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--ios-text)]">When</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.when}</span>
             <input
               className="ios-field w-full"
               defaultValue={record.occurredAtLocal}
@@ -192,12 +205,12 @@ export function TransactionEditorDrawer({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--ios-text)]">Note</span>
+            <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.note}</span>
             <textarea
               className="ios-field min-h-28 w-full"
               defaultValue={record.note ?? ""}
               name="note"
-              placeholder="Optional"
+              placeholder={labels.common.optional}
             />
           </label>
 
@@ -209,7 +222,7 @@ export function TransactionEditorDrawer({
               disabled={isUpdating || isDeleting}
               type="submit"
             >
-              {isUpdating ? "Saving..." : "Save changes"}
+              {isUpdating ? labels.common.saving : labels.editor.saveChanges}
             </button>
           </div>
         </form>
@@ -218,11 +231,12 @@ export function TransactionEditorDrawer({
           action={deleteAction}
           className="mt-4 border-t border-stone-200 pt-4"
           onSubmit={(event) => {
-            if (!window.confirm("Delete this record?")) {
+            if (!window.confirm(labels.editor.deleteConfirm)) {
               event.preventDefault();
             }
           }}
         >
+          <input name="locale" type="hidden" value={locale} />
           <input name="transactionId" type="hidden" value={record.id} />
           <input name="returnTo" type="hidden" value={returnTo} />
           <button
@@ -230,7 +244,7 @@ export function TransactionEditorDrawer({
             disabled={isUpdating || isDeleting}
             type="submit"
           >
-            {isDeleting ? "Deleting..." : "Delete record"}
+            {isDeleting ? labels.editor.deleting : labels.editor.deleteRecord}
           </button>
         </form>
       </aside>

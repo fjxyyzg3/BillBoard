@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { IosSelect } from "@/components/ios-select";
+import { getCategoryDisplayName, type Locale, type Messages } from "@/lib/i18n";
 
 type CategoryOption = {
   id: string;
@@ -11,6 +12,10 @@ type CategoryOption = {
 
 type RecordsFilterBarProps = {
   categories: CategoryOption[];
+  labels: {
+    common: Messages["common"];
+  };
+  locale: Locale;
 };
 
 function parseType(value: string | null): CategoryOption["type"] | undefined {
@@ -21,7 +26,7 @@ function parseType(value: string | null): CategoryOption["type"] | undefined {
   return undefined;
 }
 
-export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
+export function RecordsFilterBar({ categories, labels, locale }: RecordsFilterBarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -31,10 +36,10 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
     (category) => !selectedType || category.type === selectedType,
   );
   const categoryOptions = [
-    { value: "", label: "All categories" },
+    { value: "", label: labels.common.allCategories },
     ...visibleCategories.map((category) => ({
       value: category.id,
-      label: category.name,
+      label: getCategoryDisplayName(category.name, locale),
     })),
   ];
 
@@ -63,7 +68,7 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="space-y-2">
-        <span className="text-sm font-medium text-[var(--ios-muted)]">Type</span>
+        <span className="text-sm font-medium text-[var(--ios-muted)]">{labels.common.type}</span>
         <IosSelect
           onChange={(event) => {
             const nextType = parseType(event.target.value) ?? "";
@@ -80,16 +85,18 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
             replaceFilters(nextType, nextCategoryId);
           }}
           options={[
-            { value: "", label: "All types" },
-            { value: "expense", label: "Expense" },
-            { value: "income", label: "Income" },
+            { value: "", label: labels.common.allTypes },
+            { value: "expense", label: labels.common.expense },
+            { value: "income", label: labels.common.income },
           ]}
           value={selectedType ?? ""}
         />
       </label>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-[var(--ios-muted)]">Category</span>
+        <span className="text-sm font-medium text-[var(--ios-muted)]">
+          {labels.common.category}
+        </span>
         <IosSelect
           onChange={(event) => {
             replaceFilters(selectedType ?? "", event.target.value);

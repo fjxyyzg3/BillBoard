@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { ZodError } from "zod";
 import { requireAppSession } from "@/lib/auth/session";
+import { getMessages, getValidationMessage, parseLocale } from "@/lib/i18n";
 import { createTransaction } from "@/lib/transactions/create-transaction";
 
 export type CreateTransactionActionState = {
@@ -36,6 +37,9 @@ export async function submitTransaction(
   _previousState: CreateTransactionActionState,
   formData: FormData,
 ): Promise<CreateTransactionActionState> {
+  const locale = parseLocale(formData.get("locale"));
+  const messages = getMessages(locale);
+
   try {
     const user = await requireAppSession();
 
@@ -70,13 +74,16 @@ export async function submitTransaction(
     if (error instanceof ZodError) {
       return {
         status: "error",
-        message: error.issues[0]?.message ?? "Could not save the transaction",
+        message: getValidationMessage(error.issues[0]?.message, locale, "save"),
       };
     }
 
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Could not save the transaction",
+      message:
+        error instanceof Error
+          ? getValidationMessage(error.message, locale, "save")
+          : messages.actions.couldNotSave,
     };
   }
 }

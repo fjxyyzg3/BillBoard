@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Household Accounting",
+    name: "家庭记账",
     short_name: "BillBoard",
     start_url: "/home",
     display: "standalone",

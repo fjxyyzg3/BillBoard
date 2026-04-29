@@ -11,6 +11,7 @@ import {
   type TransactionCategory,
 } from "@/components/category-picker";
 import { IosSelect } from "@/components/ios-select";
+import type { Locale, Messages } from "@/lib/i18n";
 import { getCurrentShanghaiDateTimeLocal } from "@/lib/transactions/datetime";
 
 type HouseholdMemberOption = {
@@ -23,6 +24,11 @@ type TransactionFormProps = {
   homeHref: string;
   householdMembers: HouseholdMemberOption[];
   currentMemberId: string;
+  labels: {
+    add: Pick<Messages["add"], "save">;
+    common: Messages["common"];
+  };
+  locale: Locale;
   nextAddHref: string;
   sharedFilters: {
     perspective?: string;
@@ -48,6 +54,8 @@ export function TransactionForm({
   homeHref,
   householdMembers,
   currentMemberId,
+  labels,
+  locale,
   nextAddHref,
   sharedFilters,
   successDetail,
@@ -78,12 +86,13 @@ export function TransactionForm({
 
   return (
     <form action={formAction} className="ios-panel space-y-5 p-4 sm:p-5">
+      <input name="locale" type="hidden" value={locale} />
       {sharedFilters.perspective ? (
         <input name="perspective" type="hidden" value={sharedFilters.perspective} />
       ) : null}
       {sharedFilters.range ? <input name="range" type="hidden" value={sharedFilters.range} /> : null}
       <div className="space-y-2">
-        <span className="text-sm font-medium text-[var(--ios-text)]">Type</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.type}</span>
         <div className="grid grid-cols-2 rounded-full bg-[#e8e8ed] p-1 text-sm">
           {(["expense", "income"] as const).map((type) => {
             const isActive = selectedType === type;
@@ -105,7 +114,7 @@ export function TransactionForm({
                   type="radio"
                   value={type}
                 />
-                {type === "expense" ? "Expense" : "Income"}
+                {type === "expense" ? labels.common.expense : labels.common.income}
               </label>
             );
           })}
@@ -113,7 +122,7 @@ export function TransactionForm({
       </div>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-[var(--ios-text)]">Amount</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.amount}</span>
         <input
           autoFocus
           className="ios-field w-full"
@@ -127,13 +136,15 @@ export function TransactionForm({
 
       <CategoryPicker
         categories={categories}
+        label={labels.common.category}
+        locale={locale}
         onSelect={setSelectedCategoryId}
         selectedCategoryId={selectedCategoryId}
         selectedType={selectedType}
       />
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-[var(--ios-text)]">Who</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.who}</span>
         <IosSelect
           defaultValue={currentMemberId}
           name="actorMemberId"
@@ -146,7 +157,7 @@ export function TransactionForm({
       </label>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-[var(--ios-text)]">When</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.when}</span>
         <input
           className="ios-field w-full"
           defaultValue={occurredAtDefault}
@@ -157,11 +168,11 @@ export function TransactionForm({
       </label>
 
       <label className="space-y-2">
-        <span className="text-sm font-medium text-[var(--ios-text)]">Note</span>
+        <span className="text-sm font-medium text-[var(--ios-text)]">{labels.common.note}</span>
         <textarea
           className="ios-field min-h-24 w-full"
           name="note"
-          placeholder="Optional"
+          placeholder={labels.common.optional}
         />
       </label>
 
@@ -176,13 +187,13 @@ export function TransactionForm({
               className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-center text-sm font-medium text-stone-700 transition hover:border-stone-500 hover:text-stone-900"
               href={nextAddHref}
             >
-              Add another
+              {labels.common.addAnother}
             </Link>
             <Link
               className="rounded-xl bg-stone-900 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-stone-700"
               href={homeHref}
             >
-              Return home
+              {labels.common.returnHome}
             </Link>
           </div>
         </div>
@@ -194,7 +205,7 @@ export function TransactionForm({
         disabled={isPending}
         type="submit"
       >
-        {isPending ? "Saving..." : "Save transaction"}
+        {isPending ? labels.common.saving : labels.add.save}
       </button>
     </form>
   );

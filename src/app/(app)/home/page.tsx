@@ -6,6 +6,8 @@ import { SummaryCard } from "@/components/summary-card";
 import { TimeRangeSelector } from "@/components/time-range-selector";
 import { TrendChart } from "@/components/trend-chart";
 import { requireAppSession } from "@/lib/auth/session";
+import { formatLocaleNumber, getMessages, type Locale } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n-server";
 import { formatFen } from "@/lib/money";
 import { parsePerspective } from "@/lib/perspective";
 import { parseRangePreset } from "@/lib/range-preset";
@@ -71,6 +73,8 @@ function formatSignedFen(fen: number) {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const user = await requireAppSession();
+  const locale = await getServerLocale();
+  const messages = getMessages(locale);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const rangePreset = parseRangePreset(readParam(resolvedSearchParams, "range"));
   const perspective = parsePerspective(readParam(resolvedSearchParams, "perspective"));
@@ -89,58 +93,64 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ios-muted)]">
-            Household overview
+            {messages.home.eyebrow}
           </p>
-          <h1 className="text-3xl font-semibold tracking-[-0.01em] text-[var(--ios-text)]">Home</h1>
-          <p className="text-sm text-stone-500">
-            Household reporting updates instantly with the selected range and perspective.
-          </p>
+          <h1 className="text-3xl font-semibold tracking-[-0.01em] text-[var(--ios-text)]">
+            {messages.home.title}
+          </h1>
+          <p className="text-sm text-stone-500">{messages.home.description}</p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <TimeRangeSelector />
+          <TimeRangeSelector labels={messages.range} />
           <Link
             className="inline-flex items-center justify-center rounded-full bg-[var(--ios-blue)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600"
             href={addHref}
           >
-            Add transaction
+            {messages.home.addTransaction}
           </Link>
         </div>
       </header>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <PerspectiveToggle />
+        <PerspectiveToggle labels={messages.perspective} />
         <p className="text-sm text-stone-500">
-          {dashboard.summary.transactionCount} transaction
-          {dashboard.summary.transactionCount === 1 ? "" : "s"} in view
+          {messages.home.transactionCount(
+            formatLocaleNumber(dashboard.summary.transactionCount, locale),
+            dashboard.summary.transactionCount,
+          )}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-testid="summary-grid">
         <SummaryCard
-          detail="Review income records for this view"
+          detail={messages.home.summary.incomeDetail}
           href={buildPageHref("/records", sharedParams, { type: "income" })}
-          title="Income"
+          title={messages.home.summary.incomeTitle}
           tone="income"
           value={formatFen(dashboard.summary.incomeFen)}
+          viewLabel={messages.common.view}
         />
         <SummaryCard
-          detail="Review expense records for this view"
+          detail={messages.home.summary.expenseDetail}
           href={buildPageHref("/records", sharedParams, { type: "expense" })}
-          title="Expense"
+          title={messages.home.summary.expenseTitle}
           tone="expense"
           value={formatFen(dashboard.summary.expenseFen)}
+          viewLabel={messages.common.view}
         />
         <SummaryCard
-          detail="Net across income and expenses"
+          detail={messages.home.summary.netDetail}
           href={recordsHref}
-          title="Net"
+          title={messages.home.summary.netTitle}
           value={formatSignedFen(dashboard.summary.netFen)}
+          viewLabel={messages.common.view}
         />
         <SummaryCard
-          detail="Open the records list with these filters"
+          detail={messages.home.summary.transactionsDetail}
           href={recordsHref}
-          title="Transactions"
-          value={new Intl.NumberFormat("en-US").format(dashboard.summary.transactionCount)}
+          title={messages.home.summary.transactionsTitle}
+          value={formatLocaleNumber(dashboard.summary.transactionCount, locale)}
+          viewLabel={messages.common.view}
         />
       </div>
 
@@ -157,6 +167,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             });
           }}
           granularity={dashboard.trend.granularity}
+          labels={{
+            daily: messages.trend.daily,
+            empty: messages.trend.empty,
+            expense: messages.trend.expense,
+            income: messages.trend.income,
+            monthly: messages.trend.monthly,
+            title: messages.trend.title,
+            tx: messages.common.tx,
+          }}
+          locale={locale}
           points={dashboard.trend.points}
         />
         <CategoryBreakdown
@@ -167,6 +187,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             })
           }
           items={dashboard.categories.items}
+          labels={messages.categories}
+          locale={locale}
           totalExpenseLabel={(amountFen) => formatFen(amountFen)}
         />
       </div>
@@ -176,6 +198,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           buildPageHref("/records", sharedParams, { record: transaction.id })
         }
         items={dashboard.recentTransactions}
+        labels={{
+          common: {
+            actor: messages.common.actor,
+            createdBy: messages.common.createdBy,
+            expense: messages.common.expense,
+            income: messages.common.income,
+            noNote: messages.common.noNote,
+          },
+          recent: messages.recent,
+        }}
+        locale={locale}
       />
     </section>
   );

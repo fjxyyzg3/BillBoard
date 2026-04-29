@@ -3,31 +3,40 @@
 import { Home, List, PlusCircle, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LanguageToggle } from "@/components/language-toggle";
 import { useAppFilters } from "@/components/app-filters-provider";
-
-const items = [
-  { href: "/home", label: "Home", Icon: Home },
-  { href: "/add", label: "Add", Icon: PlusCircle },
-  { href: "/records", label: "Records", Icon: List },
-] satisfies ReadonlyArray<{
-  href: "/home" | "/add" | "/records";
-  label: "Home" | "Add" | "Records";
-  Icon: LucideIcon;
-}>;
+import type { Locale, Messages } from "@/lib/i18n";
 
 type BottomNavProps = {
+  labels: {
+    language: Messages["language"];
+    nav: Messages["nav"];
+  };
+  locale: Locale;
   versionLabel: string;
 };
 
-export function BottomNav({ versionLabel }: BottomNavProps) {
+type NavItem = {
+  href: "/home" | "/add" | "/records";
+  label: string;
+  Icon: LucideIcon;
+};
+
+export function BottomNav({ labels, locale, versionLabel }: BottomNavProps) {
   const pathname = usePathname();
   const { buildHref, navigateTo } = useAppFilters();
+  const items: NavItem[] = [
+    { href: "/home", label: labels.nav.home, Icon: Home },
+    { href: "/add", label: labels.nav.add, Icon: PlusCircle },
+    { href: "/records", label: labels.nav.records, Icon: List },
+  ];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-black/[0.08] bg-white/90 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl md:hidden">
-      <p className="border-b border-black/[0.06] px-4 py-1.5 text-center text-[0.625rem] leading-none text-stone-400">
-        {versionLabel}
-      </p>
+      <div className="flex items-center justify-between gap-3 border-b border-black/[0.06] px-4 py-1.5">
+        <p className="text-[0.625rem] leading-none text-stone-400">{versionLabel}</p>
+        <LanguageToggle labels={labels.language} locale={locale} />
+      </div>
       <ul className="mx-auto grid max-w-7xl grid-cols-3 px-3 py-2">
         {items.map((item) => {
           const isActive = pathname === item.href;

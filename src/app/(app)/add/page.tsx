@@ -2,9 +2,11 @@ import { buildAppHref } from "@/lib/app-navigation";
 import { TransactionForm } from "@/components/transaction-form";
 import { requireAppSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { getMessages, type Locale, type Messages } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n-server";
 
-function formatSuccessAmount(amountFen: number) {
-  return new Intl.NumberFormat("en-US", {
+function formatSuccessAmount(amountFen: number, locale: Locale) {
+  return new Intl.NumberFormat(locale, {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
   }).format(amountFen / 100);
@@ -18,6 +20,8 @@ function readSuccessDetail(
         type?: string;
       }
     | undefined,
+  locale: Locale,
+  messages: Messages,
 ) {
   if (searchParams?.created !== "1") {
     return undefined;
@@ -33,7 +37,9 @@ function readSuccessDetail(
     return undefined;
   }
 
-  return `${searchParams.type === "expense" ? "Expense" : "Income"}: ${formatSuccessAmount(amountFen)}`;
+  const typeLabel = searchParams.type === "expense" ? messages.common.expense : messages.common.income;
+
+  return messages.add.successDetail(typeLabel, formatSuccessAmount(amountFen, locale));
 }
 
 function buildSharedParams(
@@ -62,6 +68,8 @@ type AddPageProps = {
 
 export default async function AddPage({ searchParams }: AddPageProps) {
   const user = await requireAppSession();
+  const locale = await getServerLocale();
+  const messages = getMessages(locale);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const sharedParams = buildSharedParams(resolvedSearchParams);
   const sharedParamReader = {
@@ -85,13 +93,11 @@ export default async function AddPage({ searchParams }: AddPageProps) {
   return (
     <section className="space-y-6">
       <header className="space-y-1">
-        <p className="text-sm font-medium text-[var(--ios-muted)]">Quick entry</p>
+        <p className="text-sm font-medium text-[var(--ios-muted)]">{messages.add.eyebrow}</p>
         <h1 className="text-3xl font-semibold tracking-normal text-[var(--ios-text)]">
-          Add transaction
+          {messages.add.title}
         </h1>
-        <p className="text-sm text-[var(--ios-muted)]">
-          Capture household income and expenses without leaving the app shell.
-        </p>
+        <p className="text-sm text-[var(--ios-muted)]">{messages.add.description}</p>
       </header>
       <TransactionForm
         categories={categories.map((category) => ({
@@ -102,10 +108,12 @@ export default async function AddPage({ searchParams }: AddPageProps) {
         currentMemberId={user.memberId}
         householdMembers={householdMembers}
         homeHref={buildAppHref("/home", sharedParamReader)}
+        labels={{ add: { save: messages.add.save }, common: messages.common }}
+        locale={locale}
         nextAddHref={buildAppHref("/add", sharedParamReader)}
         sharedFilters={sharedParams}
-        successDetail={readSuccessDetail(resolvedSearchParams)}
-        successMessage={resolvedSearchParams?.created === "1" ? "Transaction saved" : undefined}
+        successDetail={readSuccessDetail(resolvedSearchParams, locale, messages)}
+        successMessage={resolvedSearchParams?.created === "1" ? messages.add.successMessage : undefined}
       />
     </section>
   );

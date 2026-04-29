@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 import { requireAppSession } from "@/lib/auth/session";
+import { getMessages, getValidationMessage, parseLocale } from "@/lib/i18n";
 import { deleteTransaction } from "@/lib/transactions/delete-transaction";
 import { updateTransaction } from "@/lib/transactions/update-transaction";
 
@@ -47,6 +48,8 @@ export async function submitRecordUpdate(
   _previousState: RecordEditorActionState,
   formData: FormData,
 ): Promise<RecordEditorActionState> {
+  const locale = parseLocale(formData.get("locale"));
+  const messages = getMessages(locale);
   const returnTo = removeQueryParam(getRecordsHref(formData.get("returnTo")), "record");
 
   try {
@@ -72,13 +75,16 @@ export async function submitRecordUpdate(
     if (error instanceof ZodError) {
       return {
         status: "error",
-        message: error.issues[0]?.message ?? "Could not update the record",
+        message: getValidationMessage(error.issues[0]?.message, locale, "update"),
       };
     }
 
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Could not update the record",
+      message:
+        error instanceof Error
+          ? getValidationMessage(error.message, locale, "update")
+          : messages.actions.couldNotUpdate,
     };
   }
 
@@ -89,6 +95,8 @@ export async function submitRecordDelete(
   _previousState: RecordEditorActionState,
   formData: FormData,
 ): Promise<RecordEditorActionState> {
+  const locale = parseLocale(formData.get("locale"));
+  const messages = getMessages(locale);
   const returnTo = removeQueryParam(getRecordsHref(formData.get("returnTo")), "record");
 
   try {
@@ -102,7 +110,10 @@ export async function submitRecordDelete(
 
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Could not delete the record",
+      message:
+        error instanceof Error
+          ? getValidationMessage(error.message, locale, "delete")
+          : messages.actions.couldNotDelete,
     };
   }
 

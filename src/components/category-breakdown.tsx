@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatLocaleNumber, getCategoryDisplayName, type Locale } from "@/lib/i18n";
 
 type CategoryBreakdownItem = {
   amountFen: number;
@@ -11,23 +12,32 @@ type CategoryBreakdownItem = {
 type CategoryBreakdownProps = {
   getCategoryHref: (item: CategoryBreakdownItem) => string;
   items: CategoryBreakdownItem[];
+  labels: {
+    description: string;
+    empty: string;
+    title: string;
+    transactionCount: (countLabel: string, count: number) => string;
+  };
+  locale: Locale;
   totalExpenseLabel: (amountFen: number) => string;
 };
 
 export function CategoryBreakdown({
   getCategoryHref,
   items,
+  labels,
+  locale,
   totalExpenseLabel,
 }: CategoryBreakdownProps) {
   return (
     <section className="ios-panel p-5 min-w-0">
       <div className="min-w-0 space-y-1">
-        <h2 className="text-lg font-semibold text-stone-900">Expense categories</h2>
-        <p className="text-sm text-stone-500">Where spending is concentrated in this range.</p>
+        <h2 className="text-lg font-semibold text-stone-900">{labels.title}</h2>
+        <p className="text-sm text-stone-500">{labels.description}</p>
       </div>
 
       {items.length === 0 ? (
-        <p className="mt-5 text-sm text-stone-500">No expense activity yet for the selected filters.</p>
+        <p className="mt-5 text-sm text-stone-500">{labels.empty}</p>
       ) : (
         <div className="mt-5 space-y-4">
           {items.map((item) => (
@@ -38,8 +48,15 @@ export function CategoryBreakdown({
             >
               <div className="flex min-w-0 items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-stone-900">{item.categoryName}</p>
-                  <p className="text-xs text-stone-500">{item.transactionCount} transactions</p>
+                  <p className="text-sm font-medium text-stone-900">
+                    {getCategoryDisplayName(item.categoryName, locale)}
+                  </p>
+                  <p className="text-xs text-stone-500">
+                    {labels.transactionCount(
+                      formatLocaleNumber(item.transactionCount, locale),
+                      item.transactionCount,
+                    )}
+                  </p>
                 </div>
                 <p className="shrink-0 text-sm font-semibold text-stone-900">
                   {totalExpenseLabel(item.amountFen)}

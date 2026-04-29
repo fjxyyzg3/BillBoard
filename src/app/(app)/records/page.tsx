@@ -6,6 +6,8 @@ import { TimeRangeSelector } from "@/components/time-range-selector";
 import { TransactionEditorDrawer } from "@/components/transaction-editor-drawer";
 import { requireAppSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { formatLocaleDateTime, getCategoryDisplayName, getMessages } from "@/lib/i18n";
+import { getServerLocale } from "@/lib/i18n-server";
 import { formatFen } from "@/lib/money";
 import { parsePerspective } from "@/lib/perspective";
 import { parseRangePreset } from "@/lib/range-preset";
@@ -46,19 +48,9 @@ function buildRecordsHref(params: URLSearchParams) {
   return query ? `/records?${query}` : "/records";
 }
 
-function formatOccurredAt(date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Shanghai",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function getNoteExcerpt(note: string | null) {
+function getNoteExcerpt(note: string | null, noNoteLabel: string) {
   if (!note) {
-    return "No note";
+    return noNoteLabel;
   }
 
   if (note.length <= 72) {
@@ -92,6 +84,8 @@ function parseDrillDownDate(value: string | null) {
 
 export default async function RecordsPage({ searchParams }: RecordsPageProps) {
   const user = await requireAppSession();
+  const locale = await getServerLocale();
+  const messages = getMessages(locale);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const currentParams = buildSearchParams(resolvedSearchParams);
 
@@ -172,28 +166,30 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
     <section className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ios-muted)]">History</p>
-          <h1 className="text-2xl font-semibold">Records</h1>
-          <p className="text-sm text-stone-500">
-            Review household history, filter it quickly, and adjust records in place.
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ios-muted)]">
+            {messages.records.eyebrow}
           </p>
+          <h1 className="text-2xl font-semibold">{messages.records.title}</h1>
+          <p className="text-sm text-stone-500">{messages.records.description}</p>
         </div>
-        <TimeRangeSelector />
+        <TimeRangeSelector labels={messages.range} />
       </header>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <PerspectiveToggle />
+        <PerspectiveToggle labels={messages.perspective} />
         <div className="w-full lg:max-w-xl">
-          <RecordsFilterBar categories={categoryOptions} />
+          <RecordsFilterBar
+            categories={categoryOptions}
+            labels={{ common: messages.common }}
+            locale={locale}
+          />
         </div>
       </div>
 
       <div className="ios-panel overflow-hidden">
         {records.length === 0 ? (
           <div className="p-6">
-            <p className="text-sm text-stone-600">
-              No records match the current filters. Try a wider range or clear a filter.
-            </p>
+            <p className="text-sm text-stone-600">{messages.records.empty}</p>
           </div>
         ) : (
           <ul className="divide-y divide-stone-100">
@@ -227,17 +223,27 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
                                 : "bg-stone-100 text-stone-700"
                             }`}
                           >
-                            {record.type === "income" ? "Income" : "Expense"}
+                            {record.type === "income" ? messages.common.income : messages.common.expense}
                           </span>
-                          <span className="text-sm text-stone-600">{record.categoryName}</span>
+                          <span className="text-sm text-stone-600">
+                            {getCategoryDisplayName(record.categoryName, locale)}
+                          </span>
                         </div>
-                        <p className="text-sm text-stone-600">{getNoteExcerpt(record.note)}</p>
+                        <p className="text-sm text-stone-600">
+                          {getNoteExcerpt(record.note, messages.common.noNote)}
+                        </p>
                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
-                          <span>Actor: {record.actorMemberName}</span>
-                          <span>Created by: {record.createdByMemberName}</span>
+                          <span>
+                            {messages.common.actor}: {record.actorMemberName}
+                          </span>
+                          <span>
+                            {messages.common.createdBy}: {record.createdByMemberName}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-sm text-stone-500">{formatOccurredAt(record.occurredAt)}</div>
+                      <div className="text-sm text-stone-500">
+                        {formatLocaleDateTime(record.occurredAt, locale)}
+                      </div>
                     </div>
                   </Link>
                 </li>
@@ -252,14 +258,27 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
           categories={categoryOptions}
           closeHref={closeHref}
           householdMembers={householdMembers}
+          labels={{
+            common: messages.common,
+            editor: {
+              deleteConfirm: messages.editor.deleteConfirm,
+              deleteRecord: messages.editor.deleteRecord,
+              deleting: messages.editor.deleting,
+              saveChanges: messages.editor.saveChanges,
+              title: messages.editor.title,
+            },
+          }}
+          locale={locale}
           record={{
             id: selectedRecord.id,
             amountFen: selectedRecord.amountFen,
             actorMemberId: selectedRecord.actorMemberId,
             categoryId: selectedRecord.categoryId,
-            createdByMemberName: selectedRecord.createdByMember.memberName,
+            createdByLabel: messages.editor.createdBy(
+              formatLocaleDateTime(selectedRecord.occurredAt, locale),
+              selectedRecord.createdByMember.memberName,
+            ),
             note: selectedRecord.note,
-            occurredAtLabel: formatOccurredAt(selectedRecord.occurredAt),
             occurredAtLocal: getCurrentShanghaiDateTimeLocal(selectedRecord.occurredAt),
             type: selectedRecord.type === "INCOME" ? "income" : "expense",
           }}

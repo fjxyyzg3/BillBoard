@@ -213,6 +213,8 @@ describe("transaction form follow-up UI requirements", () => {
           { id: "expense-2", name: "Groceries", type: "expense" },
           { id: "income-1", name: "Salary", type: "income" },
         ],
+        label: "Category",
+        locale: "en-US",
         onSelect: () => {},
         selectedCategoryId: "expense-1",
         selectedType: "expense",
@@ -238,9 +240,9 @@ describe("transaction form follow-up UI requirements", () => {
       "utf8",
     );
 
-    expect(source).toContain("Add another");
+    expect(source).toContain("labels.common.addAnother");
     expect(source).toContain("href={nextAddHref}");
-    expect(source).toContain("Return home");
+    expect(source).toContain("labels.common.returnHome");
     expect(source).toContain("href={homeHref}");
   });
 });

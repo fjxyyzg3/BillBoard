@@ -1,3 +1,5 @@
+import { getCategoryDisplayName, type Locale, type Messages } from "@/lib/i18n";
+
 type TransactionCategory = {
   id: string;
   name: string;
@@ -6,6 +8,8 @@ type TransactionCategory = {
 
 type CategoryPickerProps = {
   categories: TransactionCategory[];
+  label: Messages["common"]["category"];
+  locale: Locale;
   selectedType: TransactionCategory["type"];
   selectedCategoryId: string;
   onSelect: (categoryId: string) => void;
@@ -15,6 +19,8 @@ export type { TransactionCategory };
 
 export function CategoryPicker({
   categories,
+  label,
+  locale,
   selectedType,
   selectedCategoryId,
   onSelect,
@@ -24,7 +30,7 @@ export function CategoryPicker({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-stone-700">Category</span>
+        <span className="text-sm font-medium text-stone-700">{label}</span>
       </div>
       <input name="categoryId" readOnly required type="hidden" value={selectedCategoryId} />
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -39,7 +45,7 @@ export function CategoryPicker({
             onClick={() => onSelect(category.id)}
             type="button"
           >
-            {category.name}
+            {getCategoryDisplayName(category.name, locale)}
           </button>
         ))}
       </div>

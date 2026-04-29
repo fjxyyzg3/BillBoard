@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ZodError } from "zod";
 
 const {
   categoryFindManyMock,
@@ -54,6 +55,12 @@ vi.mock("next/navigation", () => ({
     replace: replaceMock,
   }),
   useSearchParams: useSearchParamsMock,
+}));
+
+vi.mock("next/headers", () => ({
+  cookies: async () => ({
+    get: () => undefined,
+  }),
 }));
 
 vi.mock("@/lib/auth/session", () => ({
@@ -283,6 +290,58 @@ describe("Records page", () => {
     expect(transactionEditorDrawerMock).not.toHaveBeenCalled();
   });
 
+  it("passes only serializable editor labels to the record drawer", async () => {
+    listRecordsMock.mockResolvedValue([
+      {
+        id: "record-1",
+        amountFen: 1860,
+        actorMemberId: "member-1",
+        actorMemberName: "Me",
+        categoryId: "category-expense",
+        categoryName: "Dining",
+        createdByMemberId: "member-1",
+        createdByMemberName: "Me",
+        note: "Lunch",
+        occurredAt: new Date("2026-04-26T00:30:00.000Z"),
+        type: "expense",
+      },
+    ]);
+    transactionFindFirstMock.mockResolvedValue({
+      id: "record-1",
+      amountFen: 1860,
+      actorMemberId: "member-1",
+      categoryId: "category-expense",
+      createdByMember: { memberName: "Me" },
+      note: "Lunch",
+      occurredAt: new Date("2026-04-26T00:30:00.000Z"),
+      type: "EXPENSE",
+    });
+
+    const { default: RecordsPage } = await import("@/app/(app)/records/page");
+
+    renderToStaticMarkup(
+      await RecordsPage({
+        searchParams: Promise.resolve({
+          range: "last-30-days",
+          record: "record-1",
+        }),
+      }),
+    );
+
+    const drawerProps = transactionEditorDrawerMock.mock.calls[0]?.[0];
+
+    expect(drawerProps.record.createdByLabel).toEqual(expect.any(String));
+    expect(drawerProps.record.createdByLabel).toContain("Me");
+    expect(drawerProps.labels.editor).toEqual({
+      deleteConfirm: expect.any(String),
+      deleteRecord: expect.any(String),
+      deleting: expect.any(String),
+      saveChanges: expect.any(String),
+      title: expect.any(String),
+    });
+    expect(drawerProps.labels.editor.createdBy).toBeUndefined();
+  });
+
   it("passes a drill-down bucket window through to the records query", async () => {
     const { default: RecordsPage } = await import("@/app/(app)/records/page");
 
@@ -356,6 +415,83 @@ describe("Home page trend drill-down", () => {
       "/records?range=last-7-days&amp;from=2026-04-24T16%3A00%3A00.000Z&amp;to=2026-04-25T15%3A59%3A59.999Z",
     );
   });
+
+  it("renders the dashboard with localized Chinese labels and category display names", async () => {
+    queryDashboardMock.mockResolvedValue({
+      categories: {
+        items: [
+          {
+            amountFen: 1860,
+            categoryId: "category-expense",
+            categoryName: "Dining",
+            share: 1,
+            transactionCount: 1,
+          },
+        ],
+        totalExpenseFen: 1860,
+      },
+      range: {
+        from: new Date("2026-04-19T16:00:00.000Z"),
+        preset: "last-7-days",
+        to: new Date("2026-04-26T15:59:59.999Z"),
+      },
+      recentTransactions: [
+        {
+          id: "record-1",
+          amountFen: 1860,
+          actorMemberId: "member-1",
+          actorMemberName: "Me",
+          categoryId: "category-expense",
+          categoryName: "Dining",
+          createdByMemberId: "member-1",
+          createdByMemberName: "Me",
+          note: null,
+          occurredAt: new Date("2026-04-26T00:30:00.000Z"),
+          type: "expense",
+        },
+      ],
+      summary: {
+        expenseFen: 1860,
+        incomeFen: 0,
+        netFen: -1860,
+        transactionCount: 1,
+      },
+      trend: {
+        granularity: "day",
+        points: [
+          {
+            bucketEnd: new Date("2026-04-25T15:59:59.999Z"),
+            bucketKey: "2026-04-25",
+            bucketStart: new Date("2026-04-24T16:00:00.000Z"),
+            expenseFen: 1860,
+            incomeFen: 0,
+            label: "Apr 25",
+            netFen: -1860,
+            transactionCount: 1,
+          },
+        ],
+      },
+    });
+
+    const { default: HomePage } = await import("@/app/(app)/home/page");
+    const markup = renderToStaticMarkup(
+      await HomePage({
+        searchParams: Promise.resolve({ range: "last-7-days" }),
+      }),
+    );
+
+    expect(markup).toContain("家庭概览");
+    expect(markup).toContain("查看");
+    expect(markup).toContain("趋势");
+    expect(markup).toContain("1 笔");
+    expect(markup).toContain("4月25日");
+    expect(markup).not.toContain("Apr 25");
+    expect(markup).toContain("支出分类");
+    expect(markup).toContain("餐饮");
+    expect(markup).toContain("近期记录");
+    expect(markup).toContain("无备注");
+    expect(markup).toContain("记账人: Me");
+  });
 });
 
 describe("submitRecordUpdate", () => {
@@ -392,5 +528,52 @@ describe("submitRecordUpdate", () => {
     );
 
     expect(redirectMock).toHaveBeenCalledWith("/records?range=last-30-days&type=expense");
+  });
+
+  it("localizes update validation messages from the submitted locale", async () => {
+    requireAppSessionMock.mockResolvedValue({
+      householdId: "household-1",
+      id: "user-1",
+      memberId: "member-1",
+    });
+    updateTransactionMock.mockRejectedValue(
+      new ZodError([{ code: "custom", message: "Select a category", path: ["categoryId"] }]),
+    );
+
+    const { initialRecordEditorState, submitRecordUpdate } = await import(
+      "@/app/(app)/records/actions"
+    );
+    const formData = new FormData();
+    formData.set("locale", "zh-CN");
+    formData.set("returnTo", "/records?range=last-30-days&record=record-1");
+
+    await expect(submitRecordUpdate(initialRecordEditorState, formData)).resolves.toEqual({
+      status: "error",
+      message: "请选择分类",
+    });
+  });
+});
+
+describe("submitRecordDelete", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    redirectMock.mockClear();
+    requireAppSessionMock.mockReset();
+  });
+
+  it("uses the localized delete fallback for unknown thrown values", async () => {
+    requireAppSessionMock.mockRejectedValue("database unavailable");
+
+    const { initialRecordEditorState, submitRecordDelete } = await import(
+      "@/app/(app)/records/actions"
+    );
+    const formData = new FormData();
+    formData.set("locale", "zh-CN");
+    formData.set("returnTo", "/records?range=last-30-days&record=record-1");
+
+    await expect(submitRecordDelete(initialRecordEditorState, formData)).resolves.toEqual({
+      status: "error",
+      message: "无法删除记录",
+    });
   });
 });
