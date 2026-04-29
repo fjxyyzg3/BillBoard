@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { IosSelect } from "@/components/ios-select";
 
 type CategoryOption = {
   id: string;
@@ -29,6 +30,13 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
   const visibleCategories = categories.filter(
     (category) => !selectedType || category.type === selectedType,
   );
+  const categoryOptions = [
+    { value: "", label: "All categories" },
+    ...visibleCategories.map((category) => ({
+      value: category.id,
+      label: category.name,
+    })),
+  ];
 
   function replaceFilters(nextType: string, nextCategoryId: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -56,8 +64,7 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
     <div className="grid gap-3 sm:grid-cols-2">
       <label className="space-y-2">
         <span className="text-sm font-medium text-[var(--ios-muted)]">Type</span>
-        <select
-          className="ios-field w-full"
+        <IosSelect
           onChange={(event) => {
             const nextType = parseType(event.target.value) ?? "";
             const nextCategoryId =
@@ -72,30 +79,24 @@ export function RecordsFilterBar({ categories }: RecordsFilterBarProps) {
 
             replaceFilters(nextType, nextCategoryId);
           }}
+          options={[
+            { value: "", label: "All types" },
+            { value: "expense", label: "Expense" },
+            { value: "income", label: "Income" },
+          ]}
           value={selectedType ?? ""}
-        >
-          <option value="">All types</option>
-          <option value="expense">Expense</option>
-          <option value="income">Income</option>
-        </select>
+        />
       </label>
 
       <label className="space-y-2">
         <span className="text-sm font-medium text-[var(--ios-muted)]">Category</span>
-        <select
-          className="ios-field w-full"
+        <IosSelect
           onChange={(event) => {
             replaceFilters(selectedType ?? "", event.target.value);
           }}
+          options={categoryOptions}
           value={selectedCategoryId}
-        >
-          <option value="">All categories</option>
-          {visibleCategories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        />
       </label>
     </div>
   );

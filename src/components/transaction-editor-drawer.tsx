@@ -7,6 +7,7 @@ import {
   submitRecordDelete,
   submitRecordUpdate,
 } from "@/app/(app)/records/actions";
+import { IosSelect } from "@/components/ios-select";
 import { formatFen } from "@/lib/money";
 
 type CategoryOption = {
@@ -76,6 +77,14 @@ export function TransactionEditorDrawer({
     initialRecordEditorState,
   );
   const visibleCategories = categories.filter((category) => category.type === selectedType);
+  const categoryOptions = visibleCategories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
+  const householdMemberOptions = householdMembers.map((member) => ({
+    value: member.id,
+    label: member.memberName,
+  }));
   const message = updateState.status === "error" ? updateState.message : deleteState.message;
 
   function handleTypeChange(type: CategoryOption["type"]) {
@@ -150,37 +159,25 @@ export function TransactionEditorDrawer({
 
           <label className="space-y-2">
             <span className="text-sm font-medium text-[var(--ios-text)]">Category</span>
-            <select
-              className="ios-field w-full"
+            <IosSelect
               name="categoryId"
               onChange={(event) => {
                 setSelectedCategoryId(event.target.value);
               }}
+              options={categoryOptions}
               required
               value={selectedCategoryId}
-            >
-              {visibleCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            />
           </label>
 
           <label className="space-y-2">
             <span className="text-sm font-medium text-[var(--ios-text)]">Who</span>
-            <select
-              className="ios-field w-full"
+            <IosSelect
               defaultValue={record.actorMemberId}
               name="actorMemberId"
+              options={householdMemberOptions}
               required
-            >
-              {householdMembers.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.memberName}
-                </option>
-              ))}
-            </select>
+            />
           </label>
 
           <label className="space-y-2">

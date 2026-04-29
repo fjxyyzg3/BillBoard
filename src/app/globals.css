@@ -69,6 +69,91 @@ textarea {
     outline-offset: 2px;
   }
 
+  .ios-select {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+    color: #1d1d1f;
+    display: inline-flex;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    min-height: 2.75rem;
+    min-width: 0;
+    padding: 0 2.6875rem 0 1rem;
+    position: relative;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    width: 100%;
+  }
+
+  .ios-select--pill {
+    border-radius: 999px;
+    min-height: 2.5rem;
+    padding-left: 1.25rem;
+  }
+
+  .ios-select__value {
+    align-items: center;
+    display: inline-flex;
+    height: 1.375rem;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.375rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: none;
+    transform: translateY(-0.5px);
+    white-space: nowrap;
+  }
+
+  .ios-select__icon {
+    color: #1d1d1f;
+    height: 1.375rem;
+    pointer-events: none;
+    position: absolute;
+    right: 0.5625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.375rem;
+    z-index: 1;
+  }
+
+  .ios-select__native {
+    appearance: none;
+    border: 0;
+    border-radius: inherit;
+    cursor: pointer;
+    inset: 0;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    z-index: 2;
+  }
+
+  .ios-select__native:focus {
+    outline: none;
+  }
+
+  .ios-select:focus-within {
+    border-color: var(--ios-blue);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+  }
+
+  .ios-select:has(.ios-select__native:focus-visible) {
+    outline: 3px solid rgba(0, 122, 255, 0.28);
+    outline-offset: 2px;
+  }
+
+  .ios-select:has(.ios-select__native:disabled) {
+    opacity: 0.6;
+  }
+
+  .ios-select:has(.ios-select__native:disabled) .ios-select__native {
+    cursor: not-allowed;
+  }
+
   .ios-amount {
     font-weight: 600;
     font-variant-numeric: tabular-nums;

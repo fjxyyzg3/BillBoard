@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppFilters } from "@/components/app-filters-provider";
+import { IosSelect } from "@/components/ios-select";
 import type { RangePreset } from "@/lib/time-range";
 
 const options: Array<{ value: RangePreset; label: string }> = [
@@ -16,19 +17,14 @@ export function TimeRangeSelector() {
   return (
     <label className="flex min-w-0 items-center gap-2 text-sm text-[var(--ios-muted)]">
       <span className="shrink-0 font-medium">Range</span>
-      <select
-        className="ios-field min-h-10 rounded-full py-2 pr-9"
+      <IosSelect
         onChange={(event) => {
           setRangePreset(event.target.value as RangePreset);
         }}
+        options={options}
         value={rangePreset}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        variant="pill"
+      />
     </label>
   );
 }

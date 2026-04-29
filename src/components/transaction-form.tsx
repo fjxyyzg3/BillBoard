@@ -10,6 +10,7 @@ import {
   CategoryPicker,
   type TransactionCategory,
 } from "@/components/category-picker";
+import { IosSelect } from "@/components/ios-select";
 import { getCurrentShanghaiDateTimeLocal } from "@/lib/transactions/datetime";
 
 type HouseholdMemberOption = {
@@ -133,18 +134,15 @@ export function TransactionForm({
 
       <label className="space-y-2">
         <span className="text-sm font-medium text-[var(--ios-text)]">Who</span>
-        <select
-          className="ios-field w-full"
+        <IosSelect
           defaultValue={currentMemberId}
           name="actorMemberId"
+          options={householdMembers.map((member) => ({
+            value: member.id,
+            label: member.memberName,
+          }))}
           required
-        >
-          {householdMembers.map((member) => (
-            <option key={member.id} value={member.id}>
-              {member.memberName}
-            </option>
-          ))}
-        </select>
+        />
       </label>
 
       <label className="space-y-2">
