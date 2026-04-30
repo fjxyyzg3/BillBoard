@@ -74,7 +74,7 @@ afterAll(async () => {
 });
 
 async function getSeedFixture() {
-  const ownerEmail = process.env.SEED_USER_A_EMAIL ?? "me@example.com";
+  const ownerEmail = process.env.SEED_USER_A_EMAIL ?? "lehary@home.com";
   const actorEmail = process.env.SEED_USER_B_EMAIL ?? ownerEmail;
 
   const [ownerMember, actorMember, expenseCategory, incomeCategory] = await Promise.all([

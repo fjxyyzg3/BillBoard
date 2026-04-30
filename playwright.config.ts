@@ -12,6 +12,8 @@ try {
 loadEnvFile(".env.example");
 
 export default defineConfig({
+  globalSetup: "./tests/e2e/global-setup.ts",
+  globalTeardown: "./tests/e2e/global-teardown.ts",
   testDir: "./tests/e2e",
   use: {
     baseURL: "http://127.0.0.1:3000",

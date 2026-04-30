@@ -27,10 +27,10 @@ services:
       SEED_HOUSEHOLD_NAME: ${SEED_HOUSEHOLD_NAME:-Household}
       SEED_USER_A_EMAIL: ${SEED_USER_A_EMAIL:-}
       SEED_USER_A_PASSWORD: ${SEED_USER_A_PASSWORD:-}
-      SEED_USER_A_NAME: ${SEED_USER_A_NAME:-Me}
+      SEED_USER_A_NAME: ${SEED_USER_A_NAME:-老公}
       SEED_USER_B_EMAIL: ${SEED_USER_B_EMAIL:-}
       SEED_USER_B_PASSWORD: ${SEED_USER_B_PASSWORD:-}
-      SEED_USER_B_NAME: ${SEED_USER_B_NAME:-Spouse}
+      SEED_USER_B_NAME: ${SEED_USER_B_NAME:-老婆}
     profiles:
       - bootstrap
     restart: "no"

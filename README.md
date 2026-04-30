@@ -47,8 +47,8 @@ npm run dev
 
 The default seed logins are defined in `.env.example`:
 
-- Email: `lehary@home.com`
-- Email: `noma@home.com`
+- 老公: `lehary@home.com`
+- 老婆: `noma@home.com`
 - Password: `10212286`
 
 ## Verification
@@ -62,7 +62,7 @@ npm run test:integration
 npm run test:e2e
 ```
 
-Integration and E2E tests need PostgreSQL plus seed data. Playwright uses `http://127.0.0.1:3000` and starts `npm run dev` automatically.
+Integration and E2E tests need PostgreSQL plus seed data. Playwright uses `http://127.0.0.1:3000` and starts `npm run dev` automatically. E2E runs clear the `Transaction` table before and after the suite, so point them only at a test database.
 
 If Podman on Windows reports the database container is running but Prisma cannot reach `127.0.0.1:5432`, restart the Podman machine or provide a reachable `DATABASE_URL` for the test command.
 
