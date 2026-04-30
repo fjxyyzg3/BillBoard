@@ -38,8 +38,8 @@ test("users can create an expense and confirm what was saved", async ({ page }) 
   expect(addUrl.searchParams.get("range")).toBe("last-30-days");
   expect(addUrl.searchParams.get("type")).toBe("expense");
   await expect(page.getByText("支出：12.34")).toBeVisible();
-  await expect(page.getByRole("link", { name: "再记一笔" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "返回首页" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "再记一笔" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "返回首页" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "记录" }).click();
   await expect(page).toHaveURL(/\/records/);

@@ -1,4 +1,3 @@
-import { buildAppHref } from "@/lib/app-navigation";
 import { TransactionForm } from "@/components/transaction-form";
 import { requireAppSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -72,11 +71,6 @@ export default async function AddPage({ searchParams }: AddPageProps) {
   const messages = getMessages(locale);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const sharedParams = buildSharedParams(resolvedSearchParams);
-  const sharedParamReader = {
-    get(key: string) {
-      return key === "perspective" ? sharedParams.perspective ?? null : sharedParams.range ?? null;
-    },
-  };
   const [categories, householdMembers] = await Promise.all([
     db.category.findMany({
       where: { isActive: true },
@@ -107,10 +101,8 @@ export default async function AddPage({ searchParams }: AddPageProps) {
         }))}
         currentMemberId={user.memberId}
         householdMembers={householdMembers}
-        homeHref={buildAppHref("/home", sharedParamReader)}
         labels={{ add: { save: messages.add.save }, common: messages.common }}
         locale={locale}
-        nextAddHref={buildAppHref("/add", sharedParamReader)}
         sharedFilters={sharedParams}
         successDetail={readSuccessDetail(resolvedSearchParams, locale, messages)}
         successMessage={resolvedSearchParams?.created === "1" ? messages.add.successMessage : undefined}

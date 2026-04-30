@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   submitTransaction,
   type CreateTransactionActionState,
@@ -21,7 +20,6 @@ type HouseholdMemberOption = {
 
 type TransactionFormProps = {
   categories: TransactionCategory[];
-  homeHref: string;
   householdMembers: HouseholdMemberOption[];
   currentMemberId: string;
   labels: {
@@ -29,7 +27,6 @@ type TransactionFormProps = {
     common: Messages["common"];
   };
   locale: Locale;
-  nextAddHref: string;
   sharedFilters: {
     perspective?: string;
     range?: string;
@@ -49,14 +46,39 @@ function getFirstCategoryId(
   return categories.find((category) => category.type === type)?.id ?? "";
 }
 
+function SuccessToast({ detail, message }: { detail?: string; message: string }) {
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setIsVisible(false);
+    }, 2500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <div
+      aria-live="polite"
+      className="fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+1rem)] z-50 mx-auto max-w-md rounded-2xl border border-emerald-200 bg-white/95 px-4 py-3 text-sm text-emerald-800 shadow-[0_12px_32px_rgba(15,23,42,0.16)] backdrop-blur"
+      role="status"
+    >
+      <p className="font-medium">{message}</p>
+      {detail ? <p>{detail}</p> : null}
+    </div>
+  );
+}
+
 export function TransactionForm({
   categories,
-  homeHref,
   householdMembers,
   currentMemberId,
   labels,
   locale,
-  nextAddHref,
   sharedFilters,
   successDetail,
   successMessage,
@@ -177,26 +199,11 @@ export function TransactionForm({
       </label>
 
       {successMessage && state.status === "idle" ? (
-        <div className="space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-          <div className="space-y-1">
-            <p className="text-sm text-emerald-700">{successMessage}</p>
-            {successDetail ? <p className="text-sm text-emerald-700">{successDetail}</p> : null}
-          </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Link
-              className="rounded-xl border border-stone-300 bg-white px-4 py-3 text-center text-sm font-medium text-stone-700 transition hover:border-stone-500 hover:text-stone-900"
-              href={nextAddHref}
-            >
-              {labels.common.addAnother}
-            </Link>
-            <Link
-              className="rounded-xl bg-stone-900 px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-stone-700"
-              href={homeHref}
-            >
-              {labels.common.returnHome}
-            </Link>
-          </div>
-        </div>
+        <SuccessToast
+          detail={successDetail}
+          key={`${successMessage}-${successDetail ?? ""}`}
+          message={successMessage}
+        />
       ) : null}
       {state.status === "error" ? <p className="text-sm text-rose-700">{state.message}</p> : null}
 

@@ -36,8 +36,8 @@ test("users can create an income and confirm what was saved", async ({ page }) =
   expect(addUrl.searchParams.get("created")).toBe("1");
   expect(addUrl.searchParams.get("type")).toBe("income");
   await expect(page.getByText("收入：4,321.09")).toBeVisible();
-  await expect(page.getByRole("link", { name: "再记一笔" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "返回首页" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "再记一笔" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "返回首页" })).toHaveCount(0);
 
   await page.getByRole("link", { name: "记录" }).click();
   await expect(page).toHaveURL(/\/records/);

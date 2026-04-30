@@ -234,15 +234,18 @@ describe("transaction form follow-up UI requirements", () => {
     expect(source).toContain("autoFocus");
   });
 
-  it("offers add-another and return-home actions after a successful save", () => {
+  it("uses a lightweight toast without follow-up action links after a successful save", () => {
     const source = readFileSync(
       path.resolve(process.cwd(), "src/components/transaction-form.tsx"),
       "utf8",
     );
 
-    expect(source).toContain("labels.common.addAnother");
-    expect(source).toContain("href={nextAddHref}");
-    expect(source).toContain("labels.common.returnHome");
-    expect(source).toContain("href={homeHref}");
+    expect(source).toContain("function SuccessToast");
+    expect(source).toContain("window.setTimeout");
+    expect(source).toContain("2500");
+    expect(source).not.toContain("labels.common.addAnother");
+    expect(source).not.toContain("href={nextAddHref}");
+    expect(source).not.toContain("labels.common.returnHome");
+    expect(source).not.toContain("href={homeHref}");
   });
 });
