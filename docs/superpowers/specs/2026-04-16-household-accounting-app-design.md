@@ -198,6 +198,8 @@ Default expense categories:
 - Daily Use
 - Home
 - Medical
+- Childcare
+- Parent Care
 - Entertainment
 - Social
 - Travel

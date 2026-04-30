@@ -7,6 +7,7 @@
 - 设计目标：`BillBoard` 是两人家庭记账应用，核心体验是快速记录、按家庭成员视角查看、按时间范围复盘。所有改动必须服务这些目标，避免新增无关页面、复杂配置或泛化场景。
 - 产品风格：保持现有移动优先、清爽直接、英文 UI 文案的应用形态。新增交互优先减少记账阻力和查看成本，不做营销化、装饰化设计。
 - 业务约束：金额以整数分 `amountFen` 处理；交易按 `Asia/Shanghai` 做日期和范围计算；有效记录查询必须排除软删除数据；家庭数据访问必须基于当前 session 的 `householdId` 和 `memberId` 校验。
+- 分类约束：默认分类由 `prisma/seed.ts` 维护；内置分类名在数据库中保存英文，中文 UI 仅通过 `src/lib/i18n.ts` 的 `getCategoryDisplayName` 做展示映射。新增内置分类时必须同步 seed、中文映射和相关测试。
 - 验证方法：按改动范围选择最小充分验证。通用代码先跑 `npm run lint`；纯函数和组件逻辑跑 `npm run test:unit`；涉及 Prisma、server actions、认证或查询逻辑跑 `npm run test:integration`；涉及登录、导航、表单提交或端到端用户流程跑 `npm run test:e2e`。
 - 测试环境：集成测试和 e2e 依赖 PostgreSQL 与 seed 数据；本地数据库优先用 `.\ops\podman\compose.ps1 -f podman-compose.dev.yml up -d db`，Linux/Bash 环境用 `bash ops/podman/compose.sh -f podman-compose.dev.yml up -d db`，seed 用 `npm run prisma:seed`。Playwright 默认使用 `http://127.0.0.1:3000` 并启动 `npm run dev`。
 - 启动服务测试：当用户要求启动服务进行测试时，服务必须使用当时机器的局域网 IP 绑定，确保局域网环境可以访问；如框架支持同时指定 host，优先显式传入对应 host 参数。

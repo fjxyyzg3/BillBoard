@@ -16,6 +16,7 @@ BillBoard is a mobile-first household accounting app for two people. The core wo
 - Calculate transaction dates and ranges in `Asia/Shanghai`.
 - Exclude soft-deleted transactions from active lists and reports.
 - Scope household data by the current session's `householdId` and `memberId`.
+- Default categories are seeded from `prisma/seed.ts`; built-in category names are stored in English and translated only for UI display.
 
 ## Local Setup
 
