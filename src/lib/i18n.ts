@@ -8,6 +8,7 @@ export type ActionErrorKind = "save" | "update" | "delete";
 const categoryDisplayNames = {
   "zh-CN": {
     Bonus: "奖金",
+    Childcare: "育儿",
     Dining: "餐饮",
     Entertainment: "娱乐",
     Groceries: "买菜",
@@ -15,6 +16,7 @@ const categoryDisplayNames = {
     Investment: "投资",
     Medical: "医疗",
     Other: "其他",
+    "Parent Care": "孝心",
     Refund: "退款",
     Reimbursement: "报销",
     Salary: "工资",

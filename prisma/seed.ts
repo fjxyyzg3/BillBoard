@@ -10,6 +10,8 @@ const expenseCategories = [
   "Daily Use",
   "Home",
   "Medical",
+  "Childcare",
+  "Parent Care",
   "Entertainment",
   "Social",
   "Travel",

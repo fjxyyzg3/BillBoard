@@ -28,8 +28,11 @@ describe("i18n helpers", () => {
   it("maps built-in category names only at display time", () => {
     expect(getCategoryDisplayName("Groceries", "zh-CN")).toBe("买菜");
     expect(getCategoryDisplayName("Salary", "zh-CN")).toBe("工资");
+    expect(getCategoryDisplayName("Childcare", "zh-CN")).toBe("育儿");
+    expect(getCategoryDisplayName("Parent Care", "zh-CN")).toBe("孝心");
     expect(getCategoryDisplayName("Custom Family", "zh-CN")).toBe("Custom Family");
     expect(getCategoryDisplayName("Groceries", "en-US")).toBe("Groceries");
+    expect(getCategoryDisplayName("Childcare", "en-US")).toBe("Childcare");
   });
 
   it("formats numbers and dates with the selected locale", () => {
