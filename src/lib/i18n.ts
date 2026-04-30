@@ -78,8 +78,8 @@ export const messages = {
     },
     perspective: {
       household: "家庭",
-      me: "我",
-      spouse: "伴侣",
+      me: "老公",
+      spouse: "老婆",
     },
     login: {
       eyebrow: "BillBoard",

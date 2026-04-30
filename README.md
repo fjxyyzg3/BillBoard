@@ -45,10 +45,11 @@ Run the app:
 npm run dev
 ```
 
-The default seed login is defined in `.env.example`:
+The default seed logins are defined in `.env.example`:
 
-- Email: `me@example.com`
-- Password: `change-me`
+- Email: `lehary@home.com`
+- Email: `noma@home.com`
+- Password: `10212286`
 
 ## Verification
 

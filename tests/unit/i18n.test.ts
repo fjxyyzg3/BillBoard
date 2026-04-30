@@ -21,6 +21,8 @@ describe("i18n helpers", () => {
   it("returns UI messages for both supported locales", () => {
     expect(getMessages("zh-CN").nav.home).toBe("首页");
     expect(getMessages("zh-CN").login.submit).toBe("登录");
+    expect(getMessages("zh-CN").perspective.me).toBe("老公");
+    expect(getMessages("zh-CN").perspective.spouse).toBe("老婆");
     expect(getMessages("en-US").nav.home).toBe("Home");
     expect(getMessages("en-US").login.submit).toBe("Log in");
   });

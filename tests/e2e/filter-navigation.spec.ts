@@ -1,9 +1,19 @@
 import { expect, test } from "@playwright/test";
 
+function requireEnv(name: string) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+
+  return value;
+}
+
 test("shared filters persist while navigating between app pages", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("邮箱").fill("spouse@example.com");
-  await page.getByLabel("密码").fill("change-me");
+  await page.getByLabel("邮箱").fill(requireEnv("SEED_USER_B_EMAIL"));
+  await page.getByLabel("密码").fill(requireEnv("SEED_USER_B_PASSWORD"));
   await page.getByRole("button", { name: "登录" }).click();
 
   await expect(page).toHaveURL(/\/home$/);

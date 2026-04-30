@@ -45,14 +45,14 @@ async function main() {
     {
       email: requireEnv("SEED_USER_A_EMAIL"),
       password: requireEnv("SEED_USER_A_PASSWORD"),
-      displayName: process.env.SEED_USER_A_NAME ?? "Me",
-      memberName: process.env.SEED_USER_A_NAME ?? "Me",
+      displayName: process.env.SEED_USER_A_NAME ?? "老公",
+      memberName: process.env.SEED_USER_A_NAME ?? "老公",
     },
     {
       email: requireEnv("SEED_USER_B_EMAIL"),
       password: requireEnv("SEED_USER_B_PASSWORD"),
-      displayName: process.env.SEED_USER_B_NAME ?? "Spouse",
-      memberName: process.env.SEED_USER_B_NAME ?? "Spouse",
+      displayName: process.env.SEED_USER_B_NAME ?? "老婆",
+      memberName: process.env.SEED_USER_B_NAME ?? "老婆",
     },
   ];
 
