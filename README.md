@@ -32,6 +32,20 @@ Start the development PostgreSQL database:
 .\ops\podman\compose.ps1 -f podman-compose.dev.yml up -d db
 ```
 
+On Windows, Podman may print `Executing external compose provider "podman-compose"`; this is informational, not an error. If the database container is running but Prisma cannot reach `127.0.0.1:5432`, keep an SSH tunnel open in a separate PowerShell:
+
+```powershell
+$dbIp = podman inspect billboard_db_1 --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
+$machine = podman machine inspect podman-machine-default | ConvertFrom-Json
+ssh.exe -i $machine.SSHConfig.IdentityPath -p $machine.SSHConfig.Port -N -L "127.0.0.1:15432:${dbIp}:5432" "$($machine.SSHConfig.RemoteUsername)@127.0.0.1"
+```
+
+Then run Prisma and Next.js commands with the tunnel URL:
+
+```powershell
+$env:DATABASE_URL = "postgresql://billboard:billboard@127.0.0.1:15432/billboard?schema=public"
+```
+
 Prepare the schema and seed data:
 
 ```powershell
@@ -43,6 +57,12 @@ Run the app:
 
 ```powershell
 npm run dev
+```
+
+For LAN device testing, bind the dev server to the machine's LAN IP:
+
+```powershell
+npm run dev -- -H <LAN_IP> -p 3000
 ```
 
 The default seed logins are defined in `.env.example`:
@@ -64,7 +84,7 @@ npm run test:e2e
 
 Integration and E2E tests need PostgreSQL plus seed data. Playwright uses `http://127.0.0.1:3000` and starts `npm run dev` automatically. E2E runs clear the `Transaction` table before and after the suite, so point them only at a test database.
 
-If Podman on Windows reports the database container is running but Prisma cannot reach `127.0.0.1:5432`, restart the Podman machine or provide a reachable `DATABASE_URL` for the test command.
+If Podman on Windows reports the database container is running but Prisma cannot reach `127.0.0.1:5432`, restart the Podman machine or use the SSH tunnel from Local Setup and point `DATABASE_URL` at `127.0.0.1:15432`.
 
 ## Operations Docs
 

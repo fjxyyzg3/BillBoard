@@ -11,6 +11,7 @@
 - 内置账号：默认两人家庭账号由 `.env.example`、`prisma/seed.ts` 和 `podman-compose.yml` 的 bootstrap 环境共同维护；账号 A 为 `lehary@home.com` / `老公`，账号 B 为 `noma@home.com` / `老婆`，默认密码为 `10212286`。修改内置账号时必须同步这些位置和 e2e 登录测试。
 - 验证方法：按改动范围选择最小充分验证。通用代码先跑 `npm run lint`；纯函数和组件逻辑跑 `npm run test:unit`；涉及 Prisma、server actions、认证或查询逻辑跑 `npm run test:integration`；涉及登录、导航、表单提交或端到端用户流程跑 `npm run test:e2e`。
 - 测试环境：集成测试和 e2e 依赖 PostgreSQL 与 seed 数据；本地数据库优先用 `.\ops\podman\compose.ps1 -f podman-compose.dev.yml up -d db`，Linux/Bash 环境用 `bash ops/podman/compose.sh -f podman-compose.dev.yml up -d db`，seed 用 `npm run prisma:seed`。Playwright 默认使用 `http://127.0.0.1:3000` 并启动 `npm run dev`；e2e 会在测试开始前和结束后清空 `Transaction` 表，只能连接测试数据库运行。
+- Windows Podman 排障：`Executing external compose provider "podman-compose"` 是信息提示，不是错误；若容器内 PostgreSQL 健康但 Windows 侧 Prisma 不能访问 `127.0.0.1:5432`，优先通过 `podman machine inspect` 的 SSH 参数建立 `127.0.0.1:15432 -> <db-container-ip>:5432` 隧道，并将 `DATABASE_URL` 指向 `127.0.0.1:15432` 后再运行 migrate、seed 或 dev 服务。
 - 启动服务测试：当用户要求启动服务进行测试时，服务必须使用当时机器的局域网 IP 绑定，确保局域网环境可以访问；如框架支持同时指定 host，优先显式传入对应 host 参数。
 
 ## 1. 实现前先思考
