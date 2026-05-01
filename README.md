@@ -62,8 +62,16 @@ npm run dev
 For LAN device testing, bind the dev server to the machine's LAN IP:
 
 ```powershell
-npm run dev -- -H <LAN_IP> -p 3000
+npm run dev -- --hostname <LAN_IP> --port 3000
 ```
+
+If a tunnel such as frpc maps `127.0.0.1:3000` to an external IP and port, bind Next.js to all local interfaces so both loopback and LAN access work:
+
+```powershell
+npm run dev -- --hostname 0.0.0.0 --port 3000
+```
+
+When using an external IP or domain with `next dev`, add that host to `allowedDevOrigins` in `next.config.ts` and restart the dev server. Otherwise Next.js can block development resources, leaving the login form without client-side `signIn` handling. The current temporary frp test host `115.29.200.7` is already allowed.
 
 The default seed logins are defined in `.env.example`:
 

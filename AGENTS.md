@@ -5,14 +5,14 @@
 ## 0. 当前仓库注意事项
 
 - 设计目标：`BillBoard` 是两人家庭记账应用，核心体验是快速记录、按家庭成员视角查看、按时间范围复盘。所有改动必须服务这些目标，避免新增无关页面、复杂配置或泛化场景。
-- 产品风格：保持现有移动优先、清爽直接、英文 UI 文案的应用形态。新增交互优先减少记账阻力和查看成本，不做营销化、装饰化设计。
+- 产品风格：保持现有移动优先、清爽直接、默认中文并支持英文切换的应用形态。新增 UI 文案必须同步 `src/lib/i18n.ts` 的双语文案；新增交互优先减少记账阻力和查看成本，不做营销化、装饰化设计。
 - 业务约束：金额以整数分 `amountFen` 处理；交易按 `Asia/Shanghai` 做日期和范围计算；有效记录查询必须排除软删除数据；家庭数据访问必须基于当前 session 的 `householdId` 和 `memberId` 校验。
 - 分类约束：默认分类由 `prisma/seed.ts` 维护；内置分类名在数据库中保存英文，中文 UI 仅通过 `src/lib/i18n.ts` 的 `getCategoryDisplayName` 做展示映射。新增内置分类时必须同步 seed、中文映射和相关测试。
 - 内置账号：默认两人家庭账号由 `.env.example`、`prisma/seed.ts` 和 `podman-compose.yml` 的 bootstrap 环境共同维护；账号 A 为 `lehary@home.com` / `老公`，账号 B 为 `noma@home.com` / `老婆`，默认密码为 `10212286`。修改内置账号时必须同步这些位置和 e2e 登录测试。
 - 验证方法：按改动范围选择最小充分验证。通用代码先跑 `npm run lint`；纯函数和组件逻辑跑 `npm run test:unit`；涉及 Prisma、server actions、认证或查询逻辑跑 `npm run test:integration`；涉及登录、导航、表单提交或端到端用户流程跑 `npm run test:e2e`。
 - 测试环境：集成测试和 e2e 依赖 PostgreSQL 与 seed 数据；本地数据库优先用 `.\ops\podman\compose.ps1 -f podman-compose.dev.yml up -d db`，Linux/Bash 环境用 `bash ops/podman/compose.sh -f podman-compose.dev.yml up -d db`，seed 用 `npm run prisma:seed`。Playwright 默认使用 `http://127.0.0.1:3000` 并启动 `npm run dev`；e2e 会在测试开始前和结束后清空 `Transaction` 表，只能连接测试数据库运行。
 - Windows Podman 排障：`Executing external compose provider "podman-compose"` 是信息提示，不是错误；若容器内 PostgreSQL 健康但 Windows 侧 Prisma 不能访问 `127.0.0.1:5432`，优先通过 `podman machine inspect` 的 SSH 参数建立 `127.0.0.1:15432 -> <db-container-ip>:5432` 隧道，并将 `DATABASE_URL` 指向 `127.0.0.1:15432` 后再运行 migrate、seed 或 dev 服务。
-- 启动服务测试：当用户要求启动服务进行测试时，服务必须使用当时机器的局域网 IP 绑定，确保局域网环境可以访问；如框架支持同时指定 host，优先显式传入对应 host 参数。
+- 启动服务测试：当用户要求启动服务进行测试时，按访问方式选择 host。局域网直连优先绑定当时机器的局域网 IP；若 frpc 或隧道配置指向 `127.0.0.1:3000`，必须绑定 `0.0.0.0` 或确认 `127.0.0.1:3000` 正在监听。通过外网 IP 或域名访问 Next dev 时，必须确认 `next.config.ts` 的 `allowedDevOrigins` 包含该 host，否则客户端 JS/HMR 可能被拦截，登录表单会退化为普通 GET 提交。
 
 ## 1. 实现前先思考
 
