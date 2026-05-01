@@ -41,7 +41,8 @@ test("users can create an income and confirm what was saved", async ({ page }) =
 
   await page.getByRole("link", { name: "记录" }).click();
   await expect(page).toHaveURL(/\/records/);
-  const createdRecord = page.getByRole("link", { name: new RegExp(note) });
+  const createdRecord = page.getByRole("link", { name: /\+4321\.09.*工资.*老公/ });
   await expect(createdRecord).toBeVisible();
   await expect(createdRecord).toContainText("+4321.09");
+  await expect(page.getByText(note)).toHaveCount(0);
 });

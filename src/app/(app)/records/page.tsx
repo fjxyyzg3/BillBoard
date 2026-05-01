@@ -48,18 +48,6 @@ function buildRecordsHref(params: URLSearchParams) {
   return query ? `/records?${query}` : "/records";
 }
 
-function getNoteExcerpt(note: string | null, noNoteLabel: string) {
-  if (!note) {
-    return noNoteLabel;
-  }
-
-  if (note.length <= 72) {
-    return note;
-  }
-
-  return `${note.slice(0, 69)}...`;
-}
-
 function parseTypeFilter(value: string | null) {
   if (value === "income" || value === "expense") {
     return value;
@@ -201,50 +189,28 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
               return (
                 <li key={record.id}>
                   <Link
-                    className="block px-4 py-4 transition hover:bg-black/[0.03] sm:px-5"
+                    className="flex min-w-0 items-center gap-3 px-4 py-2.5 transition hover:bg-black/[0.03] sm:px-5"
                     href={buildRecordsHref(rowParams)}
                     scroll={false}
                   >
-                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={`ios-amount text-lg ${
-                              record.type === "income" ? "text-[var(--ios-green)]" : "text-[var(--ios-text)]"
-                            }`}
-                          >
-                            {record.type === "income" ? "+" : "-"}
-                            {formatFen(record.amountFen)}
-                          </span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              record.type === "income"
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-stone-100 text-stone-700"
-                            }`}
-                          >
-                            {record.type === "income" ? messages.common.income : messages.common.expense}
-                          </span>
-                          <span className="text-sm text-stone-600">
-                            {getCategoryDisplayName(record.categoryName, locale)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-stone-600">
-                          {getNoteExcerpt(record.note, messages.common.noNote)}
-                        </p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
-                          <span>
-                            {messages.common.actor}: {record.actorMemberName}
-                          </span>
-                          <span>
-                            {messages.common.createdBy}: {record.createdByMemberName}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-sm text-stone-500">
-                        {formatLocaleDateTime(record.occurredAt, locale)}
-                      </div>
-                    </div>
+                    <span
+                      className={`ios-amount shrink-0 whitespace-nowrap text-base ${
+                        record.type === "income" ? "text-[var(--ios-green)]" : "text-[var(--ios-text)]"
+                      }`}
+                    >
+                      {record.type === "income" ? "+" : "-"}
+                      {formatFen(record.amountFen)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm text-stone-600">
+                      <span className="font-medium text-stone-700">
+                        {getCategoryDisplayName(record.categoryName, locale)}
+                      </span>
+                      <span className="text-stone-400"> · </span>
+                      <span>{record.actorMemberName}</span>
+                    </span>
+                    <span className="shrink-0 whitespace-nowrap text-xs text-stone-500 sm:text-sm">
+                      {formatLocaleDateTime(record.occurredAt, locale)}
+                    </span>
                   </Link>
                 </li>
               );

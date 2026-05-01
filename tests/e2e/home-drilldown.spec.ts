@@ -39,7 +39,8 @@ test("home expense drill-down preserves shared filters", async ({ page }) => {
   await page.getByRole("link", { name: /查看当前视图的支出记录/ }).click();
 
   await expect(page).toHaveURL(/\/records\?/);
-  await expect(page.getByText(note)).toBeVisible();
+  await expect(page.getByRole("link", { name: /-45\.67.*买菜.*老婆/ })).toBeVisible();
+  await expect(page.getByText(note)).toHaveCount(0);
 
   const recordsUrl = new URL(page.url());
   expect(recordsUrl.pathname).toBe("/records");

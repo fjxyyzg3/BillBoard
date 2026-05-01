@@ -342,6 +342,40 @@ describe("Records page", () => {
     expect(drawerProps.labels.editor.createdBy).toBeUndefined();
   });
 
+  it("renders record rows with only compact summary fields", async () => {
+    listRecordsMock.mockResolvedValue([
+      {
+        id: "record-1",
+        amountFen: 1860,
+        actorMemberId: "member-1",
+        actorMemberName: "老公",
+        categoryId: "category-expense",
+        categoryName: "Dining",
+        createdByMemberId: "member-2",
+        createdByMemberName: "老婆",
+        note: "Lunch note should stay in details",
+        occurredAt: new Date("2026-04-26T00:30:00.000Z"),
+        type: "expense",
+      },
+    ]);
+
+    const { default: RecordsPage } = await import("@/app/(app)/records/page");
+    const markup = renderToStaticMarkup(
+      await RecordsPage({
+        searchParams: Promise.resolve({ range: "last-30-days" }),
+      }),
+    );
+
+    expect(markup).toContain("-18.60");
+    expect(markup).toContain("餐饮");
+    expect(markup).toContain("老公");
+    expect(markup).toContain("4月26日");
+    expect(markup).not.toContain("Lunch note should stay in details");
+    expect(markup).not.toContain("支出");
+    expect(markup).not.toContain("创建人");
+    expect(markup).not.toContain("老婆");
+  });
+
   it("passes a drill-down bucket window through to the records query", async () => {
     const { default: RecordsPage } = await import("@/app/(app)/records/page");
 

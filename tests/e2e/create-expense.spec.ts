@@ -45,7 +45,8 @@ test("users can create an expense and confirm what was saved", async ({ page }) 
   await expect(page).toHaveURL(/\/records/);
   await expect(page).toHaveURL(/perspective=spouse/);
   await expect(page).toHaveURL(/range=last-30-days/);
-  const createdRecord = page.getByRole("link", { name: new RegExp(note) });
+  const createdRecord = page.getByRole("link", { name: /-12\.34.*买菜.*老婆/ });
   await expect(createdRecord).toBeVisible();
   await expect(createdRecord).toContainText("-12.34");
+  await expect(page.getByText(note)).toHaveCount(0);
 });
