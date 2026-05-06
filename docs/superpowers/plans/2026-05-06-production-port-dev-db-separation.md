@@ -2,6 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Execution Status:** Completed in `v0.11.0` (commit `fd0055f`) and pushed to `master`.
+
 **Goal:** Make production directly reachable on host port `3000`, move the default dev server to `2500`, and separate dev and production database defaults.
 
 **Architecture:** Keep production container internals on `3000`, add a host `3000` mapping to the production `web` service, and preserve the existing `proxy` service. Move local dev and Playwright to `2500`; use `billboard_dev` as the default local development database while production compose keeps `billboard`.

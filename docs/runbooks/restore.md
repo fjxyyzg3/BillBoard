@@ -6,7 +6,7 @@ Use this runbook to recover BillBoard onto a new or rebuilt machine.
 
 - Podman and `podman-compose` are installed.
 - The repository contents are available on the target machine.
-- Production environment values are restored, especially `AUTH_SECRET`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `APP_DOMAIN`.
+- Production environment values are restored, especially `AUTH_SECRET`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `APP_DOMAIN`, and optional `APP_PORT`.
 - A PostgreSQL dump created by `bash ops/backup/pg_dump.sh` is available locally.
 
 ## Restore Steps
@@ -14,9 +14,10 @@ Use this runbook to recover BillBoard onto a new or rebuilt machine.
 1. Copy the production environment file or export the required production variables before starting the stack.
 2. Start the database service first: `bash ops/podman/compose.sh -f podman-compose.yml up -d db`
 3. Wait for PostgreSQL to become healthy: `bash ops/podman/compose.sh -f podman-compose.yml ps`
-4. Restore the latest dump: `bash ops/backup/restore-from-dump.sh /path/to/billboard-YYYYMMDD-HHMMSS.dump`
-5. Start only the public app services: `bash ops/podman/compose.sh -f podman-compose.yml up -d web proxy`
-6. Validate the app at the public hostname or local proxy URL.
+4. Restore the selected recovery dump: `bash ops/backup/restore-from-dump.sh /path/to/billboard-YYYYMMDD-HHMMSS.dump`
+5. Start the direct app service: `bash ops/podman/compose.sh -f podman-compose.yml up -d web`
+6. If using HTTPS/domain access, start the proxy too: `bash ops/podman/compose.sh -f podman-compose.yml up -d web proxy`
+7. Validate the app at `http://<host>:${APP_PORT:-3000}` or the public proxy hostname.
 
 ## Validation Checklist
 

@@ -2,6 +2,8 @@
 
 日期：2026-05-04
 
+更新说明：2026-05-06 的 `v0.11.0` 改动已让生产 `web` 服务默认暴露 `http://<host>:3000`，同时保留本设计中的 `proxy` / Caddy `80/443 -> web:3000` 域名入口。当前运维步骤以 `README.md` 和 `docs/runbooks/` 为准；本文保留为家庭主机 + ECS + frp HTTPS 入口的历史设计记录。
+
 ## 1. 背景与目标
 
 本设计定义 BillBoard 的正式部署方案。目标是让两人家庭记账服务可以通过公网域名稳定访问，同时把账本应用和 PostgreSQL 数据库保留在家里机器上，避免把家庭财务数据直接部署到云服务器。
@@ -66,7 +68,7 @@
 
 缺点：
 
-- 当前生产 Compose 没有把 `web:3000` 设计成公网入口。
+- 2026-05-04 设计时的生产 Compose 尚未把 `web:3000` 设计成公网入口；2026-05-06 起该能力已由 `APP_PORT` 直连入口补上。
 - 需要新增隧道专用 override 或调整生产部署结构。
 - 家里与 ECS 之间通常是隧道内 HTTP，边界比方案 3.1 更绕。
 
@@ -140,7 +142,7 @@ TLS：
 - ECS 公网放行 `80/tcp` 和 `443/tcp`。
 - ECS 公网或受限来源放行 frp 控制端口，例如 `7000/tcp`。
 - 家里机器本地监听 `80/tcp` 和 `443/tcp`，由 Caddy 使用。
-- 不暴露 `3000/tcp` 和 `5432/tcp` 到公网。
+- 在本 HTTPS/frp 域名入口方案中，不暴露 `3000/tcp` 和 `5432/tcp` 到公网；需要直连生产端口时按 2026-05-06 的 `APP_PORT` 方案单独发布 `3000/tcp`。
 
 ## 6. 环境变量与密钥
 
@@ -211,7 +213,7 @@ bash ops/backup/restore-from-dump.sh /path/to/billboard-YYYYMMDD-HHMMSS.dump
 - 只暴露域名的 `80` 和 `443`。
 - frp 控制端口必须使用强 token，并尽量通过安全组限制来源。
 - 不暴露 PostgreSQL。
-- 不直接暴露 Next.js `3000`。
+- 在本 HTTPS/frp 域名入口方案中，不直接暴露 Next.js `3000`；需要直连生产端口时按 2026-05-06 的 `APP_PORT` 方案执行。
 
 应用安全：
 
@@ -262,7 +264,7 @@ bash ops/backup/restore-from-dump.sh /path/to/billboard-YYYYMMDD-HHMMSS.dump
 回滚方式：
 
 - 应用容器更新失败时，保留数据库 volume，回退到上一版代码后重新构建并启动 `web`、`proxy`。
-- 数据异常时，停止 `web`，按恢复文档从最近的 dump 恢复。
+- 数据异常时，停止 `web`，按恢复文档从选定恢复点的 dump 恢复。
 - frp 入口异常时，先关闭公网入口，保留家里机器内部服务和数据。
 
 ## 12. 成功标准
