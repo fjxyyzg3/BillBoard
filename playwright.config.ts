@@ -16,12 +16,12 @@ export default defineConfig({
   globalTeardown: "./tests/e2e/global-teardown.ts",
   testDir: "./tests/e2e",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "http://127.0.0.1:2500",
     trace: "on-first-retry",
   },
   webServer: {
     command: "npm run dev",
-    port: 3000,
+    port: 2500,
     reuseExistingServer: !process.env.CI,
   },
 });

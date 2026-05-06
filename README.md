@@ -32,10 +32,12 @@ Start the development PostgreSQL database:
 .\ops\podman\compose.ps1 -f podman-compose.dev.yml up -d db
 ```
 
+The development compose project is named `billboard-dev`; production compose uses `billboard`.
+
 On Windows, Podman may print `Executing external compose provider "podman-compose"`; this is informational, not an error. If the database container is running but Prisma cannot reach `127.0.0.1:5432`, keep an SSH tunnel open in a separate PowerShell:
 
 ```powershell
-$dbIp = podman inspect billboard_db_1 --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
+$dbIp = podman inspect billboard-dev_db_1 --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
 $machine = podman machine inspect podman-machine-default | ConvertFrom-Json
 ssh.exe -i $machine.SSHConfig.IdentityPath -p $machine.SSHConfig.Port -N -L "127.0.0.1:15432:${dbIp}:5432" "$($machine.SSHConfig.RemoteUsername)@127.0.0.1"
 ```
@@ -43,7 +45,7 @@ ssh.exe -i $machine.SSHConfig.IdentityPath -p $machine.SSHConfig.Port -N -L "127
 Then run Prisma and Next.js commands with the tunnel URL:
 
 ```powershell
-$env:DATABASE_URL = "postgresql://billboard:billboard@127.0.0.1:15432/billboard?schema=public"
+$env:DATABASE_URL = "postgresql://billboard:billboard@127.0.0.1:15432/billboard_dev?schema=public"
 ```
 
 Prepare the schema and seed data:
@@ -59,16 +61,18 @@ Run the app:
 npm run dev
 ```
 
+The development server listens on `http://127.0.0.1:2500` by default.
+
 For LAN device testing, bind the dev server to the machine's LAN IP:
 
 ```powershell
-npm run dev -- --hostname <LAN_IP> --port 3000
+npm run dev -- --hostname <LAN_IP> --port 2500
 ```
 
-If a tunnel such as frpc maps `127.0.0.1:3000` to an external IP and port, bind Next.js to all local interfaces so both loopback and LAN access work:
+If a tunnel such as frpc maps `127.0.0.1:2500` to an external IP and port, bind Next.js to all local interfaces so both loopback and LAN access work:
 
 ```powershell
-npm run dev -- --hostname 0.0.0.0 --port 3000
+npm run dev -- --hostname 0.0.0.0 --port 2500
 ```
 
 When using an external IP or domain with `next dev`, add that host to `allowedDevOrigins` in `next.config.ts` and restart the dev server. Otherwise Next.js can block development resources, leaving the login form without client-side `signIn` handling. The current temporary frp test host `115.29.200.7` is already allowed.
@@ -78,6 +82,16 @@ The default seed logins are defined in `.env.example`:
 - 老公: `lehary@home.com`
 - 老婆: `noma@home.com`
 - Password: `10212286`
+
+## Production Port
+
+The production `web` service exposes `http://<host>:3000` by default through `APP_PORT`:
+
+```powershell
+.\ops\podman\compose.ps1 -f podman-compose.yml up -d web db
+```
+
+The existing `proxy` service remains available for `80/443` reverse proxy use.
 
 ## Verification
 
@@ -90,9 +104,9 @@ npm run test:integration
 npm run test:e2e
 ```
 
-Integration and E2E tests need PostgreSQL plus seed data. Playwright uses `http://127.0.0.1:3000` and starts `npm run dev` automatically. E2E runs clear the `Transaction` table before and after the suite, so point them only at a test database.
+Integration and E2E tests need PostgreSQL plus seed data. Playwright uses `http://127.0.0.1:2500` and starts `npm run dev` automatically. E2E runs clear the `Transaction` table before and after the suite, so point them only at the development/test database, not production.
 
-If Podman on Windows reports the database container is running but Prisma cannot reach `127.0.0.1:5432`, restart the Podman machine or use the SSH tunnel from Local Setup and point `DATABASE_URL` at `127.0.0.1:15432`.
+If Podman on Windows reports the database container is running but Prisma cannot reach `127.0.0.1:5432`, restart the Podman machine or use the SSH tunnel from Local Setup and point `DATABASE_URL` at `postgresql://billboard:billboard@127.0.0.1:15432/billboard_dev?schema=public`.
 
 ## Operations Docs
 

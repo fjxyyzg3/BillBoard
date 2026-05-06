@@ -1,8 +1,10 @@
+name: billboard-dev
+
 services:
   db:
     image: postgres:17
     environment:
-      POSTGRES_DB: billboard
+      POSTGRES_DB: billboard_dev
       POSTGRES_USER: billboard
       POSTGRES_PASSWORD: billboard
     ports:

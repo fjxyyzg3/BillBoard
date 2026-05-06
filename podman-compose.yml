@@ -1,3 +1,5 @@
+name: billboard
+
 services:
   web:
     build:
@@ -10,6 +12,8 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-billboard}:${POSTGRES_PASSWORD:-billboard}@db:5432/${POSTGRES_DB:-billboard}?schema=public
       AUTH_SECRET: ${AUTH_SECRET:-change-me-before-launch}
+    ports:
+      - "${APP_PORT:-3000}:3000"
     restart: unless-stopped
 
   bootstrap:
