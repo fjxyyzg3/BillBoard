@@ -43,3 +43,14 @@ Use this checklist before exposing the production stack to the public internet.
 - If using HTTPS/domain access, visit the public hostname and confirm Caddy provisions HTTPS successfully.
 - Confirm login works through the selected production entrypoint.
 - Run `bash ops/backup/pg_dump.sh ./tmp/backups` and verify a dump file is created.
+
+## Windows Podman Fallback
+
+Use this only when the normal production `web` compose build or port publishing is stuck on Windows. Keep the database in the `billboard_default` Podman network, start `web` from a built application, and expose host port `3000` with an SSH tunnel to the web container IP.
+
+- Preserve and reuse a real `AUTH_SECRET`; changing it invalidates existing JWT cookies.
+- If starting `node .next/standalone/server.js` manually, copy `.next/static` to `.next/standalone/.next/static` before starting the server. Otherwise `/_next/static/chunks/*.js` returns `404`, the login form loses its client-side `signIn` handler, and submissions appear as `/login?email=...&password=...`.
+- After starting the fallback, verify at least one chunk and the login page:
+  `Invoke-WebRequest http://127.0.0.1:3000/_next/static/chunks/<chunk>.js`
+  `Invoke-WebRequest http://127.0.0.1:3000/login`
+- If Podman `-p 3000:3000` does not create a working Windows listener, remove the host port publishing and create an SSH tunnel with `podman machine inspect` parameters from `0.0.0.0:3000` to `<web-container-ip>:3000`.
