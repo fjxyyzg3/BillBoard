@@ -93,6 +93,8 @@ The production `web` service exposes `http://<host>:3000` by default through `AP
 
 The existing `proxy` service remains available for `80/443` reverse proxy use.
 
+On Windows hosts that need the documented Podman fallback path, `ops/windows/start-production.ps1` starts the production stack and `ops/windows/register-production-startup.ps1` registers the `BillBoard Production Startup` task for boot-time startup. See `docs/runbooks/home-network-checklist.md` for the exact checks and recovery notes.
+
 ## Verification
 
 Use the smallest command that proves the change:

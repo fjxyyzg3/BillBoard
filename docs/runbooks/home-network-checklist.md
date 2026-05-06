@@ -54,3 +54,25 @@ Use this only when the normal production `web` compose build or port publishing 
   `Invoke-WebRequest http://127.0.0.1:3000/_next/static/chunks/<chunk>.js`
   `Invoke-WebRequest http://127.0.0.1:3000/login`
 - If Podman `-p 3000:3000` does not create a working Windows listener, remove the host port publishing and create an SSH tunnel with `podman machine inspect` parameters from `0.0.0.0:3000` to `<web-container-ip>:3000`.
+
+## Windows Autostart
+
+When the production host is Windows and the fallback path is required, register the startup task after `.env.production.local` contains the production `AUTH_SECRET`. This registration needs administrator rights because it creates an at-startup scheduled task.
+
+```powershell
+.\ops\windows\register-production-startup.ps1
+```
+
+The task is named `BillBoard Production Startup`. It runs at system startup under the current Windows user with `S4U` logon, so it can start before an interactive login while still using that user's Podman machine files.
+
+Useful checks:
+
+```powershell
+Get-ScheduledTask -TaskName "BillBoard Production Startup"
+Get-Content .\tmp\logs\production-startup.log -Tail 80
+Invoke-WebRequest http://127.0.0.1:3000/login -UseBasicParsing
+```
+
+`LastTaskResult` value `267009` means the task is currently running, which is expected because `start-production.ps1 -StayAttached` waits on the SSH tunnel process.
+
+If the task fails before login, first check whether it can access the current user's Podman machine SSH identity at `C:\Users\<user>\.local\share\containers\podman\machine\machine`. If `S4U` cannot access it on the host, re-register the task with stored Windows credentials or switch to a normal logged-in startup task.
