@@ -59,7 +59,7 @@ test("desktop navigation keeps accessible labels after icons are added", async (
   await page.setViewportSize({ width: 1280, height: 900 });
   await logIn(page);
 
-  const navigation = page.getByRole("navigation");
+  const navigation = page.getByRole("complementary").getByRole("navigation");
   await expect(navigation.getByRole("link", { name: "首页", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "记一笔", exact: true })).toBeVisible();
   await expect(navigation.getByRole("link", { name: "记录", exact: true })).toBeVisible();

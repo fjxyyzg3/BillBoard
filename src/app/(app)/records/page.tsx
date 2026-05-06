@@ -160,7 +160,15 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
           <h1 className="text-2xl font-semibold">{messages.records.title}</h1>
           <p className="text-sm text-stone-500">{messages.records.description}</p>
         </div>
-        <TimeRangeSelector labels={messages.range} />
+        <div className="flex items-center gap-2">
+          <Link
+            className="rounded-full border border-stone-200 bg-white px-3 py-2 text-sm font-medium text-stone-700 shadow-sm transition hover:bg-stone-50"
+            href="/records/import"
+          >
+            {messages.common.importRecords}
+          </Link>
+          <TimeRangeSelector labels={messages.range} />
+        </div>
       </header>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

@@ -27,6 +27,25 @@ enum TransactionType {
   EXPENSE
 }
 
+enum ImportDraftStatus {
+  PENDING
+  COMPLETED
+}
+
+enum ImportDraftRowStatus {
+  READY
+  NEEDS_MAPPING
+  SOURCE_DUPLICATE
+  POSSIBLE_DUPLICATE
+  INVALID
+  USER_SKIPPED
+}
+
+enum ImportRowDecision {
+  KEEP
+  SKIP
+}
+
 model User {
   id              String           @id @default(cuid())
   email           String           @unique
@@ -39,13 +58,15 @@ model User {
 }
 
 model Household {
-  id           String            @id @default(cuid())
-  name         String
-  baseCurrency String            @default("CNY") @map("base_currency")
-  timezone     String            @default("Asia/Shanghai")
-  createdAt    DateTime          @default(now()) @map("created_at")
-  members      HouseholdMember[]
-  transactions Transaction[]
+  id                     String                  @id @default(cuid())
+  name                   String
+  baseCurrency           String                  @default("CNY") @map("base_currency")
+  timezone               String                  @default("Asia/Shanghai")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  members                HouseholdMember[]
+  transactions           Transaction[]
+  importDrafts           ImportDraft[]
+  importCategoryMappings ImportCategoryMapping[]
 }
 
 model HouseholdMember {
@@ -59,17 +80,19 @@ model HouseholdMember {
   user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   actorTransactions   Transaction[] @relation("ActorTransactions")
   createdTransactions Transaction[] @relation("CreatedTransactions")
+  importDrafts        ImportDraft[]
 
   @@unique([householdId, memberName])
 }
 
 model Category {
-  id           String        @id @default(cuid())
-  type         CategoryType
-  name         String
-  sortOrder    Int           @map("sort_order")
-  isActive     Boolean       @default(true) @map("is_active")
-  transactions Transaction[]
+  id             String                  @id @default(cuid())
+  type           CategoryType
+  name           String
+  sortOrder      Int                     @map("sort_order")
+  isActive       Boolean                 @default(true) @map("is_active")
+  transactions   Transaction[]
+  importMappings ImportCategoryMapping[]
 
   @@unique([type, name], name: "type_name")
 }
@@ -84,6 +107,9 @@ model Transaction {
   amountFen         Int             @map("amount_fen")
   occurredAt        DateTime        @map("occurred_at")
   note              String?
+  source            String?
+  sourceFingerprint String?         @map("source_fingerprint")
+  sourceImportedAt  DateTime?       @map("source_imported_at")
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
   deletedAt         DateTime?       @map("deleted_at")
@@ -95,7 +121,79 @@ model Transaction {
   @@index([householdId, occurredAt])
   @@index([actorMemberId, occurredAt])
   @@index([categoryId, occurredAt])
+  @@index([householdId, source, sourceFingerprint])
   @@unique([id, householdId], name: "id_householdId")
+}
+
+model ImportCategoryMapping {
+  id                String          @id @default(cuid())
+  householdId       String          @map("household_id")
+  source            String
+  transactionType   TransactionType @map("transaction_type")
+  primaryCategory   String          @map("primary_category")
+  secondaryCategory String          @map("secondary_category")
+  categoryId        String          @map("category_id")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  household         Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  category          Category        @relation(fields: [categoryId], references: [id])
+
+  @@unique([householdId, source, transactionType, primaryCategory, secondaryCategory], name: "household_source_type_primary_secondary", map: "household_source_type_primary_secondary")
+  @@index([categoryId])
+}
+
+model ImportDraft {
+  id                String            @id @default(cuid())
+  householdId       String            @map("household_id")
+  source            String
+  status            ImportDraftStatus @default(PENDING)
+  fileName          String            @map("file_name")
+  createdByMemberId String            @map("created_by_member_id")
+  completedAt       DateTime?         @map("completed_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  household         Household         @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByMember   HouseholdMember   @relation(fields: [createdByMemberId], references: [id])
+  rows              ImportDraftRow[]
+
+  @@index([householdId, status, createdAt])
+}
+
+model ImportDraftRow {
+  id                     String               @id @default(cuid())
+  draftId                String               @map("draft_id")
+  rowNumber              Int                  @map("row_number")
+  transactionType        TransactionType?     @map("transaction_type")
+  occurredAt             DateTime?            @map("occurred_at")
+  occurredDate           String?              @map("occurred_date")
+  amountFen              Int?                 @map("amount_fen")
+  actorMemberId          String?              @map("actor_member_id")
+  createdByMemberId      String?              @map("created_by_member_id")
+  categoryId             String?              @map("category_id")
+  primaryCategory        String?              @map("primary_category")
+  secondaryCategory      String?              @map("secondary_category")
+  mappingKey             String?              @map("mapping_key")
+  note                   String?
+  sourceFingerprint      String?              @map("source_fingerprint")
+  status                 ImportDraftRowStatus
+  userDecision           ImportRowDecision    @default(KEEP) @map("user_decision")
+  skipReason             String?              @map("skip_reason")
+  duplicateCandidates    Json?                @map("duplicate_candidates")
+  actorFallbackApplied   Boolean              @default(false) @map("actor_fallback_applied")
+  creatorFallbackApplied Boolean              @default(false) @map("creator_fallback_applied")
+  rawTransactionType     String?              @map("raw_transaction_type")
+  rawDate                String?              @map("raw_date")
+  rawAmount              String?              @map("raw_amount")
+  rawMember              String?              @map("raw_member")
+  rawCreatedBy           String?              @map("raw_created_by")
+  rawCurrency            String?              @map("raw_currency")
+  createdAt              DateTime             @default(now()) @map("created_at")
+  updatedAt              DateTime             @updatedAt @map("updated_at")
+  draft                  ImportDraft          @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId, status])
+  @@index([mappingKey])
+  @@index([sourceFingerprint])
 }
 
 model LoginThrottle {
