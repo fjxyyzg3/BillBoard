@@ -104,7 +104,9 @@ The production `web` service exposes `http://<host>:3000` by default through `AP
 
 The existing `proxy` service remains available for `80/443` reverse proxy use.
 
-On Windows hosts that need the documented Podman fallback path, `ops/windows/start-production.ps1` starts the production stack and `ops/windows/register-production-startup.ps1` registers the `BillBoard Production Startup` task for boot-time startup. See `docs/runbooks/home-network-checklist.md` for the exact checks and recovery notes.
+For domain HTTPS access, set `APP_DOMAIN` in the production environment and route public `80/443` traffic to Caddy. In the Windows Podman fallback path, `frpc` maps the ECS public `80/443` ports to local `127.0.0.1:8080/8443`, and `ops/windows/start-production.ps1` keeps those local ports tunneled to the Caddy container.
+
+On Windows hosts that need the documented Podman fallback path, `ops/windows/start-production.ps1` starts the production stack, Caddy, and the required SSH tunnels. `ops/windows/register-production-startup.ps1` registers the `BillBoard Production Startup` task for boot-time startup. See `docs/runbooks/home-network-checklist.md` for the exact checks and recovery notes.
 
 ## Verification
 

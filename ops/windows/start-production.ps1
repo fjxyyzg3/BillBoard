@@ -9,9 +9,11 @@ $logDir = Join-Path $repoRoot "tmp\logs"
 $envFile = Join-Path $repoRoot ".env.production.local"
 $taskName = "BillBoard Production Startup"
 $webContainerName = "billboard_web_1"
+$proxyContainerName = "billboard_proxy_1"
 $dbContainerName = "billboard_db_1"
 $composeFile = Join-Path $repoRoot "podman-compose.yml"
 $webImage = "localhost/billboard-tools:latest"
+$caddyImage = "docker.io/library/caddy:2.10"
 
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $logFile = Join-Path $logDir "production-startup.log"
@@ -101,16 +103,22 @@ function Wait-Database {
 }
 
 function Stop-ExistingTunnel {
+  param(
+    [string] $BindAddress,
+    [int] $LocalPort
+  )
+
   $identityPath = Join-Path $env:USERPROFILE ".local\share\containers\podman\machine\machine"
   $escapedIdentity = [regex]::Escape($identityPath)
+  $escapedForward = [regex]::Escape("${BindAddress}:${LocalPort}:")
   $processes = Get-CimInstance Win32_Process | Where-Object {
     $_.Name -eq "ssh.exe" -and
     $_.CommandLine -match $escapedIdentity -and
-    $_.CommandLine -match "0\.0\.0\.0:3000:"
+    $_.CommandLine -match $escapedForward
   }
 
   foreach ($process in $processes) {
-    Write-Log "Stopping existing 3000 tunnel process $($process.ProcessId)"
+    Write-Log "Stopping existing ${BindAddress}:${LocalPort} tunnel process $($process.ProcessId)"
     Stop-Process -Id $process.ProcessId -Force
   }
 }
@@ -118,7 +126,7 @@ function Stop-ExistingTunnel {
 function Start-Tunnel {
   param([string] $WebIp)
 
-  Stop-ExistingTunnel
+  Stop-ExistingTunnel -BindAddress "0.0.0.0" -LocalPort 3000
 
   $machine = (podman machine inspect podman-machine-default | ConvertFrom-Json)[0]
   $target = "$($machine.SSHConfig.RemoteUsername)@127.0.0.1"
@@ -142,6 +150,89 @@ function Start-Tunnel {
   }
 
   Write-Log "SSH tunnel is running as process $($process.Id)"
+  return $process
+}
+
+function Start-Proxy {
+  param([string] $WebIp)
+
+  if (-not $env:APP_DOMAIN) {
+    Write-Log "APP_DOMAIN is not set; skipping HTTPS proxy"
+    return $null
+  }
+
+  & podman image exists $caddyImage *> $null
+  if ($LASTEXITCODE -ne 0) {
+    Invoke-Logged -FilePath "podman" -Arguments @("pull", $caddyImage)
+  }
+
+  Invoke-Logged -FilePath "podman" -Arguments @("rm", "-f", $proxyContainerName) -AllowFailure
+
+  $runArgs = @(
+    "run", "-d",
+    "--name", $proxyContainerName,
+    "--network", "billboard_default",
+    "--add-host", "web:${WebIp}",
+    "-e", "APP_DOMAIN=$($env:APP_DOMAIN)",
+    "-v", "$repoRoot\ops\caddy\Caddyfile:/etc/caddy/Caddyfile:ro",
+    "-v", "billboard_caddy-data:/data",
+    "-v", "billboard_caddy-config:/config",
+    $caddyImage
+  )
+
+  Invoke-Logged -FilePath "podman" -Arguments $runArgs
+
+  for ($attempt = 1; $attempt -le 30; $attempt++) {
+    $status = (& podman inspect $proxyContainerName --format "{{.State.Status}}" 2>$null)
+    if ($status -eq "running") {
+      Write-Log "Proxy container is running"
+      break
+    }
+
+    if ($attempt -eq 30) {
+      throw "Proxy container did not become ready"
+    }
+
+    Start-Sleep -Seconds 2
+  }
+
+  $proxyIp = (& podman inspect $proxyContainerName --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}").Trim()
+  if (-not $proxyIp) {
+    throw "Could not resolve proxy container IP"
+  }
+
+  return $proxyIp
+}
+
+function Start-CaddyTunnel {
+  param([string] $ProxyIp)
+
+  Stop-ExistingTunnel -BindAddress "127.0.0.1" -LocalPort 8080
+  Stop-ExistingTunnel -BindAddress "127.0.0.1" -LocalPort 8443
+
+  $machine = (podman machine inspect podman-machine-default | ConvertFrom-Json)[0]
+  $target = "$($machine.SSHConfig.RemoteUsername)@127.0.0.1"
+  $arguments = @(
+    "-i", $machine.SSHConfig.IdentityPath,
+    "-p", [string] $machine.SSHConfig.Port,
+    "-o", "ExitOnForwardFailure=yes",
+    "-o", "ServerAliveInterval=30",
+    "-o", "ServerAliveCountMax=3",
+    "-N",
+    "-L", "127.0.0.1:8080:${ProxyIp}:80",
+    "-L", "127.0.0.1:8443:${ProxyIp}:443",
+    $target
+  )
+
+  Write-Log "Starting Caddy SSH tunnel to ${ProxyIp}:80/443"
+  $process = Start-Process -FilePath "ssh.exe" -ArgumentList $arguments -WindowStyle Hidden -PassThru
+  Start-Sleep -Seconds 2
+
+  if ($process.HasExited) {
+    throw "Caddy SSH tunnel exited with code $($process.ExitCode)"
+  }
+
+  Write-Log "Caddy SSH tunnel is running as process $($process.Id)"
   return $process
 }
 
@@ -255,12 +346,29 @@ try {
     }
 
     $tunnelProcess = Start-Tunnel -WebIp $webIp
+    $proxyIp = Start-Proxy -WebIp $webIp
+    $httpsTunnelProcess = if ($proxyIp) { Start-CaddyTunnel -ProxyIp $proxyIp } else { $null }
     Test-Endpoint
 
     if ($StayAttached) {
-      Write-Log "StayAttached enabled; waiting on SSH tunnel process $($tunnelProcess.Id)"
-      Wait-Process -Id $tunnelProcess.Id
-      throw "SSH tunnel process exited"
+      $watchedProcesses = @($tunnelProcess)
+      if ($httpsTunnelProcess) {
+        $watchedProcesses += $httpsTunnelProcess
+      }
+
+      $processIds = ($watchedProcesses | ForEach-Object { $_.Id }) -join ", "
+      Write-Log "StayAttached enabled; monitoring SSH tunnel processes $processIds"
+
+      while ($true) {
+        foreach ($process in $watchedProcesses) {
+          $running = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
+          if (-not $running) {
+            throw "SSH tunnel process $($process.Id) exited"
+          }
+        }
+
+        Start-Sleep -Seconds 30
+      }
     }
   }
   finally {

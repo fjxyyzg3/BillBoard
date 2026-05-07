@@ -17,7 +17,8 @@ Use this runbook to recover BillBoard onto a new or rebuilt machine.
 4. Restore the selected recovery dump: `bash ops/backup/restore-from-dump.sh /path/to/billboard-YYYYMMDD-HHMMSS.dump`
 5. Start the direct app service: `bash ops/podman/compose.sh -f podman-compose.yml up -d web`
 6. If using HTTPS/domain access, start the proxy too: `bash ops/podman/compose.sh -f podman-compose.yml up -d web proxy`
-7. Validate the app at `http://<host>:${APP_PORT:-3000}` or the public proxy hostname.
+7. On a Windows host that requires the Podman fallback path, run `.\ops\windows\start-production.ps1` instead of the normal `web proxy` compose path; with `APP_DOMAIN` set it starts Caddy and the `8080/8443` HTTPS tunnels expected by frpc.
+8. Validate the app at `http://<host>:${APP_PORT:-3000}` or the public proxy hostname.
 
 ## Validation Checklist
 

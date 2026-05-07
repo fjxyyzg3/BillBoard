@@ -4,17 +4,17 @@
 
 **Goal:** Configure BillBoard production to start on Windows boot before an interactive user login.
 
-**Architecture:** Use Windows Task Scheduler with an at-startup trigger under the existing `littleclaw\fjxyy` user context so the task can access the existing Podman machine, SSH identity, and repository files. The startup script keeps PostgreSQL in the `billboard_default` Podman network, starts the current Windows fallback web container, copies standalone static assets before starting Next.js, and keeps the host `3000` SSH tunnel alive.
+**Architecture:** Use Windows Task Scheduler with an at-startup trigger under the existing `littleclaw\fjxyy` user context so the task can access the existing Podman machine, SSH identity, and repository files. The startup script keeps PostgreSQL in the `billboard_default` Podman network, starts the current Windows fallback web container, copies standalone static assets before starting Next.js, keeps the host `3000` SSH tunnel alive, and when `APP_DOMAIN` is set starts Caddy plus `8080/8443 -> Caddy:80/443` tunnels for frp-backed HTTPS.
 
 **Tech Stack:** PowerShell 7, Windows Task Scheduler, Podman machine, Podman containers, OpenSSH local port forwarding, Next.js standalone output.
 
-**Execution Status:** Completed and manually verified on 2026-05-06. The registered task is `BillBoard Production Startup`; `LastTaskResult=267009` means the task is running and holding the SSH tunnel open.
+**Execution Status:** Completed and manually verified on 2026-05-06. Updated on 2026-05-07 to include Caddy and HTTPS tunnel startup for the ECS/frp domain path. The registered task is `BillBoard Production Startup`; `LastTaskResult=267009` means the task is running and monitoring the SSH tunnel processes.
 
 ---
 
 ## File Structure
 
-- Create `ops/windows/start-production.ps1`: idempotent production startup script. It reads `.env.production.local`, starts Podman, starts `db`, recreates `billboard_web_1`, creates the `3000` tunnel, verifies `/login`, and optionally stays attached for Task Scheduler.
+- Create `ops/windows/start-production.ps1`: idempotent production startup script. It reads `.env.production.local`, starts Podman, starts `db`, recreates `billboard_web_1`, creates the `3000` tunnel, starts Caddy and `8080/8443` HTTPS tunnels when `APP_DOMAIN` is set, verifies `/login`, and optionally stays attached for Task Scheduler.
 - Create `ops/windows/register-production-startup.ps1`: registers or replaces the `BillBoard Production Startup` scheduled task.
 - Modify `docs/runbooks/home-network-checklist.md`: document the autostart task and verification commands.
 
@@ -35,6 +35,7 @@ The script must:
 - recreate `billboard_web_1` from `localhost/billboard-tools:latest`;
 - copy `.next/static` to `.next/standalone/.next/static` before `server.js`;
 - start an SSH tunnel from `0.0.0.0:3000` to the web container IP;
+- start `billboard_proxy_1` and SSH tunnels from `127.0.0.1:8080/8443` to Caddy `80/443` when `APP_DOMAIN` is set;
 - verify `/login` and one JS chunk;
 - stay attached when `-StayAttached` is passed.
 

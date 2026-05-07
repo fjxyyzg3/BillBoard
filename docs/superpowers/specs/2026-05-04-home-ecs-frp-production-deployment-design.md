@@ -2,7 +2,7 @@
 
 日期：2026-05-04
 
-更新说明：2026-05-06 的 `v0.11.0` 改动已让生产 `web` 服务默认暴露 `http://<host>:3000`，同时保留本设计中的 `proxy` / Caddy `80/443 -> web:3000` 域名入口。当前运维步骤以 `README.md` 和 `docs/runbooks/` 为准；本文保留为家庭主机 + ECS + frp HTTPS 入口的历史设计记录。
+更新说明：2026-05-06 的 `v0.11.0` 改动已让生产 `web` 服务默认暴露 `http://<host>:3000`，同时保留本设计中的 `proxy` / Caddy `80/443 -> web:3000` 域名入口。2026-05-07 的 Windows fallback 实际落地使用公网 `80/443 -> frpc -> 127.0.0.1:8080/8443 -> SSH tunnel -> Caddy:80/443 -> web:3000`，以绕过 Windows 非管理员绑定低端口和 Podman 容器 IP 变化问题。当前运维步骤以 `README.md` 和 `docs/runbooks/` 为准；本文保留为家庭主机 + ECS + frp HTTPS 入口的历史设计记录。
 
 ## 1. 背景与目标
 
