@@ -13,11 +13,15 @@ import { db } from "@/lib/db";
 import { buildImportCategoryMappingKey } from "@/lib/imports/category-mapping";
 import { resolveImportedMember } from "@/lib/imports/member-mapping";
 import { parseSuiShouJiWorkbook } from "@/lib/imports/sources/sui-shou-ji";
+import { parseWechatPayWorkbook } from "@/lib/imports/sources/wechat-pay";
 import {
   type HouseholdMemberOption,
+  type ImportSource,
   type InvalidImportRow,
   type ParsedImportRow,
+  type ParsedImportWorkbook,
   SUI_SHOU_JI_SOURCE,
+  WECHAT_PAY_SOURCE,
 } from "@/lib/imports/types";
 
 type SessionUser = {
@@ -86,7 +90,7 @@ type ImportDraftSummary = {
     transactionType: TransactionType | null;
   }>;
   rows: ImportDraftRowSummary[];
-  source: typeof SUI_SHOU_JI_SOURCE;
+  source: ImportSource;
   status: ImportDraftStatus;
 };
 
@@ -101,7 +105,7 @@ type ConfirmImportDraftResult = {
 type MappingKeyParts = {
   primaryCategory: string;
   secondaryCategory: string;
-  source: typeof SUI_SHOU_JI_SOURCE;
+  source: ImportSource;
   transactionType: TransactionType;
 };
 
@@ -119,6 +123,7 @@ type ConfirmImportableRow = {
 };
 
 const confirmImportChunkSize = 500;
+const possibleDuplicateLookupChunkSize = 500;
 
 const transactionTypeToCategoryType = {
   [TransactionType.EXPENSE]: CategoryType.EXPENSE,
@@ -139,7 +144,7 @@ function parseMappingKey(mappingKey: string): MappingKeyParts {
   const [source, transactionType, primaryCategory, secondaryCategory] = mappingKey.split("|");
 
   if (
-    source !== SUI_SHOU_JI_SOURCE ||
+    (source !== SUI_SHOU_JI_SOURCE && source !== WECHAT_PAY_SOURCE) ||
     (transactionType !== TransactionType.EXPENSE && transactionType !== TransactionType.INCOME) ||
     primaryCategory === undefined ||
     secondaryCategory === undefined
@@ -174,6 +179,10 @@ function rowStatusCount(rows: ImportDraftRowSummary[], status: ImportDraftRowSta
   return rows.filter((row) => row.status === status).length;
 }
 
+function possibleDuplicateLookupKey(occurredDate: string, amountFen: number) {
+  return `${occurredDate}\u0000${amountFen}`;
+}
+
 function isImportableRow(row: Pick<ImportDraftRowSummary, "status" | "userDecision">) {
   return (
     row.userDecision === ImportRowDecision.KEEP &&
@@ -185,6 +194,7 @@ function isImportableRow(row: Pick<ImportDraftRowSummary, "status" | "userDecisi
 async function findExistingSourceFingerprints(
   tx: Prisma.TransactionClient,
   householdId: string,
+  source: ImportSource,
   fingerprints: string[],
 ) {
   const existing = new Set<string>();
@@ -193,7 +203,7 @@ async function findExistingSourceFingerprints(
     const rows = await tx.transaction.findMany({
       where: {
         householdId,
-        source: SUI_SHOU_JI_SOURCE,
+        source,
         sourceFingerprint: { in: chunk },
       },
       select: { sourceFingerprint: true },
@@ -225,6 +235,7 @@ async function markRowsAsSourceDuplicates(tx: Prisma.TransactionClient, rowIds: 
 async function insertImportTransactions(
   tx: Prisma.TransactionClient,
   householdId: string,
+  source: ImportSource,
   rows: ConfirmImportableRow[],
   importedAt: Date,
 ) {
@@ -259,7 +270,7 @@ async function insertImportTransactions(
           ${row.amountFen},
           ${row.occurredAt},
           ${row.note},
-          ${SUI_SHOU_JI_SOURCE},
+          ${source},
           ${row.sourceFingerprint},
           ${importedAt},
           CURRENT_TIMESTAMP,
@@ -362,7 +373,7 @@ function buildSummary(draft: {
       a.mappingKey.localeCompare(b.mappingKey),
     ),
     rows,
-    source: SUI_SHOU_JI_SOURCE,
+    source: draft.source as ImportSource,
     status: draft.status,
   };
 }
@@ -409,12 +420,12 @@ async function requireHouseholdMember(sessionUser: SessionUser) {
   };
 }
 
-async function loadCategoryMappings(householdId: string, mappingKeys: string[]) {
+async function loadCategoryMappings(householdId: string, source: ImportSource, mappingKeys: string[]) {
   const keySet = new Set(mappingKeys);
   const mappings = await db.importCategoryMapping.findMany({
     where: {
       householdId,
-      source: SUI_SHOU_JI_SOURCE,
+      source,
     },
     select: {
       categoryId: true,
@@ -430,7 +441,7 @@ async function loadCategoryMappings(householdId: string, mappingKeys: string[]) 
     const mappingKey = buildImportCategoryMappingKey({
       primaryCategory: mapping.primaryCategory,
       secondaryCategory: mapping.secondaryCategory,
-      source: SUI_SHOU_JI_SOURCE,
+      source: mapping.source as ImportSource,
       transactionType: mapping.transactionType,
     });
 
@@ -442,11 +453,15 @@ async function loadCategoryMappings(householdId: string, mappingKeys: string[]) 
   return mappingByKey;
 }
 
-async function findSourceDuplicateFingerprints(householdId: string, fingerprints: string[]) {
+async function findSourceDuplicateFingerprints(
+  householdId: string,
+  source: ImportSource,
+  fingerprints: string[],
+) {
   const rows = await db.transaction.findMany({
     where: {
       householdId,
-      source: SUI_SHOU_JI_SOURCE,
+      source,
       sourceFingerprint: { in: fingerprints },
     },
     select: { sourceFingerprint: true },
@@ -455,42 +470,76 @@ async function findSourceDuplicateFingerprints(householdId: string, fingerprints
   return new Set(rows.flatMap((row) => (row.sourceFingerprint ? [row.sourceFingerprint] : [])));
 }
 
-async function findPossibleDuplicateCandidates(input: {
+function toDuplicateCandidate(transaction: {
   amountFen: number;
-  householdId: string;
-  occurredDate: string;
-}) {
-  const { nextStart, start } = shanghaiDayBounds(input.occurredDate);
-  const transactions = await db.transaction.findMany({
-    where: {
-      amountFen: input.amountFen,
-      deletedAt: null,
-      householdId: input.householdId,
-      occurredAt: {
-        gte: start,
-        lt: nextStart,
-      },
-      OR: [{ source: null }, { source: { not: SUI_SHOU_JI_SOURCE } }],
-    },
-    orderBy: { occurredAt: "asc" },
-    select: {
-      amountFen: true,
-      categoryId: true,
-      id: true,
-      occurredAt: true,
-      source: true,
-      type: true,
-    },
-  });
-
-  return transactions.map((transaction) => ({
+  categoryId: string;
+  id: string;
+  occurredAt: Date;
+  source: string | null;
+  type: TransactionType;
+}): DuplicateCandidate {
+  return {
     amountFen: transaction.amountFen,
     categoryId: transaction.categoryId,
     id: transaction.id,
     occurredAt: transaction.occurredAt.toISOString(),
     source: transaction.source,
     type: transaction.type,
-  }));
+  };
+}
+
+async function findPossibleDuplicateCandidatesByKey(input: {
+  householdId: string;
+  rows: ParsedImportRow[];
+  source: ImportSource;
+}) {
+  const amountsByDate = new Map<string, Set<number>>();
+  const candidatesByKey = new Map<string, DuplicateCandidate[]>();
+
+  for (const row of input.rows) {
+    const amounts = amountsByDate.get(row.occurredAtDate) ?? new Set<number>();
+
+    amounts.add(row.amountFen);
+    amountsByDate.set(row.occurredAtDate, amounts);
+  }
+
+  for (const [occurredDate, amounts] of amountsByDate) {
+    const { nextStart, start } = shanghaiDayBounds(occurredDate);
+
+    for (const amountChunk of chunkArray(Array.from(amounts), possibleDuplicateLookupChunkSize)) {
+      const transactions = await db.transaction.findMany({
+        where: {
+          amountFen: { in: amountChunk },
+          deletedAt: null,
+          householdId: input.householdId,
+          occurredAt: {
+            gte: start,
+            lt: nextStart,
+          },
+          OR: [{ source: null }, { source: { not: input.source } }],
+        },
+        orderBy: { occurredAt: "asc" },
+        select: {
+          amountFen: true,
+          categoryId: true,
+          id: true,
+          occurredAt: true,
+          source: true,
+          type: true,
+        },
+      });
+
+      for (const transaction of transactions) {
+        const key = possibleDuplicateLookupKey(occurredDate, transaction.amountFen);
+        const candidates = candidatesByKey.get(key) ?? [];
+
+        candidates.push(toDuplicateCandidate(transaction));
+        candidatesByKey.set(key, candidates);
+      }
+    }
+  }
+
+  return candidatesByKey;
 }
 
 function buildParsedRowCreateInput(input: {
@@ -584,29 +633,36 @@ async function loadDraftForSummary(draftId: string, sessionUser: SessionUser) {
   return draft;
 }
 
-export async function createSuiShouJiImportDraft(input: {
+async function createImportDraft(input: {
   buffer: Buffer;
   fileName: string;
+  parseWorkbook: (buffer: Buffer) => Promise<ParsedImportWorkbook>;
   sessionUser: SessionUser;
+  source: ImportSource;
 }) {
   const { currentMember, householdMembers } = await requireHouseholdMember(input.sessionUser);
-  const parsedWorkbook = await parseSuiShouJiWorkbook(input.buffer);
+  const parsedWorkbook = await input.parseWorkbook(input.buffer);
   const mappingKeys = parsedWorkbook.rows.map((row) => row.mappingKey);
   const [categoryMappings, sourceDuplicateFingerprints] = await Promise.all([
-    loadCategoryMappings(input.sessionUser.householdId, mappingKeys),
+    loadCategoryMappings(input.sessionUser.householdId, input.source, mappingKeys),
     findSourceDuplicateFingerprints(
       input.sessionUser.householdId,
+      input.source,
       parsedWorkbook.rows.map((row) => row.sourceFingerprint),
     ),
   ]);
+  const possibleDuplicateCandidatesByKey = await findPossibleDuplicateCandidatesByKey({
+    householdId: input.sessionUser.householdId,
+    rows: parsedWorkbook.rows,
+    source: input.source,
+  });
   const parsedRowCreateInputs = [];
 
   for (const row of parsedWorkbook.rows) {
-    const duplicateCandidates = await findPossibleDuplicateCandidates({
-      amountFen: row.amountFen,
-      householdId: input.sessionUser.householdId,
-      occurredDate: row.occurredAtDate,
-    });
+    const duplicateCandidates =
+      possibleDuplicateCandidatesByKey.get(
+        possibleDuplicateLookupKey(row.occurredAtDate, row.amountFen),
+      ) ?? [];
 
     parsedRowCreateInputs.push(
       buildParsedRowCreateInput({
@@ -631,12 +687,104 @@ export async function createSuiShouJiImportDraft(input: {
           ...parsedWorkbook.invalidRows.map(buildInvalidRowCreateInput),
         ],
       },
-      source: SUI_SHOU_JI_SOURCE,
+      source: input.source,
     },
     select: {
       id: true,
       status: true,
     },
+  });
+}
+
+export async function createSuiShouJiImportDraft(input: {
+  buffer: Buffer;
+  fileName: string;
+  sessionUser: SessionUser;
+}) {
+  return createImportDraft({
+    ...input,
+    parseWorkbook: parseSuiShouJiWorkbook,
+    source: SUI_SHOU_JI_SOURCE,
+  });
+}
+
+export async function createWechatPayImportDraft(input: {
+  buffer: Buffer;
+  fileName: string;
+  sessionUser: SessionUser;
+}) {
+  return createImportDraft({
+    ...input,
+    parseWorkbook: parseWechatPayWorkbook,
+    source: WECHAT_PAY_SOURCE,
+  });
+}
+
+export async function saveWechatPayDraftOwnerMember(
+  draftId: string,
+  ownerMemberId: string,
+  sessionUser: SessionUser,
+) {
+  await requireHouseholdMember(sessionUser);
+
+  await db.$transaction(async (tx) => {
+    const lockedDraftRows = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id"
+      FROM "ImportDraft"
+      WHERE "id" = ${draftId}
+        AND "household_id" = ${sessionUser.householdId}
+        AND "source" = ${WECHAT_PAY_SOURCE}
+      FOR UPDATE
+    `;
+
+    if (lockedDraftRows.length === 0) {
+      throw new Error("Import draft not found");
+    }
+
+    const [draft, ownerMember] = await Promise.all([
+      tx.importDraft.findFirst({
+        where: {
+          householdId: sessionUser.householdId,
+          id: draftId,
+          source: WECHAT_PAY_SOURCE,
+        },
+        select: { id: true, status: true },
+      }),
+      tx.householdMember.findFirst({
+        where: {
+          householdId: sessionUser.householdId,
+          id: ownerMemberId,
+        },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!draft) {
+      throw new Error("Import draft not found");
+    }
+
+    if (!ownerMember) {
+      throw new Error("Member not found");
+    }
+
+    if (draft.status !== ImportDraftStatus.PENDING) {
+      throw new Error("Import draft is already completed");
+    }
+
+    await tx.importDraftRow.updateMany({
+      where: {
+        draftId: draft.id,
+        status: {
+          notIn: [ImportDraftRowStatus.INVALID, ImportDraftRowStatus.SOURCE_DUPLICATE],
+        },
+      },
+      data: {
+        actorFallbackApplied: false,
+        actorMemberId: ownerMember.id,
+        createdByMemberId: ownerMember.id,
+        creatorFallbackApplied: false,
+      },
+    });
   });
 }
 
@@ -647,6 +795,66 @@ export async function getImportDraftSummary(
   const draft = await loadDraftForSummary(draftId, sessionUser);
 
   return buildSummary(draft);
+}
+
+async function updateDraftRowsForMapping(input: {
+  categoryId: string;
+  draftId: string;
+  mappingKey: string;
+}) {
+  const rows = await db.importDraftRow.findMany({
+    where: {
+      draftId: input.draftId,
+      mappingKey: input.mappingKey,
+      status: ImportDraftRowStatus.NEEDS_MAPPING,
+    },
+    select: {
+      duplicateCandidates: true,
+      id: true,
+    },
+  });
+  const readyRowIds: string[] = [];
+  const possibleDuplicateRowIds: string[] = [];
+
+  for (const row of rows) {
+    if (hasDuplicateCandidates(row.duplicateCandidates)) {
+      possibleDuplicateRowIds.push(row.id);
+    } else {
+      readyRowIds.push(row.id);
+    }
+  }
+
+  for (const chunk of chunkArray(readyRowIds, confirmImportChunkSize)) {
+    await db.importDraftRow.updateMany({
+      where: {
+        draftId: input.draftId,
+        id: { in: chunk },
+        mappingKey: input.mappingKey,
+        status: ImportDraftRowStatus.NEEDS_MAPPING,
+      },
+      data: {
+        categoryId: input.categoryId,
+        status: ImportDraftRowStatus.READY,
+        userDecision: ImportRowDecision.KEEP,
+      },
+    });
+  }
+
+  for (const chunk of chunkArray(possibleDuplicateRowIds, confirmImportChunkSize)) {
+    await db.importDraftRow.updateMany({
+      where: {
+        draftId: input.draftId,
+        id: { in: chunk },
+        mappingKey: input.mappingKey,
+        status: ImportDraftRowStatus.NEEDS_MAPPING,
+      },
+      data: {
+        categoryId: input.categoryId,
+        status: ImportDraftRowStatus.POSSIBLE_DUPLICATE,
+        userDecision: ImportRowDecision.KEEP,
+      },
+    });
+  }
 }
 
 export async function saveImportDraftMappings(
@@ -661,7 +869,7 @@ export async function saveImportDraftMappings(
       householdId: sessionUser.householdId,
       id: draftId,
     },
-    select: { id: true },
+    select: { id: true, source: true },
   });
 
   if (!draft) {
@@ -670,6 +878,11 @@ export async function saveImportDraftMappings(
 
   for (const mapping of mappings) {
     const mappingKeyParts = parseMappingKey(mapping.mappingKey);
+
+    if (mappingKeyParts.source !== draft.source) {
+      throw new Error("Mapping source does not match import draft source");
+    }
+
     const category = await db.category.findFirst({
       where: { id: mapping.categoryId, isActive: true },
       select: { id: true, type: true },
@@ -706,30 +919,11 @@ export async function saveImportDraftMappings(
       },
     });
 
-    const rows = await db.importDraftRow.findMany({
-      where: {
-        draftId,
-        mappingKey: mapping.mappingKey,
-        status: ImportDraftRowStatus.NEEDS_MAPPING,
-      },
-      select: {
-        duplicateCandidates: true,
-        id: true,
-      },
+    await updateDraftRowsForMapping({
+      categoryId: category.id,
+      draftId: draft.id,
+      mappingKey: mapping.mappingKey,
     });
-
-    for (const row of rows) {
-      await db.importDraftRow.update({
-        where: { id: row.id },
-        data: {
-          categoryId: category.id,
-          status: hasDuplicateCandidates(row.duplicateCandidates)
-            ? ImportDraftRowStatus.POSSIBLE_DUPLICATE
-            : ImportDraftRowStatus.READY,
-          userDecision: ImportRowDecision.KEEP,
-        },
-      });
-    }
   }
 }
 
@@ -834,6 +1028,8 @@ export async function confirmImportDraft(
       throw new Error("Import draft not found");
     }
 
+    const draftSource = draft.source as ImportSource;
+
     if (draft.status === ImportDraftStatus.COMPLETED) {
       return buildConfirmResultFromRows(
         draft.rows.map((row) => ({
@@ -919,6 +1115,7 @@ export async function confirmImportDraft(
     const existingSourceFingerprints = await findExistingSourceFingerprints(
       tx,
       sessionUser.householdId,
+      draftSource,
       importableRows.map((row) => row.sourceFingerprint),
     );
     const rowsToCreate = [];
@@ -939,6 +1136,7 @@ export async function confirmImportDraft(
     const insertedFingerprints = await insertImportTransactions(
       tx,
       sessionUser.householdId,
+      draftSource,
       rowsToCreate,
       importedAt,
     );

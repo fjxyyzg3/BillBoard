@@ -27,6 +27,29 @@ describe("i18n helpers", () => {
     expect(getMessages("en-US").login.submit).toBe("Log in");
   });
 
+  it("includes import source and WeChat Pay owner member messages", () => {
+    expect(getMessages("zh-CN").import.sources.wechatPay).toBe("微信支付");
+    expect(getMessages("zh-CN").import.ownerMemberTitle).toBe("账单归属成员");
+    expect(getMessages("zh-CN").import.errors["file-too-large"]).toBe(
+      "文件过大，请上传不超过 20MB 的 .xlsx 文件。",
+    );
+    expect(getMessages("zh-CN").import.errors["file-too-large"]).not.toContain("随手记");
+    expect(getMessages("zh-CN").import.errors["missing-source"]).toBe("请选择导入来源。");
+    expect(getMessages("zh-CN").import.errors["unrecognized-wechat-pay-file"]).toBe(
+      "无法识别微信支付账单格式。",
+    );
+    expect(getMessages("en-US").import.sources.wechatPay).toBe("WeChat Pay");
+    expect(getMessages("en-US").import.ownerMemberTitle).toBe("Bill owner");
+    expect(getMessages("en-US").import.errors["file-too-large"]).toBe(
+      "File is too large. Upload an .xlsx file up to 20MB.",
+    );
+    expect(getMessages("en-US").import.errors["file-too-large"]).not.toContain("Sui Shou Ji");
+    expect(getMessages("en-US").import.errors["missing-source"]).toBe("Choose an import source.");
+    expect(getMessages("en-US").import.errors["unrecognized-wechat-pay-file"]).toBe(
+      "Could not recognize the WeChat Pay bill format.",
+    );
+  });
+
   it("maps built-in category names only at display time", () => {
     expect(getCategoryDisplayName("Shopping", "zh-CN")).toBe("购物");
     expect(getCategoryDisplayName("Study", "zh-CN")).toBe("学习");

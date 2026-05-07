@@ -1,8 +1,9 @@
 import type { TransactionType } from "@prisma/client";
 
 export const SUI_SHOU_JI_SOURCE = "sui_shou_ji" as const;
+export const WECHAT_PAY_SOURCE = "wechat_pay" as const;
 
-export type ImportSource = typeof SUI_SHOU_JI_SOURCE;
+export type ImportSource = typeof SUI_SHOU_JI_SOURCE | typeof WECHAT_PAY_SOURCE;
 
 export type HouseholdMemberOption = {
   id: string;
@@ -59,5 +60,6 @@ export type InvalidImportRow = {
 
 export type ParsedImportWorkbook = {
   invalidRows: InvalidImportRow[];
+  ownerName?: string;
   rows: ParsedImportRow[];
 };

@@ -6,7 +6,7 @@ import { buildImportCategoryMappingKey } from "@/lib/imports/category-mapping";
 import { createSourceFingerprint } from "@/lib/imports/fingerprint";
 import { resolveImportedMember } from "@/lib/imports/member-mapping";
 import { parseSuiShouJiWorkbook } from "@/lib/imports/sources/sui-shou-ji";
-import { SUI_SHOU_JI_SOURCE } from "@/lib/imports/types";
+import { SUI_SHOU_JI_SOURCE, WECHAT_PAY_SOURCE } from "@/lib/imports/types";
 
 const members = [
   { id: "husband-member", memberName: "老公" },
@@ -63,6 +63,19 @@ describe("buildImportCategoryMappingKey", () => {
         secondaryCategory: "三餐  ",
       }),
     ).toBe("sui_shou_ji|EXPENSE|餐饮|三餐");
+  });
+
+  it("supports distinct source prefixes for each import source", () => {
+    expect(SUI_SHOU_JI_SOURCE).toBe("sui_shou_ji");
+    expect(WECHAT_PAY_SOURCE).toBe("wechat_pay");
+    expect(
+      buildImportCategoryMappingKey({
+        source: WECHAT_PAY_SOURCE,
+        transactionType: TransactionType.EXPENSE,
+        primaryCategory: "扫二维码付款",
+        secondaryCategory: "阿泉食杂店",
+      }),
+    ).toBe("wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店");
   });
 });
 

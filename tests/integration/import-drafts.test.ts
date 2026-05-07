@@ -14,10 +14,13 @@ import {
   ImportDraftRowStatus,
   ImportDraftStatus,
   ImportRowDecision,
+  Prisma,
   TransactionType,
 } from "@prisma/client";
 import ExcelJS from "exceljs";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+
+import { WECHAT_PAY_SOURCE } from "@/lib/imports/types";
 
 type SessionUser = {
   householdId: string;
@@ -44,6 +47,20 @@ const headers = [
   "成员",
   "商家",
   "记账人",
+  "备注",
+];
+
+const wechatHeaders = [
+  "交易时间",
+  "交易类型",
+  "交易对方",
+  "商品",
+  "收/支",
+  "金额(元)",
+  "支付方式",
+  "当前状态",
+  "交易单号",
+  "商户单号",
   "备注",
 ];
 
@@ -153,6 +170,34 @@ function buildExpenseWorkbook(overrides: Partial<Record<string, string>> = {}) {
   return buildWorkbookBuffer({
     支出: [headers, expenseRow(overrides)],
   });
+}
+
+async function buildWechatPayWorkbook(ownerName = "李环宇") {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Sheet1");
+  sheet.addRows([
+    ["微信支付账单明细"],
+    [`微信昵称：[${ownerName}]`],
+    ["起始时间：[2026-04-30 00:00:00] 终止时间：[2026-05-07 20:26:54]"],
+    [],
+    ["----------------------微信支付账单明细列表--------------------"],
+    wechatHeaders,
+    [
+      "2026-05-02 17:22:40",
+      "扫二维码付款",
+      "阿泉食杂店",
+      "收款方备注:二维码收款",
+      "支出",
+      "30",
+      "招商银行储蓄卡(1209)",
+      "已转账",
+      "53110001409141202605020932752192",
+      "10001073012026050201637220123649",
+      "/",
+    ],
+  ]);
+
+  return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 
 async function getSeededCategories() {
@@ -328,7 +373,401 @@ async function uninstallImportDraftTestTrigger() {
   `);
 }
 
-describe("Sui Shou Ji import draft services", () => {
+describe("import draft services", () => {
+  it("creates a WeChat Pay draft with owner inferred from the file header", async () => {
+    const { husbandMember, sessionUser } = await createHouseholdFixture();
+    const draft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("李环宇"),
+      fileName: "wechat-pay.xlsx",
+      sessionUser,
+    });
+
+    const summary = await services.getImportDraftSummary(draft.id, sessionUser);
+
+    expect(summary.source).toBe(WECHAT_PAY_SOURCE);
+    expect(summary.missingMappings).toMatchObject([
+      {
+        mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+        primaryCategory: "扫二维码付款",
+        secondaryCategory: "阿泉食杂店",
+        transactionType: TransactionType.EXPENSE,
+      },
+    ]);
+    expect(summary.rows[0]).toMatchObject({
+      actorFallbackApplied: false,
+      actorMemberId: husbandMember.id,
+      createdByMemberId: husbandMember.id,
+      creatorFallbackApplied: false,
+      rawCreatedBy: "李环宇",
+      rawMember: "李环宇",
+      status: ImportDraftRowStatus.NEEDS_MAPPING,
+    });
+  });
+
+  it("falls back to the current member when a WeChat Pay owner cannot be inferred", async () => {
+    const { sessionUser } = await createHouseholdFixture();
+    const draft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("陌生昵称"),
+      fileName: "wechat-pay-unknown.xlsx",
+      sessionUser,
+    });
+
+    const summary = await services.getImportDraftSummary(draft.id, sessionUser);
+
+    expect(summary.rows[0]).toMatchObject({
+      actorFallbackApplied: true,
+      actorMemberId: sessionUser.memberId,
+      createdByMemberId: sessionUser.memberId,
+      creatorFallbackApplied: true,
+    });
+  });
+
+  it("updates WeChat Pay draft owner member on importable rows before confirmation", async () => {
+    const { sessionUser, wifeMember } = await createHouseholdFixture();
+    const draft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("李环宇"),
+      fileName: "wechat-owner.xlsx",
+      sessionUser,
+    });
+
+    await services.saveWechatPayDraftOwnerMember(draft.id, wifeMember.id, sessionUser);
+
+    const summary = await services.getImportDraftSummary(draft.id, sessionUser);
+
+    expect(summary.rows[0]).toMatchObject({
+      actorFallbackApplied: false,
+      actorMemberId: wifeMember.id,
+      createdByMemberId: wifeMember.id,
+      creatorFallbackApplied: false,
+    });
+  });
+
+  it("updates WeChat Pay draft owner member only on rows that are not invalid or source duplicates", async () => {
+    const { husbandMember, sessionUser, wifeMember } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+    const draft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("陌生昵称"),
+      fileName: "wechat-owner-statuses.xlsx",
+      sessionUser,
+    });
+    const statuses = [
+      ImportDraftRowStatus.READY,
+      ImportDraftRowStatus.NEEDS_MAPPING,
+      ImportDraftRowStatus.POSSIBLE_DUPLICATE,
+      ImportDraftRowStatus.USER_SKIPPED,
+      ImportDraftRowStatus.INVALID,
+      ImportDraftRowStatus.SOURCE_DUPLICATE,
+    ];
+
+    await db.importDraftRow.deleteMany({ where: { draftId: draft.id } });
+    await db.importDraftRow.createMany({
+      data: statuses.map((status, index) => ({
+        actorFallbackApplied: true,
+        actorMemberId: husbandMember.id,
+        amountFen: 3000 + index,
+        categoryId:
+          status === ImportDraftRowStatus.NEEDS_MAPPING ? null : expenseCategory.id,
+        createdByMemberId: husbandMember.id,
+        creatorFallbackApplied: true,
+        draftId: draft.id,
+        mappingKey: `wechat_pay|EXPENSE|扫二维码付款|owner-status-${index}`,
+        occurredAt: new Date("2026-05-02T09:22:40.000Z"),
+        occurredDate: "2026-05-02",
+        primaryCategory: "扫二维码付款",
+        rawCreatedBy: "陌生昵称",
+        rawMember: "陌生昵称",
+        rowNumber: index + 1,
+        secondaryCategory: `owner-status-${index}`,
+        skipReason:
+          status === ImportDraftRowStatus.USER_SKIPPED ||
+          status === ImportDraftRowStatus.SOURCE_DUPLICATE
+            ? "Skipped"
+            : null,
+        sourceFingerprint: `wechat-owner-status-${index}`,
+        status,
+        transactionType: TransactionType.EXPENSE,
+        userDecision:
+          status === ImportDraftRowStatus.USER_SKIPPED ||
+          status === ImportDraftRowStatus.SOURCE_DUPLICATE
+            ? ImportRowDecision.SKIP
+            : ImportRowDecision.KEEP,
+      })),
+    });
+
+    await services.saveWechatPayDraftOwnerMember(draft.id, wifeMember.id, sessionUser);
+
+    const summary = await services.getImportDraftSummary(draft.id, sessionUser);
+    const rowsByStatus = new Map(summary.rows.map((row) => [row.status, row]));
+    const updatedStatuses = [
+      ImportDraftRowStatus.READY,
+      ImportDraftRowStatus.NEEDS_MAPPING,
+      ImportDraftRowStatus.POSSIBLE_DUPLICATE,
+      ImportDraftRowStatus.USER_SKIPPED,
+    ];
+
+    for (const status of updatedStatuses) {
+      expect(rowsByStatus.get(status)).toMatchObject({
+        actorFallbackApplied: false,
+        actorMemberId: wifeMember.id,
+        createdByMemberId: wifeMember.id,
+        creatorFallbackApplied: false,
+      });
+    }
+
+    for (const status of [
+      ImportDraftRowStatus.INVALID,
+      ImportDraftRowStatus.SOURCE_DUPLICATE,
+    ]) {
+      expect(rowsByStatus.get(status)).toMatchObject({
+        actorFallbackApplied: true,
+        actorMemberId: husbandMember.id,
+        createdByMemberId: husbandMember.id,
+        creatorFallbackApplied: true,
+      });
+    }
+  });
+
+  it("waits for concurrent WeChat Pay draft completion before changing owner member", async () => {
+    const { sessionUser, wifeMember } = await createHouseholdFixture();
+    const draft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("李环宇"),
+      fileName: "wechat-owner-concurrent.xlsx",
+      sessionUser,
+    });
+    let releaseDraftLock = () => {};
+    const draftLockReleased = new Promise<void>((resolve) => {
+      releaseDraftLock = resolve;
+    });
+    let markDraftLocked = () => {};
+    const draftLocked = new Promise<void>((resolve) => {
+      markDraftLocked = resolve;
+    });
+    const lockTransaction = db.$transaction(
+      async (tx) => {
+        await tx.importDraft.update({
+          where: { id: draft.id },
+          data: {
+            completedAt: new Date("2026-05-07T12:00:00.000Z"),
+            status: ImportDraftStatus.COMPLETED,
+          },
+        });
+        markDraftLocked();
+        await draftLockReleased;
+      },
+      { timeout: 10_000 },
+    );
+
+    await draftLocked;
+
+    const ownerChange = services.saveWechatPayDraftOwnerMember(
+      draft.id,
+      wifeMember.id,
+      sessionUser,
+    );
+    const earlyResult = await Promise.race([
+      ownerChange.then(
+        () => "resolved",
+        (error: Error) => error.message,
+      ),
+      new Promise<"blocked">((resolve) => {
+        setTimeout(() => resolve("blocked"), 250);
+      }),
+    ]);
+
+    releaseDraftLock();
+    await lockTransaction;
+
+    expect(earlyResult).toBe("blocked");
+    await expect(ownerChange).rejects.toThrow("Import draft is already completed");
+  });
+
+  it("does not allow WeChat Pay owner changes after completion", async () => {
+    const { sessionUser, wifeMember } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+    const draft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("李环宇"),
+      fileName: "wechat-completed-owner.xlsx",
+      sessionUser,
+    });
+    await services.saveImportDraftMappings(
+      draft.id,
+      [
+        {
+          categoryId: expenseCategory.id,
+          mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+        },
+      ],
+      sessionUser,
+    );
+    await services.confirmImportDraft(draft.id, sessionUser);
+
+    await expect(
+      services.saveWechatPayDraftOwnerMember(draft.id, wifeMember.id, sessionUser),
+    ).rejects.toThrow("Import draft is already completed");
+  });
+
+  it("rejects WeChat Pay owner member changes to a member outside the current household", async () => {
+    const { sessionUser } = await createHouseholdFixture();
+    const outsideSessionUser = await createOutsideSessionUser();
+    const draft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("李环宇"),
+      fileName: "wechat-owner-private.xlsx",
+      sessionUser,
+    });
+
+    await expect(
+      services.saveWechatPayDraftOwnerMember(draft.id, outsideSessionUser.memberId, sessionUser),
+    ).rejects.toThrow("Member not found");
+  });
+
+  it("loads possible duplicate candidates without one transaction lookup per parsed row", async () => {
+    const { husbandMember, sessionUser } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+
+    await db.importCategoryMapping.create({
+      data: {
+        categoryId: expenseCategory.id,
+        householdId: sessionUser.householdId,
+        primaryCategory: "餐饮",
+        secondaryCategory: "三餐",
+        source: "sui_shou_ji",
+        transactionType: TransactionType.EXPENSE,
+      },
+    });
+    await db.transaction.create({
+      data: {
+        actorMemberId: husbandMember.id,
+        amountFen: 17600,
+        categoryId: expenseCategory.id,
+        createdByMemberId: husbandMember.id,
+        householdId: sessionUser.householdId,
+        note: "Manual lunch",
+        occurredAt: new Date("2026-05-06T02:30:00.000Z"),
+        type: TransactionType.EXPENSE,
+      },
+    });
+
+    const findManySpy = vi.spyOn(db.transaction, "findMany");
+    const draft = await services.createSuiShouJiImportDraft({
+      buffer: await buildWorkbookBuffer({
+        支出: [
+          headers,
+          expenseRow({ rawAmount: "176", rawNote: "first" }),
+          expenseRow({ rawAmount: "28", rawNote: "second" }),
+          expenseRow({ rawAmount: "9", rawNote: "third" }),
+        ],
+      }),
+      fileName: "batched-possible-duplicates.xlsx",
+      sessionUser,
+    });
+    const transactionFindManyCallCount = findManySpy.mock.calls.length;
+
+    findManySpy.mockRestore();
+
+    const summary = await services.getImportDraftSummary(draft.id, sessionUser);
+
+    expect(transactionFindManyCallCount).toBe(2);
+    expect(summary.rows.map((row) => row.status)).toEqual([
+      ImportDraftRowStatus.POSSIBLE_DUPLICATE,
+      ImportDraftRowStatus.READY,
+      ImportDraftRowStatus.READY,
+    ]);
+    expect(summary.rows[0]?.duplicateCandidates).toHaveLength(1);
+  });
+
+  it("confirms WeChat Pay drafts and marks later same-source rows as duplicates", async () => {
+    const { husbandMember, sessionUser } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+    const buffer = await buildWechatPayWorkbook("李环宇");
+    const draft = await services.createWechatPayImportDraft({
+      buffer,
+      fileName: "wechat-pay-confirm.xlsx",
+      sessionUser,
+    });
+    await services.saveImportDraftMappings(
+      draft.id,
+      [
+        {
+          categoryId: expenseCategory.id,
+          mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+        },
+      ],
+      sessionUser,
+    );
+
+    const result = await services.confirmImportDraft(draft.id, sessionUser);
+
+    expect(result).toMatchObject({
+      createdCount: 1,
+      sourceDuplicateCount: 0,
+    });
+
+    const transaction = await db.transaction.findFirstOrThrow({
+      where: {
+        householdId: sessionUser.householdId,
+        source: "wechat_pay",
+      },
+    });
+
+    expect(transaction).toMatchObject({
+      actorMemberId: husbandMember.id,
+      amountFen: 3000,
+      categoryId: expenseCategory.id,
+      createdByMemberId: husbandMember.id,
+      householdId: sessionUser.householdId,
+      source: "wechat_pay",
+    });
+    expect(transaction.sourceFingerprint).toEqual(expect.any(String));
+    expect(transaction.sourceFingerprint).not.toBe("");
+    expect(transaction.sourceImportedAt).toBeInstanceOf(Date);
+
+    const duplicateDraft = await services.createWechatPayImportDraft({
+      buffer,
+      fileName: "wechat-pay-duplicate.xlsx",
+      sessionUser,
+    });
+    const duplicateSummary = await services.getImportDraftSummary(duplicateDraft.id, sessionUser);
+
+    expect(duplicateSummary.rows[0]).toMatchObject({
+      status: ImportDraftRowStatus.SOURCE_DUPLICATE,
+      userDecision: ImportRowDecision.SKIP,
+    });
+  });
+
+  it("reuses household WeChat Pay category mappings on the next draft", async () => {
+    const { sessionUser } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+    const firstDraft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("李环宇"),
+      fileName: "wechat-first.xlsx",
+      sessionUser,
+    });
+
+    await services.saveImportDraftMappings(
+      firstDraft.id,
+      [
+        {
+          categoryId: expenseCategory.id,
+          mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+        },
+      ],
+      sessionUser,
+    );
+
+    const secondDraft = await services.createWechatPayImportDraft({
+      buffer: await buildWechatPayWorkbook("李环宇"),
+      fileName: "wechat-second.xlsx",
+      sessionUser,
+    });
+    const summary = await services.getImportDraftSummary(secondDraft.id, sessionUser);
+
+    expect(summary.counts.needsMapping).toBe(0);
+    expect(summary.rows[0]).toMatchObject({
+      categoryId: expenseCategory.id,
+      status: ImportDraftRowStatus.READY,
+    });
+  });
+
   it("creates a draft, saves missing mappings, and confirms mapped transactions", async () => {
     const { sessionUser, wifeMember } = await createHouseholdFixture();
     const buffer = await buildExpenseIncomeWorkbook();
@@ -821,6 +1260,132 @@ describe("Sui Shou Ji import draft services", () => {
     ).resolves.toBe(rowCount);
   }, 30_000);
 
+  it("saves category mappings without per-row draft row updates", async () => {
+    const { husbandMember, sessionUser } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+    const draft = await db.importDraft.create({
+      data: {
+        createdByMemberId: sessionUser.memberId,
+        fileName: "batched-mapping.xlsx",
+        householdId: sessionUser.householdId,
+        source: "sui_shou_ji",
+      },
+      select: { id: true },
+    });
+    const mappingKey = "sui_shou_ji|EXPENSE|餐饮|三餐";
+
+    await db.importDraftRow.createMany({
+      data: [
+        {
+          actorMemberId: husbandMember.id,
+          amountFen: 17600,
+          createdByMemberId: husbandMember.id,
+          draftId: draft.id,
+          mappingKey,
+          occurredAt: new Date("2026-05-06T05:23:02.000Z"),
+          occurredDate: "2026-05-06",
+          primaryCategory: "餐饮",
+          rowNumber: 1,
+          secondaryCategory: "三餐",
+          sourceFingerprint: "batched-mapping-ready-1",
+          status: ImportDraftRowStatus.NEEDS_MAPPING,
+          transactionType: TransactionType.EXPENSE,
+          userDecision: ImportRowDecision.KEEP,
+        },
+        {
+          actorMemberId: husbandMember.id,
+          amountFen: 2800,
+          createdByMemberId: husbandMember.id,
+          draftId: draft.id,
+          mappingKey,
+          occurredAt: new Date("2026-05-06T06:23:02.000Z"),
+          occurredDate: "2026-05-06",
+          primaryCategory: "餐饮",
+          rowNumber: 2,
+          secondaryCategory: "三餐",
+          sourceFingerprint: "batched-mapping-ready-2",
+          status: ImportDraftRowStatus.NEEDS_MAPPING,
+          transactionType: TransactionType.EXPENSE,
+          userDecision: ImportRowDecision.KEEP,
+        },
+        {
+          actorMemberId: husbandMember.id,
+          amountFen: 900,
+          createdByMemberId: husbandMember.id,
+          draftId: draft.id,
+          duplicateCandidates: [
+            {
+              amountFen: 900,
+              categoryId: expenseCategory.id,
+              id: "candidate-1",
+              occurredAt: "2026-05-06T02:30:00.000Z",
+              source: null,
+              type: TransactionType.EXPENSE,
+            },
+          ] satisfies Prisma.InputJsonValue,
+          mappingKey,
+          occurredAt: new Date("2026-05-06T07:23:02.000Z"),
+          occurredDate: "2026-05-06",
+          primaryCategory: "餐饮",
+          rowNumber: 3,
+          secondaryCategory: "三餐",
+          sourceFingerprint: "batched-mapping-duplicate",
+          status: ImportDraftRowStatus.NEEDS_MAPPING,
+          transactionType: TransactionType.EXPENSE,
+          userDecision: ImportRowDecision.KEEP,
+        },
+        {
+          draftId: draft.id,
+          mappingKey,
+          rowNumber: 4,
+          skipReason: "Invalid amount",
+          status: ImportDraftRowStatus.INVALID,
+          userDecision: ImportRowDecision.SKIP,
+        },
+        {
+          draftId: draft.id,
+          mappingKey,
+          rowNumber: 5,
+          skipReason: "Source duplicate",
+          sourceFingerprint: "batched-mapping-source-duplicate",
+          status: ImportDraftRowStatus.SOURCE_DUPLICATE,
+          userDecision: ImportRowDecision.SKIP,
+        },
+      ],
+    });
+
+    const rowUpdateSpy = vi
+      .spyOn(db.importDraftRow, "update")
+      .mockRejectedValue(new Error("saveImportDraftMappings must not update rows one by one"));
+
+    try {
+      await services.saveImportDraftMappings(
+        draft.id,
+        [{ categoryId: expenseCategory.id, mappingKey }],
+        sessionUser,
+      );
+    } finally {
+      rowUpdateSpy.mockRestore();
+    }
+
+    const summary = await services.getImportDraftSummary(draft.id, sessionUser);
+
+    expect(rowUpdateSpy).not.toHaveBeenCalled();
+    expect(summary.rows.map((row) => row.status)).toEqual([
+      ImportDraftRowStatus.READY,
+      ImportDraftRowStatus.READY,
+      ImportDraftRowStatus.POSSIBLE_DUPLICATE,
+      ImportDraftRowStatus.INVALID,
+      ImportDraftRowStatus.SOURCE_DUPLICATE,
+    ]);
+    expect(summary.rows.slice(0, 3).map((row) => row.categoryId)).toEqual([
+      expenseCategory.id,
+      expenseCategory.id,
+      expenseCategory.id,
+    ]);
+    expect(summary.rows.slice(3).map((row) => row.categoryId)).toEqual([null, null]);
+  });
+
   it("rejects mappings whose category type does not match the imported transaction type", async () => {
     const { sessionUser } = await createHouseholdFixture();
     const { incomeCategory } = await getSeededCategories();
@@ -842,6 +1407,38 @@ describe("Sui Shou Ji import draft services", () => {
         sessionUser,
       ),
     ).rejects.toThrow("Category does not match transaction type");
+  });
+
+  it("rejects mappings whose source does not match the import draft source", async () => {
+    const { sessionUser } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+    const draft = await services.createSuiShouJiImportDraft({
+      buffer: await buildExpenseWorkbook(),
+      fileName: "wrong-source-mapping.xlsx",
+      sessionUser,
+    });
+
+    await expect(
+      services.saveImportDraftMappings(
+        draft.id,
+        [
+          {
+            categoryId: expenseCategory.id,
+            mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+          },
+        ],
+        sessionUser,
+      ),
+    ).rejects.toThrow("Mapping source does not match import draft source");
+
+    await expect(
+      db.importCategoryMapping.count({
+        where: {
+          householdId: sessionUser.householdId,
+          source: "wechat_pay",
+        },
+      }),
+    ).resolves.toBe(0);
   });
 
   it("rejects mappings to inactive categories", async () => {

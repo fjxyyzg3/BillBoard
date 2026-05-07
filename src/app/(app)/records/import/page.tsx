@@ -9,6 +9,7 @@ import Link from "next/link";
 import { requireAppSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getImportDraftSummary } from "@/lib/imports/drafts";
+import { SUI_SHOU_JI_SOURCE, WECHAT_PAY_SOURCE } from "@/lib/imports/types";
 import { formatLocaleDateTime, getCategoryDisplayName, getMessages } from "@/lib/i18n";
 import { getServerLocale } from "@/lib/i18n-server";
 import { formatFen } from "@/lib/money";
@@ -17,7 +18,8 @@ import {
   confirmImportDraftAction,
   saveImportDecisions,
   saveImportMappings,
-  uploadSuiShouJiImportDraft,
+  saveWechatPayOwnerMember,
+  uploadImportDraft,
 } from "./actions";
 
 type ImportPageProps = {
@@ -28,6 +30,11 @@ type CategoryOption = {
   id: string;
   name: string;
   type: "EXPENSE" | "INCOME";
+};
+
+type MemberOption = {
+  id: string;
+  memberName: string;
 };
 
 const duplicateReviewRowLimit = 50;
@@ -58,8 +65,29 @@ function transactionTypeLabel(type: TransactionType | null, labels: { expense: s
   return "-";
 }
 
-function sourceLabel(source: string | null, manualSource: string) {
-  return source || manualSource;
+function sourceLabel(
+  source: string | null,
+  labels: {
+    manualSource: string;
+    sources: {
+      suiShouJi: string;
+      wechatPay: string;
+    };
+  },
+) {
+  if (!source) {
+    return labels.manualSource;
+  }
+
+  if (source === SUI_SHOU_JI_SOURCE) {
+    return labels.sources.suiShouJi;
+  }
+
+  if (source === WECHAT_PAY_SOURCE) {
+    return labels.sources.wechatPay;
+  }
+
+  return source;
 }
 
 export default async function ImportRecordsPage({ searchParams }: ImportPageProps) {
@@ -83,6 +111,15 @@ export default async function ImportRecordsPage({ searchParams }: ImportPageProp
         }) as Promise<CategoryOption[]>,
       ])
     : [null, [] as CategoryOption[]];
+  const shouldShowWechatOwnerForm =
+    summary?.source === WECHAT_PAY_SOURCE && summary.status === ImportDraftStatus.PENDING;
+  const members = shouldShowWechatOwnerForm
+    ? await db.householdMember.findMany({
+        where: { householdId: sessionUser.householdId },
+        orderBy: { joinedAt: "asc" },
+        select: { id: true, memberName: true },
+      }) as MemberOption[]
+    : [];
 
   const duplicateRows =
     summary?.rows.filter(
@@ -94,6 +131,15 @@ export default async function ImportRecordsPage({ searchParams }: ImportPageProp
   const visibleDuplicateRows = duplicateRows.slice(0, duplicateReviewRowLimit);
   const hiddenDuplicateRowCount = duplicateRows.length - visibleDuplicateRows.length;
   const isCompleted = summary?.status === ImportDraftStatus.COMPLETED;
+  const wechatOwnerMemberId =
+    shouldShowWechatOwnerForm
+      ? (summary.rows.find(
+          (row) =>
+            row.status !== ImportDraftRowStatus.INVALID &&
+            row.status !== ImportDraftRowStatus.SOURCE_DUPLICATE &&
+            row.actorMemberId,
+        )?.actorMemberId ?? sessionUser.memberId)
+      : null;
 
   return (
     <section className="space-y-6">
@@ -120,11 +166,24 @@ export default async function ImportRecordsPage({ searchParams }: ImportPageProp
       ) : null}
 
       {!summary ? (
-        <form action={uploadSuiShouJiImportDraft} className="ios-panel space-y-4 p-5">
+        <form action={uploadImportDraft} className="ios-panel space-y-4 p-5">
           <div className="space-y-1">
             <h2 className="text-lg font-semibold">{messages.import.uploadTitle}</h2>
             <p className="text-sm text-stone-500">{messages.import.uploadDescription}</p>
           </div>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium text-stone-700">{messages.import.source}</legend>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex items-center justify-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-2 text-sm font-medium">
+                <input name="source" required type="radio" value={SUI_SHOU_JI_SOURCE} />
+                {messages.import.sources.suiShouJi}
+              </label>
+              <label className="flex items-center justify-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-2 text-sm font-medium">
+                <input name="source" required type="radio" value={WECHAT_PAY_SOURCE} />
+                {messages.import.sources.wechatPay}
+              </label>
+            </div>
+          </fieldset>
           <label className="block space-y-2 text-sm font-medium text-stone-700">
             <span>{messages.import.file}</span>
             <input
@@ -179,6 +238,37 @@ export default async function ImportRecordsPage({ searchParams }: ImportPageProp
               </div>
             ))}
           </div>
+
+          {shouldShowWechatOwnerForm && wechatOwnerMemberId ? (
+            <form action={saveWechatPayOwnerMember} className="ios-panel space-y-4 p-5">
+              <input name="draftId" type="hidden" value={summary.id} />
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold">{messages.import.ownerMemberTitle}</h2>
+                <p className="text-sm text-stone-500">{messages.import.ownerMemberDescription}</p>
+              </div>
+              <label className="block space-y-2 text-sm font-medium text-stone-700">
+                <span>{messages.common.who}</span>
+                <select
+                  className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2 text-sm"
+                  defaultValue={wechatOwnerMemberId}
+                  name="ownerMemberId"
+                  required
+                >
+                  {members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.memberName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                className="w-full rounded-full bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-700"
+                type="submit"
+              >
+                {messages.import.saveOwnerMember}
+              </button>
+            </form>
+          ) : null}
 
           {summary.missingMappings.length > 0 ? (
             <form action={saveImportMappings} className="ios-panel space-y-4 p-5">
@@ -267,7 +357,7 @@ export default async function ImportRecordsPage({ searchParams }: ImportPageProp
                             <p>
                               {formatLocaleDateTime(new Date(candidate.occurredAt), locale)} ·{" "}
                               {formatFen(candidate.amountFen)} ·{" "}
-                              {sourceLabel(candidate.source, messages.import.manualSource)}
+                              {sourceLabel(candidate.source, messages.import)}
                             </p>
                           </div>
                         ))}

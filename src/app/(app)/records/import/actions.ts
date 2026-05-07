@@ -8,11 +8,15 @@ import { requireAppSession } from "@/lib/auth/session";
 import {
   confirmImportDraft,
   createSuiShouJiImportDraft,
+  createWechatPayImportDraft,
   saveImportDraftMappings,
+  saveWechatPayDraftOwnerMember,
   setImportDraftRowDecision,
 } from "@/lib/imports/drafts";
+import { SUI_SHOU_JI_SOURCE, WECHAT_PAY_SOURCE, type ImportSource } from "@/lib/imports/types";
 
-const unrecognizedWorkbookMessage = "无法识别随手记导出格式";
+const unrecognizedSuiShouJiWorkbookMessage = "无法识别随手记导出格式";
+const unrecognizedWechatPayWorkbookMessage = "无法识别微信支付账单格式";
 const importFileTooLargeMessage = "Import file is too large";
 const maxUploadFileBytes = 20 * 1024 * 1024;
 
@@ -34,7 +38,23 @@ function isXlsxFile(value: FormDataEntryValue | null): value is File {
   return value instanceof File && value.name.toLowerCase().endsWith(".xlsx");
 }
 
-export async function uploadSuiShouJiImportDraft(formData: FormData) {
+function readImportSource(formData: FormData): ImportSource | null {
+  const source = String(formData.get("source") ?? "").trim();
+
+  if (source === SUI_SHOU_JI_SOURCE || source === WECHAT_PAY_SOURCE) {
+    return source;
+  }
+
+  return null;
+}
+
+export async function uploadImportDraft(formData: FormData) {
+  const source = readImportSource(formData);
+
+  if (!source) {
+    redirect("/records/import?error=missing-source");
+  }
+
   const file = formData.get("file");
 
   if (!isXlsxFile(file)) {
@@ -47,11 +67,15 @@ export async function uploadSuiShouJiImportDraft(formData: FormData) {
 
   try {
     const sessionUser = await requireAppSession();
-    const draft = await createSuiShouJiImportDraft({
+    const input = {
       buffer: Buffer.from(await file.arrayBuffer()),
       fileName: file.name,
       sessionUser,
-    });
+    };
+    const draft =
+      source === WECHAT_PAY_SOURCE
+        ? await createWechatPayImportDraft(input)
+        : await createSuiShouJiImportDraft(input);
 
     redirectToDraft(draft.id);
   } catch (error) {
@@ -63,8 +87,12 @@ export async function uploadSuiShouJiImportDraft(formData: FormData) {
       redirect("/login");
     }
 
-    if (error instanceof Error && error.message === unrecognizedWorkbookMessage) {
+    if (error instanceof Error && error.message === unrecognizedSuiShouJiWorkbookMessage) {
       redirect("/records/import?error=unrecognized-file");
+    }
+
+    if (error instanceof Error && error.message === unrecognizedWechatPayWorkbookMessage) {
+      redirect("/records/import?error=unrecognized-wechat-pay-file");
     }
 
     if (error instanceof Error && error.message === importFileTooLargeMessage) {
@@ -73,6 +101,37 @@ export async function uploadSuiShouJiImportDraft(formData: FormData) {
 
     redirect("/records/import?error=upload-failed");
   }
+}
+
+export async function uploadSuiShouJiImportDraft(formData: FormData) {
+  const source = String(formData.get("source") ?? "").trim();
+
+  if (source) {
+    return uploadImportDraft(formData);
+  }
+
+  const compatibleFormData = new FormData();
+  for (const [key, value] of formData.entries()) {
+    compatibleFormData.append(key, value);
+  }
+  compatibleFormData.set("source", SUI_SHOU_JI_SOURCE);
+
+  return uploadImportDraft(compatibleFormData);
+}
+
+export async function saveWechatPayOwnerMember(formData: FormData) {
+  const draftId = readDraftId(formData);
+  const ownerMemberId = String(formData.get("ownerMemberId") ?? "").trim();
+
+  if (!ownerMemberId) {
+    redirectToDraft(draftId);
+  }
+
+  const sessionUser = await requireAppSession();
+
+  await saveWechatPayDraftOwnerMember(draftId, ownerMemberId, sessionUser);
+
+  redirectToDraft(draftId);
 }
 
 export async function saveImportMappings(formData: FormData) {

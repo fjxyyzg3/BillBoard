@@ -1,5 +1,6 @@
 import { ImportDraftRowStatus, ImportDraftStatus, ImportRowDecision, TransactionType } from "@prisma/client";
-import { createElement } from "react";
+import { Children, createElement, isValidElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -7,6 +8,7 @@ const {
   categoryFindManyMock,
   confirmImportDraftMock,
   createSuiShouJiImportDraftMock,
+  createWechatPayImportDraftMock,
   getImportDraftSummaryMock,
   getServerLocaleMock,
   householdFindUniqueOrThrowMock,
@@ -15,12 +17,14 @@ const {
   redirectMock,
   requireAppSessionMock,
   saveImportDraftMappingsMock,
+  saveWechatPayDraftOwnerMemberMock,
   setImportDraftRowDecisionMock,
   transactionFindFirstMock,
 } = vi.hoisted(() => ({
   categoryFindManyMock: vi.fn(),
   confirmImportDraftMock: vi.fn(),
   createSuiShouJiImportDraftMock: vi.fn(),
+  createWechatPayImportDraftMock: vi.fn(),
   getImportDraftSummaryMock: vi.fn(),
   getServerLocaleMock: vi.fn(),
   householdFindUniqueOrThrowMock: vi.fn(),
@@ -31,6 +35,7 @@ const {
   }),
   requireAppSessionMock: vi.fn(),
   saveImportDraftMappingsMock: vi.fn(),
+  saveWechatPayDraftOwnerMemberMock: vi.fn(),
   setImportDraftRowDecisionMock: vi.fn(),
   transactionFindFirstMock: vi.fn(),
 }));
@@ -81,8 +86,10 @@ vi.mock("@/lib/records/list-records", () => ({
 vi.mock("@/lib/imports/drafts", () => ({
   confirmImportDraft: confirmImportDraftMock,
   createSuiShouJiImportDraft: createSuiShouJiImportDraftMock,
+  createWechatPayImportDraft: createWechatPayImportDraftMock,
   getImportDraftSummary: getImportDraftSummaryMock,
   saveImportDraftMappings: saveImportDraftMappingsMock,
+  saveWechatPayDraftOwnerMember: saveWechatPayDraftOwnerMemberMock,
   setImportDraftRowDecision: setImportDraftRowDecisionMock,
 }));
 
@@ -175,6 +182,14 @@ function buildPendingDraftSummary(overrides: Record<string, unknown> = {}) {
             categoryId: "category-expense",
             id: "record-2",
             occurredAt: "2026-05-06T03:30:00.000Z",
+            source: "wechat_pay",
+            type: TransactionType.EXPENSE,
+          },
+          {
+            amountFen: 17600,
+            categoryId: "category-expense",
+            id: "record-3",
+            occurredAt: "2026-05-06T04:30:00.000Z",
             source: "other_source",
             type: TransactionType.EXPENSE,
           },
@@ -200,6 +215,30 @@ function buildPendingDraftSummary(overrides: Record<string, unknown> = {}) {
     status: ImportDraftStatus.PENDING,
     ...overrides,
   };
+}
+
+function findElementsByType(node: ReactNode, type: string) {
+  const matches: ReactElement[] = [];
+
+  function visit(value: ReactNode) {
+    Children.forEach(value, (child) => {
+      if (!isValidElement(child)) {
+        return;
+      }
+
+      const element = child as ReactElement<{ children?: ReactNode }>;
+
+      if (element.type === type) {
+        matches.push(element);
+      }
+
+      visit(element.props.children);
+    });
+  }
+
+  visit(node);
+
+  return matches;
 }
 
 describe("Records import entry", () => {
@@ -235,13 +274,34 @@ describe("records import actions", () => {
     redirectMock.mockClear();
     confirmImportDraftMock.mockReset();
     createSuiShouJiImportDraftMock.mockReset();
+    createWechatPayImportDraftMock.mockReset();
     requireAppSessionMock.mockReset();
     saveImportDraftMappingsMock.mockReset();
+    saveWechatPayDraftOwnerMemberMock.mockReset();
     setImportDraftRowDecisionMock.mockReset();
     primeSharedMocks();
   });
 
-  it("uploads an .xlsx file, creates a draft, and redirects to the draft page", async () => {
+  it("uploads a Sui Shou Ji .xlsx file when the selected source is Sui Shou Ji", async () => {
+    createSuiShouJiImportDraftMock.mockResolvedValue({ id: "draft-1" });
+    const formData = new FormData();
+    formData.set("source", "sui_shou_ji");
+    formData.set("file", new File([new Uint8Array([1, 2, 3])], "export.xlsx"));
+
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
+
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
+      "REDIRECT:/records/import?draft=draft-1",
+    );
+    expect(createSuiShouJiImportDraftMock).toHaveBeenCalledWith({
+      buffer: expect.any(Buffer),
+      fileName: "export.xlsx",
+      sessionUser,
+    });
+    expect(createWechatPayImportDraftMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the legacy Sui Shou Ji upload action compatible before source is submitted", async () => {
     createSuiShouJiImportDraftMock.mockResolvedValue({ id: "draft-1" });
     const formData = new FormData();
     formData.set("file", new File([new Uint8Array([1, 2, 3])], "export.xlsx"));
@@ -256,15 +316,49 @@ describe("records import actions", () => {
       fileName: "export.xlsx",
       sessionUser,
     });
+    expect(createWechatPayImportDraftMock).not.toHaveBeenCalled();
+  });
+
+  it("uploads a WeChat Pay .xlsx file when the selected source is WeChat Pay", async () => {
+    createWechatPayImportDraftMock.mockResolvedValue({ id: "wechat-draft" });
+    const formData = new FormData();
+    formData.set("source", "wechat_pay");
+    formData.set("file", new File([new Uint8Array([1, 2, 3])], "wechat.xlsx"));
+
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
+
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
+      "REDIRECT:/records/import?draft=wechat-draft",
+    );
+    expect(createWechatPayImportDraftMock).toHaveBeenCalledWith({
+      buffer: expect.any(Buffer),
+      fileName: "wechat.xlsx",
+      sessionUser,
+    });
+    expect(createSuiShouJiImportDraftMock).not.toHaveBeenCalled();
+  });
+
+  it("redirects when import source is missing", async () => {
+    const formData = new FormData();
+    formData.set("file", new File([new Uint8Array([1])], "export.xlsx"));
+
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
+
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
+      "REDIRECT:/records/import?error=missing-source",
+    );
+    expect(createSuiShouJiImportDraftMock).not.toHaveBeenCalled();
+    expect(createWechatPayImportDraftMock).not.toHaveBeenCalled();
   });
 
   it("redirects unsupported files without creating a draft", async () => {
     const formData = new FormData();
+    formData.set("source", "sui_shou_ji");
     formData.set("file", new File([new Uint8Array([1])], "export.csv"));
 
-    const { uploadSuiShouJiImportDraft } = await import("@/app/(app)/records/import/actions");
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
 
-    await expect(uploadSuiShouJiImportDraft(formData)).rejects.toThrow(
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
       "REDIRECT:/records/import?error=unsupported-file",
     );
     expect(createSuiShouJiImportDraftMock).not.toHaveBeenCalled();
@@ -272,11 +366,12 @@ describe("records import actions", () => {
 
   it("redirects oversized files without reading or creating a draft", async () => {
     const formData = new FormData();
+    formData.set("source", "sui_shou_ji");
     formData.set("file", new File([new Uint8Array(20 * 1024 * 1024 + 1)], "export.xlsx"));
 
-    const { uploadSuiShouJiImportDraft } = await import("@/app/(app)/records/import/actions");
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
 
-    await expect(uploadSuiShouJiImportDraft(formData)).rejects.toThrow(
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
       "REDIRECT:/records/import?error=file-too-large",
     );
     expect(requireAppSessionMock).not.toHaveBeenCalled();
@@ -286,24 +381,56 @@ describe("records import actions", () => {
   it("maps unrecognized workbook errors to the unrecognized-file redirect", async () => {
     createSuiShouJiImportDraftMock.mockRejectedValue(new Error("无法识别随手记导出格式"));
     const formData = new FormData();
+    formData.set("source", "sui_shou_ji");
     formData.set("file", new File([new Uint8Array([1])], "export.xlsx"));
 
-    const { uploadSuiShouJiImportDraft } = await import("@/app/(app)/records/import/actions");
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
 
-    await expect(uploadSuiShouJiImportDraft(formData)).rejects.toThrow(
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
       "REDIRECT:/records/import?error=unrecognized-file",
+    );
+  });
+
+  it("maps WeChat Pay unrecognized workbook errors to the WeChat error redirect", async () => {
+    createWechatPayImportDraftMock.mockRejectedValue(new Error("无法识别微信支付账单格式"));
+    const formData = new FormData();
+    formData.set("source", "wechat_pay");
+    formData.set("file", new File([new Uint8Array([1])], "wechat.xlsx"));
+
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
+
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
+      "REDIRECT:/records/import?error=unrecognized-wechat-pay-file",
     );
   });
 
   it("maps parser size errors to the file-too-large redirect", async () => {
     createSuiShouJiImportDraftMock.mockRejectedValue(new Error("Import file is too large"));
     const formData = new FormData();
+    formData.set("source", "sui_shou_ji");
     formData.set("file", new File([new Uint8Array([1])], "export.xlsx"));
 
-    const { uploadSuiShouJiImportDraft } = await import("@/app/(app)/records/import/actions");
+    const { uploadImportDraft } = await import("@/app/(app)/records/import/actions");
 
-    await expect(uploadSuiShouJiImportDraft(formData)).rejects.toThrow(
+    await expect(uploadImportDraft(formData)).rejects.toThrow(
       "REDIRECT:/records/import?error=file-too-large",
+    );
+  });
+
+  it("saves WeChat Pay owner member selection and redirects back to the draft", async () => {
+    const formData = new FormData();
+    formData.set("draftId", "draft-1");
+    formData.set("ownerMemberId", "member-2");
+
+    const { saveWechatPayOwnerMember } = await import("@/app/(app)/records/import/actions");
+
+    await expect(saveWechatPayOwnerMember(formData)).rejects.toThrow(
+      "REDIRECT:/records/import?draft=draft-1",
+    );
+    expect(saveWechatPayDraftOwnerMemberMock).toHaveBeenCalledWith(
+      "draft-1",
+      "member-2",
+      sessionUser,
     );
   });
 
@@ -380,8 +507,166 @@ describe("records import page", () => {
     categoryFindManyMock.mockReset();
     getImportDraftSummaryMock.mockReset();
     getServerLocaleMock.mockReset();
+    householdMemberFindManyMock.mockReset();
     requireAppSessionMock.mockReset();
     primeSharedMocks();
+  });
+
+  it("renders source selection on the upload form", async () => {
+    const { default: ImportPage } = await import("@/app/(app)/records/import/page");
+    const markup = renderToStaticMarkup(
+      await ImportPage({
+        searchParams: Promise.resolve({}),
+      }),
+    );
+
+    expect(markup).toContain("name=\"source\"");
+    expect(markup).toContain('required="" type="radio" name="source" value="sui_shou_ji"');
+    expect(markup).toContain('required="" type="radio" name="source" value="wechat_pay"');
+    expect(markup).toContain("随手记");
+    expect(markup).toContain("微信支付");
+  });
+
+  it("renders WeChat Pay owner member selector from the first updateable row", async () => {
+    householdMemberFindManyMock.mockResolvedValue([
+      { id: "member-1", memberName: "老公" },
+      { id: "member-2", memberName: "老婆" },
+    ]);
+    getImportDraftSummaryMock.mockResolvedValue(
+      buildPendingDraftSummary({
+        missingMappings: [],
+        rows: [
+          {
+            ...buildPendingDraftSummary().rows[0],
+            actorMemberId: "member-1",
+            createdByMemberId: "member-1",
+            mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+            primaryCategory: "扫二维码付款",
+            secondaryCategory: "阿泉食杂店",
+            status: ImportDraftRowStatus.SOURCE_DUPLICATE,
+            userDecision: ImportRowDecision.SKIP,
+          },
+          {
+            ...buildPendingDraftSummary().rows[0],
+            actorMemberId: "member-1",
+            createdByMemberId: "member-1",
+            id: "row-invalid",
+            mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+            primaryCategory: "扫二维码付款",
+            secondaryCategory: "阿泉食杂店",
+            status: ImportDraftRowStatus.INVALID,
+            userDecision: ImportRowDecision.SKIP,
+          },
+          {
+            ...buildPendingDraftSummary().rows[0],
+            actorMemberId: "member-2",
+            createdByMemberId: "member-2",
+            id: "row-updateable",
+            mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+            primaryCategory: "扫二维码付款",
+            secondaryCategory: "阿泉食杂店",
+            status: ImportDraftRowStatus.POSSIBLE_DUPLICATE,
+          },
+        ],
+        source: "wechat_pay",
+      }),
+    );
+
+    const { default: ImportPage } = await import("@/app/(app)/records/import/page");
+    const markup = renderToStaticMarkup(
+      await ImportPage({
+        searchParams: Promise.resolve({ draft: "draft-1" }),
+      }),
+    );
+
+    expect(markup).toContain("账单归属成员");
+    expect(markup).toContain('type="hidden" name="draftId" value="draft-1"');
+    expect(markup).toContain("name=\"ownerMemberId\"");
+    expect(markup).toContain("value=\"member-2\" selected=\"\"");
+    expect(markup).toContain("保存成员");
+    expect(householdMemberFindManyMock).toHaveBeenCalledWith({
+      where: { householdId: sessionUser.householdId },
+      orderBy: { joinedAt: "asc" },
+      select: { id: true, memberName: true },
+    });
+  });
+
+  it("falls back to the session member when WeChat owner rows are not updateable", async () => {
+    householdMemberFindManyMock.mockResolvedValue([
+      { id: "member-1", memberName: "老公" },
+      { id: "member-2", memberName: "老婆" },
+    ]);
+    getImportDraftSummaryMock.mockResolvedValue(
+      buildPendingDraftSummary({
+        missingMappings: [],
+        rows: [
+          {
+            ...buildPendingDraftSummary().rows[0],
+            actorMemberId: "member-2",
+            mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+            status: ImportDraftRowStatus.SOURCE_DUPLICATE,
+            userDecision: ImportRowDecision.SKIP,
+          },
+          {
+            ...buildPendingDraftSummary().rows[0],
+            actorMemberId: "member-2",
+            id: "row-invalid",
+            mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+            status: ImportDraftRowStatus.INVALID,
+            userDecision: ImportRowDecision.SKIP,
+          },
+        ],
+        source: "wechat_pay",
+      }),
+    );
+
+    const { default: ImportPage } = await import("@/app/(app)/records/import/page");
+    const markup = renderToStaticMarkup(
+      await ImportPage({
+        searchParams: Promise.resolve({ draft: "draft-1" }),
+      }),
+    );
+
+    expect(markup).toContain("账单归属成员");
+    expect(markup).toContain("value=\"member-1\" selected=\"\"");
+  });
+
+  it("does not render WeChat Pay owner member selector for Sui Shou Ji drafts", async () => {
+    getImportDraftSummaryMock.mockResolvedValue(buildPendingDraftSummary());
+
+    const { default: ImportPage } = await import("@/app/(app)/records/import/page");
+    const markup = renderToStaticMarkup(
+      await ImportPage({
+        searchParams: Promise.resolve({ draft: "draft-1" }),
+      }),
+    );
+
+    expect(markup).not.toContain("账单归属成员");
+    expect(markup).not.toContain("name=\"ownerMemberId\"");
+    expect(householdMemberFindManyMock).not.toHaveBeenCalled();
+  });
+
+  it("does not render WeChat Pay owner member selector for completed WeChat drafts", async () => {
+    getImportDraftSummaryMock.mockResolvedValue(
+      buildPendingDraftSummary({
+        missingMappings: [],
+        rows: [],
+        source: "wechat_pay",
+        status: ImportDraftStatus.COMPLETED,
+      }),
+    );
+
+    const { default: ImportPage } = await import("@/app/(app)/records/import/page");
+    const markup = renderToStaticMarkup(
+      await ImportPage({
+        searchParams: Promise.resolve({ completed: "1", draft: "draft-1" }),
+      }),
+    );
+
+    expect(markup).toContain("导入已完成");
+    expect(markup).not.toContain("账单归属成员");
+    expect(markup).not.toContain("name=\"ownerMemberId\"");
+    expect(householdMemberFindManyMock).not.toHaveBeenCalled();
   });
 
   it("renders mapping selects, duplicate decisions, and disables confirm while mappings are missing", async () => {
@@ -404,6 +689,8 @@ describe("records import page", () => {
     expect(markup).toContain("value=\"SKIP\"");
     expect(markup).toContain("176.00");
     expect(markup).toContain("手工");
+    expect(markup).toContain("微信支付");
+    expect(markup).not.toContain("wechat_pay");
     expect(markup).toContain("other_source");
     expect(markup).toContain("disabled=\"\"");
   });
@@ -563,5 +850,72 @@ describe("records import page", () => {
     expect(markup).not.toContain("hidden_source");
     expect(markup).toContain("还有 1 行未显示");
     expect(markup).toContain("还有 1 个候选未显示");
+  });
+
+  it("wires the upload form to the upload import draft action", async () => {
+    const uploadImportDraftAction = vi.fn();
+
+    vi.doMock("@/app/(app)/records/import/actions", () => ({
+      confirmImportDraftAction: vi.fn(),
+      saveImportDecisions: vi.fn(),
+      saveImportMappings: vi.fn(),
+      saveWechatPayOwnerMember: vi.fn(),
+      uploadImportDraft: uploadImportDraftAction,
+    }));
+
+    try {
+      const { default: ImportPage } = await import("@/app/(app)/records/import/page");
+      const element = await ImportPage({
+        searchParams: Promise.resolve({}),
+      });
+      const forms = findElementsByType(element, "form");
+
+      expect(forms.some((form) => form.props.action === uploadImportDraftAction)).toBe(true);
+    } finally {
+      vi.doUnmock("@/app/(app)/records/import/actions");
+    }
+  });
+
+  it("wires the WeChat owner form to the save owner member action", async () => {
+    const saveWechatPayOwnerMemberAction = vi.fn();
+
+    householdMemberFindManyMock.mockResolvedValue([
+      { id: "member-1", memberName: "老公" },
+      { id: "member-2", memberName: "老婆" },
+    ]);
+    getImportDraftSummaryMock.mockResolvedValue(
+      buildPendingDraftSummary({
+        missingMappings: [],
+        rows: [
+          {
+            ...buildPendingDraftSummary().rows[0],
+            actorMemberId: "member-2",
+            mappingKey: "wechat_pay|EXPENSE|扫二维码付款|阿泉食杂店",
+            primaryCategory: "扫二维码付款",
+            secondaryCategory: "阿泉食杂店",
+          },
+        ],
+        source: "wechat_pay",
+      }),
+    );
+    vi.doMock("@/app/(app)/records/import/actions", () => ({
+      confirmImportDraftAction: vi.fn(),
+      saveImportDecisions: vi.fn(),
+      saveImportMappings: vi.fn(),
+      saveWechatPayOwnerMember: saveWechatPayOwnerMemberAction,
+      uploadImportDraft: vi.fn(),
+    }));
+
+    try {
+      const { default: ImportPage } = await import("@/app/(app)/records/import/page");
+      const element = await ImportPage({
+        searchParams: Promise.resolve({ draft: "draft-1" }),
+      });
+      const forms = findElementsByType(element, "form");
+
+      expect(forms.some((form) => form.props.action === saveWechatPayOwnerMemberAction)).toBe(true);
+    } finally {
+      vi.doUnmock("@/app/(app)/records/import/actions");
+    }
   });
 });
