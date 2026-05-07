@@ -8,6 +8,7 @@ BillBoard is a mobile-first household accounting app for two people. The core wo
 - `/home`: household overview with income, expense, net, trend, category breakdown, and recent records.
 - `/add`: quick income or expense entry. After saving, the page stays ready for the next entry and shows a lightweight top toast with the saved type and amount for 2.5 seconds.
 - `/records`: filterable history with edit and soft-delete support.
+- `/records/import`: Sui Shou Ji `.xlsx` import with draft preview, household-shared category mapping memory, source-fingerprint dedupe, duplicate review, and batched confirmation.
 - UI locale defaults to Chinese and can be switched to English with the header language control.
 
 ## Key Rules
@@ -17,6 +18,8 @@ BillBoard is a mobile-first household accounting app for two people. The core wo
 - Exclude soft-deleted transactions from active lists and reports.
 - Scope household data by the current session's `householdId` and `memberId`.
 - Default categories are seeded from `prisma/seed.ts`; built-in category names are stored in English and translated only for UI display.
+- Imported transactions keep `source`, `sourceFingerprint`, and `sourceImportedAt` metadata for same-source dedupe; manual transactions leave them empty.
+- Sui Shou Ji imports never create categories. Users map `交易类型 + 一级分类 + 二级分类` to existing categories, and mapping choices are shared by the household.
 
 ## Local Setup
 
@@ -58,6 +61,14 @@ npm run prisma:seed
 Run the app:
 
 ```powershell
+npm run dev
+```
+
+For ad-hoc manual startup without a local `.env`, set at least `DATABASE_URL` and `AUTH_SECRET` before `npm run dev`:
+
+```powershell
+$env:DATABASE_URL = "postgresql://billboard:billboard@127.0.0.1:15432/billboard_dev?schema=public"
+$env:AUTH_SECRET = "replace-me"
 npm run dev
 ```
 
@@ -106,7 +117,7 @@ npm run test:integration
 npm run test:e2e
 ```
 
-Integration and E2E tests need PostgreSQL plus seed data. Playwright uses `http://127.0.0.1:2500` and starts `npm run dev` automatically. E2E runs clear the `Transaction` table before and after the suite, so point them only at the development/test database, not production.
+Integration and E2E tests need PostgreSQL plus seed data. Playwright uses `http://127.0.0.1:2500` and starts `npm run dev` automatically. E2E runs clear import draft rows, import drafts, import category mappings, and transactions before and after the suite, so point them only at the development/test database, not production.
 
 If Podman on Windows reports the database container is running but Prisma cannot reach `127.0.0.1:5432`, restart the Podman machine or use the SSH tunnel from Local Setup and point `DATABASE_URL` at `postgresql://billboard:billboard@127.0.0.1:15432/billboard_dev?schema=public`.
 

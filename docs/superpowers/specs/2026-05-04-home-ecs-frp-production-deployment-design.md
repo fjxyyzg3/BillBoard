@@ -249,7 +249,7 @@ bash ops/backup/restore-from-dump.sh /path/to/billboard-YYYYMMDD-HHMMSS.dump
 - `/records` 可以看到新增记录，并且编辑、软删除流程正常。
 - `bash ops/backup/pg_dump.sh ./tmp/backups` 可以生成 dump 文件。
 
-不允许把 e2e 测试直接指向生产数据库运行，因为 e2e 会在测试开始前和结束后清空 `Transaction` 表。
+不允许把 e2e 测试直接指向生产数据库运行，因为 e2e 会在测试开始前和结束后清空交易和导入暂存数据。
 
 ## 11. 错误处理与回滚
 

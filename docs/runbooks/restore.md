@@ -25,6 +25,6 @@ Use this runbook to recover BillBoard onto a new or rebuilt machine.
 - Open `/home` and confirm totals render.
 - Create a test record and confirm it appears in history.
 - Open the records view and confirm older history is present.
-- During the launch-gate rehearsal, run `npm run test:e2e -- tests/e2e/create-expense.spec.ts`, `npm run test:e2e -- tests/e2e/create-income.spec.ts`, and `npm run test:e2e -- tests/e2e/home-drilldown.spec.ts` only against a disposable test database before sign-off. Playwright clears the `Transaction` table before and after e2e runs.
+- During the launch-gate rehearsal, run `npm run test:e2e -- tests/e2e/create-expense.spec.ts`, `npm run test:e2e -- tests/e2e/create-income.spec.ts`, and `npm run test:e2e -- tests/e2e/home-drilldown.spec.ts` only against a disposable test database before sign-off. Playwright clears import draft rows, import drafts, import category mappings, and transactions before and after e2e runs.
 - Run a fresh backup and confirm a new `.dump` file appears after the restore validation.
 - If the recovery target is the final production machine, run a fresh backup after validation.
