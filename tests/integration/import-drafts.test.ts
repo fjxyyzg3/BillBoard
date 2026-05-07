@@ -766,6 +766,61 @@ describe("Sui Shou Ji import draft services", () => {
     });
   });
 
+  it("confirms large mapped drafts without expiring the transaction", async () => {
+    const { sessionUser, wifeMember } = await createHouseholdFixture();
+    const { expenseCategory } = await getSeededCategories();
+    const draft = await db.importDraft.create({
+      data: {
+        createdByMemberId: sessionUser.memberId,
+        fileName: "large-confirm.xlsx",
+        householdId: sessionUser.householdId,
+        source: "sui_shou_ji",
+      },
+      select: { id: true },
+    });
+    const rowCount = 6_000;
+
+    await db.importDraftRow.createMany({
+      data: Array.from({ length: rowCount }, (_, index) => ({
+        actorMemberId: wifeMember.id,
+        amountFen: 1_000 + index,
+        categoryId: expenseCategory.id,
+        createdByMemberId: wifeMember.id,
+        draftId: draft.id,
+        mappingKey: "sui_shou_ji|EXPENSE|餐饮|三餐",
+        note: `large confirm ${index}`,
+        occurredAt: new Date(Date.UTC(2026, 4, 6, 5, index % 60, 0)),
+        occurredDate: "2026-05-06",
+        primaryCategory: "餐饮",
+        rawAmount: String(10 + index),
+        rawCreatedBy: "晶晶",
+        rawCurrency: "CNY",
+        rawDate: "2026-05-06 13:00:00",
+        rawMember: "晶晶",
+        rawTransactionType: "支出",
+        rowNumber: index + 2,
+        secondaryCategory: "三餐",
+        sourceFingerprint: `large-confirm-${index.toString().padStart(4, "0")}`,
+        status: ImportDraftRowStatus.READY,
+        transactionType: TransactionType.EXPENSE,
+        userDecision: ImportRowDecision.KEEP,
+      })),
+    });
+
+    const result = await services.confirmImportDraft(draft.id, sessionUser);
+
+    expect(result.createdCount).toBe(rowCount);
+    expect(result.sourceDuplicateCount).toBe(0);
+    await expect(
+      db.transaction.count({
+        where: {
+          householdId: sessionUser.householdId,
+          source: "sui_shou_ji",
+        },
+      }),
+    ).resolves.toBe(rowCount);
+  }, 30_000);
+
   it("rejects mappings whose category type does not match the imported transaction type", async () => {
     const { sessionUser } = await createHouseholdFixture();
     const { incomeCategory } = await getSeededCategories();

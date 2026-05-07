@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import {
   CategoryType,
   ImportDraftRowStatus,
@@ -103,10 +105,35 @@ type MappingKeyParts = {
   transactionType: TransactionType;
 };
 
+type ConfirmImportableRow = {
+  actorMemberId: string;
+  amountFen: number;
+  categoryId: string;
+  createdByMemberId: string;
+  id: string;
+  note: string | null;
+  occurredAt: Date;
+  rowNumber: number;
+  sourceFingerprint: string;
+  transactionType: TransactionType;
+};
+
+const confirmImportChunkSize = 500;
+
 const transactionTypeToCategoryType = {
   [TransactionType.EXPENSE]: CategoryType.EXPENSE,
   [TransactionType.INCOME]: CategoryType.INCOME,
 } as const;
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+}
 
 function parseMappingKey(mappingKey: string): MappingKeyParts {
   const [source, transactionType, primaryCategory, secondaryCategory] = mappingKey.split("|");
@@ -153,6 +180,102 @@ function isImportableRow(row: Pick<ImportDraftRowSummary, "status" | "userDecisi
     (row.status === ImportDraftRowStatus.READY ||
       row.status === ImportDraftRowStatus.POSSIBLE_DUPLICATE)
   );
+}
+
+async function findExistingSourceFingerprints(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  fingerprints: string[],
+) {
+  const existing = new Set<string>();
+
+  for (const chunk of chunkArray(fingerprints, confirmImportChunkSize)) {
+    const rows = await tx.transaction.findMany({
+      where: {
+        householdId,
+        source: SUI_SHOU_JI_SOURCE,
+        sourceFingerprint: { in: chunk },
+      },
+      select: { sourceFingerprint: true },
+    });
+
+    for (const row of rows) {
+      if (row.sourceFingerprint) {
+        existing.add(row.sourceFingerprint);
+      }
+    }
+  }
+
+  return existing;
+}
+
+async function markRowsAsSourceDuplicates(tx: Prisma.TransactionClient, rowIds: string[]) {
+  for (const chunk of chunkArray(rowIds, confirmImportChunkSize)) {
+    await tx.importDraftRow.updateMany({
+      where: { id: { in: chunk } },
+      data: {
+        skipReason: "Source duplicate",
+        status: ImportDraftRowStatus.SOURCE_DUPLICATE,
+        userDecision: ImportRowDecision.SKIP,
+      },
+    });
+  }
+}
+
+async function insertImportTransactions(
+  tx: Prisma.TransactionClient,
+  householdId: string,
+  rows: ConfirmImportableRow[],
+  importedAt: Date,
+) {
+  const insertedFingerprints = new Set<string>();
+
+  for (const chunk of chunkArray(rows, confirmImportChunkSize)) {
+    const inserted = await tx.$queryRaw<Array<{ sourceFingerprint: string }>>(Prisma.sql`
+      INSERT INTO "Transaction" (
+        "id",
+        "household_id",
+        "type",
+        "actor_member_id",
+        "created_by_member_id",
+        "category_id",
+        "amount_fen",
+        "occurred_at",
+        "note",
+        "source",
+        "source_fingerprint",
+        "source_imported_at",
+        "created_at",
+        "updated_at"
+      )
+      VALUES ${Prisma.join(
+        chunk.map((row) => Prisma.sql`(
+          ${randomUUID()},
+          ${householdId},
+          CAST(${row.transactionType} AS "TransactionType"),
+          ${row.actorMemberId},
+          ${row.createdByMemberId},
+          ${row.categoryId},
+          ${row.amountFen},
+          ${row.occurredAt},
+          ${row.note},
+          ${SUI_SHOU_JI_SOURCE},
+          ${row.sourceFingerprint},
+          ${importedAt},
+          CURRENT_TIMESTAMP,
+          CURRENT_TIMESTAMP
+        )`),
+      )}
+      ON CONFLICT DO NOTHING
+      RETURNING "source_fingerprint" AS "sourceFingerprint"
+    `);
+
+    for (const row of inserted) {
+      insertedFingerprints.add(row.sourceFingerprint);
+    }
+  }
+
+  return insertedFingerprints;
 }
 
 function buildSummary(draft: {
@@ -736,6 +859,9 @@ export async function confirmImportDraft(
       userSkippedCount: 0,
     };
     const importedAt = new Date();
+    const importableRows: ConfirmImportableRow[] = [];
+    const sourceDuplicateRowIds: string[] = [];
+    const seenFingerprints = new Set<string>();
 
     for (const row of draft.rows) {
       if (row.status === ImportDraftRowStatus.INVALID) {
@@ -762,68 +888,73 @@ export async function confirmImportDraft(
         !row.actorMemberId ||
         !row.createdByMemberId ||
         !row.categoryId ||
-        !row.amountFen ||
+        row.amountFen === null ||
         !row.occurredAt ||
         !row.sourceFingerprint
       ) {
         throw new Error("Import draft row is incomplete");
       }
 
-      const sourceDuplicate = await tx.transaction.findFirst({
-        where: {
-          householdId: sessionUser.householdId,
-          source: SUI_SHOU_JI_SOURCE,
-          sourceFingerprint: row.sourceFingerprint,
-        },
-        select: { id: true },
-      });
-
-      if (sourceDuplicate) {
-        await tx.importDraftRow.update({
-          where: { id: row.id },
-          data: {
-            skipReason: "Source duplicate",
-            status: ImportDraftRowStatus.SOURCE_DUPLICATE,
-            userDecision: ImportRowDecision.SKIP,
-          },
-        });
+      if (seenFingerprints.has(row.sourceFingerprint)) {
+        sourceDuplicateRowIds.push(row.id);
         result.sourceDuplicateCount += 1;
         continue;
       }
 
-      const created = await tx.transaction.createMany({
-        data: [
-          {
-            actorMemberId: row.actorMemberId,
-            amountFen: row.amountFen,
-            categoryId: row.categoryId,
-            createdByMemberId: row.createdByMemberId,
-            householdId: sessionUser.householdId,
-            note: row.note,
-            occurredAt: row.occurredAt,
-            source: SUI_SHOU_JI_SOURCE,
-            sourceFingerprint: row.sourceFingerprint,
-            sourceImportedAt: importedAt,
-            type: row.transactionType,
-          },
-        ],
-        skipDuplicates: true,
+      seenFingerprints.add(row.sourceFingerprint);
+      importableRows.push({
+        actorMemberId: row.actorMemberId,
+        amountFen: row.amountFen,
+        categoryId: row.categoryId,
+        createdByMemberId: row.createdByMemberId,
+        id: row.id,
+        note: row.note,
+        occurredAt: row.occurredAt,
+        rowNumber: row.rowNumber,
+        sourceFingerprint: row.sourceFingerprint,
+        transactionType: row.transactionType,
       });
+    }
 
-      if (created.count === 0) {
-        await tx.importDraftRow.update({
-          where: { id: row.id },
-          data: {
-            skipReason: "Source duplicate",
-            status: ImportDraftRowStatus.SOURCE_DUPLICATE,
-            userDecision: ImportRowDecision.SKIP,
-          },
-        });
+    const existingSourceFingerprints = await findExistingSourceFingerprints(
+      tx,
+      sessionUser.householdId,
+      importableRows.map((row) => row.sourceFingerprint),
+    );
+    const rowsToCreate = [];
+
+    for (const row of importableRows) {
+      if (existingSourceFingerprints.has(row.sourceFingerprint)) {
+        sourceDuplicateRowIds.push(row.id);
         result.sourceDuplicateCount += 1;
-        continue;
+      } else {
+        rowsToCreate.push(row);
       }
+    }
 
-      result.createdCount += 1;
+    if (sourceDuplicateRowIds.length > 0) {
+      await markRowsAsSourceDuplicates(tx, sourceDuplicateRowIds);
+    }
+
+    const insertedFingerprints = await insertImportTransactions(
+      tx,
+      sessionUser.householdId,
+      rowsToCreate,
+      importedAt,
+    );
+    const conflictRowIds = [];
+
+    for (const row of rowsToCreate) {
+      if (insertedFingerprints.has(row.sourceFingerprint)) {
+        result.createdCount += 1;
+      } else {
+        conflictRowIds.push(row.id);
+        result.sourceDuplicateCount += 1;
+      }
+    }
+
+    if (conflictRowIds.length > 0) {
+      await markRowsAsSourceDuplicates(tx, conflictRowIds);
     }
 
     await tx.importDraft.update({
@@ -835,5 +966,5 @@ export async function confirmImportDraft(
     });
 
     return result;
-  });
+  }, { timeout: 120_000 });
 }
