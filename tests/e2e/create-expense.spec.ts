@@ -25,7 +25,7 @@ test("users can create an expense and confirm what was saved", async ({ page }) 
   await page.goto("/add?perspective=spouse&range=last-30-days");
 
   await page.getByLabel("金额").fill("12.34");
-  await page.getByRole("button", { name: "买菜" }).click();
+  await page.getByRole("button", { name: "购物" }).click();
   await page.getByLabel("成员").selectOption({ label: requireEnv("SEED_USER_B_NAME") });
   await page.getByLabel("备注").fill(note);
   await page.getByRole("button", { name: "保存记录" }).click();
@@ -45,7 +45,7 @@ test("users can create an expense and confirm what was saved", async ({ page }) 
   await expect(page).toHaveURL(/\/records/);
   await expect(page).toHaveURL(/perspective=spouse/);
   await expect(page).toHaveURL(/range=last-30-days/);
-  const createdRecord = page.getByRole("link", { name: /-12\.34.*买菜.*老婆/ });
+  const createdRecord = page.getByRole("link", { name: /-12\.34.*购物.*老婆/ });
   await expect(createdRecord).toBeVisible();
   await expect(createdRecord).toContainText("-12.34");
   await expect(page.getByText(note)).toHaveCount(0);

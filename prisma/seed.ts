@@ -5,9 +5,8 @@ const prisma = new PrismaClient();
 
 const expenseCategories = [
   "Dining",
-  "Groceries",
   "Transport",
-  "Daily Use",
+  "Shopping",
   "Home",
   "Medical",
   "Childcare",
@@ -15,9 +14,12 @@ const expenseCategories = [
   "Entertainment",
   "Social",
   "Travel",
+  "Study",
   "Other",
 ];
 const incomeCategories = ["Salary", "Bonus", "Reimbursement", "Refund", "Investment", "Other"];
+const renamedExpenseCategories = [{ from: "Daily Use", to: "Shopping" }];
+const inactiveExpenseCategories = ["Groceries"];
 
 function requireEnv(name: string) {
   const value = process.env[name];
@@ -84,6 +86,29 @@ async function main() {
       },
     });
   }
+
+  for (const category of renamedExpenseCategories) {
+    const target = await prisma.category.findUnique({
+      where: { type_name: { type: CategoryType.EXPENSE, name: category.to } },
+    });
+
+    if (target) {
+      await prisma.category.updateMany({
+        where: { type: CategoryType.EXPENSE, name: category.from },
+        data: { isActive: false },
+      });
+    } else {
+      await prisma.category.updateMany({
+        where: { type: CategoryType.EXPENSE, name: category.from },
+        data: { name: category.to, isActive: true },
+      });
+    }
+  }
+
+  await prisma.category.updateMany({
+    where: { type: CategoryType.EXPENSE, name: { in: inactiveExpenseCategories } },
+    data: { isActive: false },
+  });
 
   for (const [sortOrder, name] of expenseCategories.entries()) {
     await prisma.category.upsert({

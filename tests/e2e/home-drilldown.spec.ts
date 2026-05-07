@@ -25,7 +25,7 @@ test("home expense drill-down preserves shared filters", async ({ page }) => {
   await page.goto("/add");
 
   await page.getByLabel("金额").fill("45.67");
-  await page.getByRole("button", { name: "买菜" }).click();
+  await page.getByRole("button", { name: "购物" }).click();
   await page.getByLabel("成员").selectOption({ label: requireEnv("SEED_USER_B_NAME") });
   await page.getByLabel("备注").fill(note);
   await page.getByRole("button", { name: "保存记录" }).click();
@@ -39,7 +39,7 @@ test("home expense drill-down preserves shared filters", async ({ page }) => {
   await page.getByRole("link", { name: /查看当前视图的支出记录/ }).click();
 
   await expect(page).toHaveURL(/\/records\?/);
-  await expect(page.getByRole("link", { name: /-45\.67.*买菜.*老婆/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /-45\.67.*购物.*老婆/ })).toBeVisible();
   await expect(page.getByText(note)).toHaveCount(0);
 
   const recordsUrl = new URL(page.url());

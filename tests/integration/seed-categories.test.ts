@@ -3,11 +3,10 @@ import { describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
 
 describe("seed categories", () => {
-  it("includes childcare and parent care as ordered expense categories", async () => {
+  it("keeps the active default expense categories in the expected order", async () => {
     const categories = await db.category.findMany({
       where: {
         isActive: true,
-        name: { in: ["Medical", "Childcare", "Parent Care", "Entertainment"] },
         type: CategoryType.EXPENSE,
       },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -15,10 +14,18 @@ describe("seed categories", () => {
     });
 
     expect(categories.map((category) => category.name)).toEqual([
+      "Dining",
+      "Transport",
+      "Shopping",
+      "Home",
       "Medical",
       "Childcare",
       "Parent Care",
       "Entertainment",
+      "Social",
+      "Travel",
+      "Study",
+      "Other",
     ]);
   });
 });

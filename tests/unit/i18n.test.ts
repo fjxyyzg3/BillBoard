@@ -28,12 +28,15 @@ describe("i18n helpers", () => {
   });
 
   it("maps built-in category names only at display time", () => {
-    expect(getCategoryDisplayName("Groceries", "zh-CN")).toBe("买菜");
+    expect(getCategoryDisplayName("Shopping", "zh-CN")).toBe("购物");
+    expect(getCategoryDisplayName("Study", "zh-CN")).toBe("学习");
     expect(getCategoryDisplayName("Salary", "zh-CN")).toBe("工资");
     expect(getCategoryDisplayName("Childcare", "zh-CN")).toBe("育儿");
     expect(getCategoryDisplayName("Parent Care", "zh-CN")).toBe("孝心");
+    expect(getCategoryDisplayName("Groceries", "zh-CN")).toBe("Groceries");
     expect(getCategoryDisplayName("Custom Family", "zh-CN")).toBe("Custom Family");
-    expect(getCategoryDisplayName("Groceries", "en-US")).toBe("Groceries");
+    expect(getCategoryDisplayName("Shopping", "en-US")).toBe("Shopping");
+    expect(getCategoryDisplayName("Study", "en-US")).toBe("Study");
     expect(getCategoryDisplayName("Childcare", "en-US")).toBe("Childcare");
   });
 

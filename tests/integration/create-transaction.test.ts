@@ -210,7 +210,7 @@ describe("transaction form follow-up UI requirements", () => {
       createElement(CategoryPicker, {
         categories: [
           { id: "expense-1", name: "Dining", type: "expense" },
-          { id: "expense-2", name: "Groceries", type: "expense" },
+          { id: "expense-2", name: "Shopping", type: "expense" },
           { id: "income-1", name: "Salary", type: "income" },
         ],
         label: "Category",
