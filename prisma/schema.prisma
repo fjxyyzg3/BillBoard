@@ -1,0 +1,791 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  LOCKED
+  DEACTIVATED
+}
+
+enum HouseholdRole {
+  OWNER
+  MEMBER
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum ImportDraftStatus {
+  PENDING
+  COMPLETED
+}
+
+enum ImportDraftRowStatus {
+  READY
+  NEEDS_MAPPING
+  SOURCE_DUPLICATE
+  POSSIBLE_DUPLICATE
+  INVALID
+  USER_SKIPPED
+}
+
+enum ImportRowDecision {
+  KEEP
+  SKIP
+}
+
+enum NaturalLanguageRequestStatus {
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+enum BillAnalysisRequestStatus {
+  PREPARING
+  RUNNING
+  STOPPING
+  SUCCEEDED
+  FAILED
+}
+
+enum AppEventType {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  PAGE_VIEW
+  TRANSACTION_CREATED
+  TRANSACTION_UPDATED
+  TRANSACTION_DELETED
+  IMPORT_DRAFT_UPLOADED
+  IMPORT_CONFIRMED
+}
+
+enum OpsAuditAction {
+  RESET_USER_PASSWORD
+  REVOKE_USER_SESSION
+  REVOKE_USER_SESSIONS_AFTER_PASSWORD_RESET
+  ACCESS_APPLICATION_APPROVED
+  ACCESS_APPLICATION_REJECTED
+  ACCESS_APPLICATION_MAIL_RETRIED
+}
+
+enum AccessApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AccessApplicationMailStatus {
+  NONE
+  SENDING
+  SENT
+  FAILED
+}
+
+enum LedgerAuditAction {
+  TRANSACTION_CREATED
+  TRANSACTION_UPDATED
+  TRANSACTION_MOVED
+  TRANSACTION_DELETED
+  IMPORT_CONFIRMED
+  LEDGER_CREATED
+  LEDGER_RENAMED
+  LEDGER_DEFAULT_CHANGED
+  LEDGER_ARCHIVED
+  LEDGER_RESTORED
+}
+
+enum InvitationPurpose {
+  PLATFORM
+  HOUSEHOLD
+}
+
+enum AccountTokenPurpose {
+  VERIFY_EMAIL
+  CHANGE_EMAIL
+  RESET_PASSWORD
+  REGISTER
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  displayName     String           @map("display_name")
+  passwordHash    String           @map("password_hash")
+  status          UserStatus       @default(ACTIVE)
+  emailVerifiedAt DateTime?        @map("email_verified_at")
+  aiProcessingEnabled Boolean     @default(false) @map("ai_processing_enabled")
+  voiceProcessingEnabled Boolean  @default(false) @map("voice_processing_enabled")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  householdMember HouseholdMember[]
+  appSessions     AppSession[]
+  opsAuditLogs    OpsAuditLog[]    @relation("OpsAuditTargetUser")
+  accountTokens   AccountToken[]
+}
+
+model Household {
+  id                     String                  @id @default(cuid())
+  name                   String
+  baseCurrency           String                  @default("CNY") @map("base_currency")
+  timezone               String                  @default("Asia/Shanghai")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  closedAt               DateTime?               @map("closed_at")
+  ledgers                Ledger[]
+  ledgerAuditLogs        LedgerAuditLog[]
+  members                HouseholdMember[]
+  transactions           Transaction[]
+  importDrafts           ImportDraft[]
+  importCategoryMappings ImportCategoryMapping[]
+  importMemberMappings   ImportMemberMapping[]
+  appEvents              AppEvent[]
+  naturalLanguageRequests NaturalLanguageRequest[]
+  billAnalysisReports     BillAnalysisReport[]
+  billAnalysisRequests    BillAnalysisRequest[]
+  billReconciliationApplications BillReconciliationApplication[]
+  invitations             Invitation[]
+  resourceLeases          ResourceLease[]
+  voiceAdmissions         VoiceProcessingAdmission[]
+  encryption              HouseholdEncryption?
+  encryptionOperations    EncryptionOperation[]
+}
+
+model HouseholdEncryption {
+  householdId       String    @id @map("household_id")
+  mode              String    @default("UNENCRYPTED")
+  revision          Int       @default(0)
+  generation        String?
+  keyVersion        Int       @default(0) @map("key_version")
+  sealedKeyRing     String?   @map("sealed_key_ring")
+  recoveryDigest    String?   @map("recovery_digest")
+  activeOperationId String?   @unique @map("active_operation_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  household         Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+}
+
+model EncryptionOperation {
+  id                  String              @id
+  householdId         String              @map("household_id")
+  userId              String              @map("user_id")
+  memberId            String              @map("member_id")
+  appSessionId        String              @map("app_session_id")
+  kind                String
+  status              String              @default("PREPARED")
+  sourceMode          String              @map("source_mode")
+  sourceRevision      Int                 @map("source_revision")
+  barrierRevision     Int                 @map("barrier_revision")
+  candidateGeneration String?             @map("candidate_generation")
+  candidateKeyVersion Int?                @map("candidate_key_version")
+  candidateKeyRing    String?             @map("candidate_key_ring")
+  recoveryDigest      String?             @map("recovery_digest")
+  manifest            Json?
+  cursor              Json?
+  createdAt           DateTime            @default(now()) @map("created_at")
+  expiresAt           DateTime            @map("expires_at")
+  completedAt         DateTime?           @map("completed_at")
+  household           Household           @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  staging             EncryptionStaging[]
+
+  @@index([householdId, status])
+}
+
+model EncryptionStaging {
+  operationId  String              @map("operation_id")
+  model        String
+  entityId     String              @map("entity_id")
+  sourceDigest String              @map("source_digest")
+  target       Json
+  operation    EncryptionOperation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+
+  @@id([operationId, model, entityId])
+}
+
+model HouseholdMember {
+  id                   String                @id @default(cuid())
+  householdId          String                @map("household_id")
+  userId               String                @map("user_id")
+  role                 HouseholdRole
+  memberName           String                @map("member_name")
+  joinedAt             DateTime              @default(now()) @map("joined_at")
+  leftAt               DateTime?             @map("left_at")
+  household            Household             @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  actorTransactions    Transaction[]         @relation("ActorTransactions")
+  createdTransactions  Transaction[]         @relation("CreatedTransactions")
+  importDrafts         ImportDraft[]
+  importMemberMappings ImportMemberMapping[]
+  appEvents            AppEvent[]
+  naturalLanguageRequests NaturalLanguageRequest[]
+  billAnalysisReports BillAnalysisReport[]
+  billAnalysisRequests BillAnalysisRequest[]
+  billReconciliationApplications BillReconciliationApplication[]
+  appSessions          AppSession[]
+  actorImportRows      ImportDraftRow[]       @relation("ImportRowActor")
+  createdImportRows    ImportDraftRow[]       @relation("ImportRowCreator")
+  ledgerAuditLogs       LedgerAuditLog[]
+  issuedInvitations    Invitation[]
+  resourceLeases       ResourceLease[]
+  voiceAdmissions      VoiceProcessingAdmission[]
+
+  @@unique([id, householdId])
+  @@unique([id, userId])
+  @@index([userId])
+}
+
+model Invitation {
+  id                String             @id @default(cuid())
+  purpose           InvitationPurpose
+  email             String
+  tokenHash         String             @unique @map("token_hash")
+  householdId       String?            @map("household_id")
+  createdByMemberId String?            @map("created_by_member_id")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  expiresAt         DateTime           @map("expires_at")
+  sentAt            DateTime?          @map("sent_at")
+  consumedAt        DateTime?          @map("consumed_at")
+  revokedAt         DateTime?          @map("revoked_at")
+  accessApplicationId String?          @map("access_application_id")
+  accessApplication AccessApplication? @relation(fields: [accessApplicationId], references: [id], onDelete: SetNull)
+  household         Household?         @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByMember   HouseholdMember?   @relation(fields: [createdByMemberId, householdId], references: [id, householdId], onDelete: Restrict)
+  registrations     AccountToken[]
+
+  @@index([householdId, createdAt])
+  @@index([email, purpose, expiresAt])
+  @@index([accessApplicationId, createdAt])
+}
+
+model AccessApplicationConfirmation {
+  id         String   @id @default(cuid())
+  email      String
+  note       String?  @db.VarChar(80)
+  locale     String   @default("zh-CN")
+  tokenHash  String   @unique @map("token_hash")
+  createdAt  DateTime @default(now()) @map("created_at")
+  expiresAt  DateTime @map("expires_at")
+  sentAt     DateTime? @map("sent_at")
+  consumedAt DateTime? @map("consumed_at")
+  revokedAt  DateTime? @map("revoked_at")
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+}
+
+model AccessApplication {
+  id                 String                      @id @default(cuid())
+  email              String
+  note               String?                     @db.VarChar(80)
+  locale             String                      @default("zh-CN")
+  status             AccessApplicationStatus     @default(PENDING)
+  createdAt          DateTime                    @default(now()) @map("created_at")
+  updatedAt          DateTime                    @updatedAt @map("updated_at")
+  verifiedAt         DateTime                    @map("verified_at")
+  decidedAt          DateTime?                   @map("decided_at")
+  mailStatus         AccessApplicationMailStatus @default(NONE) @map("mail_status")
+  mailAttemptToken   String?                     @map("mail_attempt_token")
+  mailLeaseExpiresAt DateTime?                   @map("mail_lease_expires_at")
+  mailSentAt         DateTime?                   @map("mail_sent_at")
+  invitations        Invitation[]
+  opsAuditLogs       OpsAuditLog[]
+
+  @@index([status, createdAt])
+  @@index([email, createdAt])
+}
+
+model AccountToken {
+  id            String              @id @default(cuid())
+  purpose       AccountTokenPurpose
+  tokenHash     String              @unique @map("token_hash")
+  userId        String?             @map("user_id")
+  email         String
+  invitationId  String?             @map("invitation_id")
+  passwordHash  String?             @map("password_hash")
+  displayName   String?             @map("display_name")
+  memberName    String?             @map("member_name")
+  householdName String?             @map("household_name")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  expiresAt     DateTime            @map("expires_at")
+  sentAt        DateTime?           @map("sent_at")
+  consumedAt    DateTime?           @map("consumed_at")
+  revokedAt     DateTime?           @map("revoked_at")
+  user          User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitation    Invitation?        @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose, expiresAt])
+  @@index([invitationId, createdAt])
+  @@index([expiresAt])
+}
+
+model IdentityAuditLog {
+  id            String   @id @default(cuid())
+  action        String
+  actorUserId   String?  @map("actor_user_id")
+  actorMemberId String?  @map("actor_member_id")
+  householdId   String?  @map("household_id")
+  targetId      String?  @map("target_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([householdId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model IdentityRateLimit {
+  id              String   @id
+  attempts        Int      @default(0)
+  windowStartedAt DateTime @default(now()) @map("window_started_at")
+  lastAttemptAt   DateTime @default(now()) @map("last_attempt_at")
+}
+
+model IdentityMailLease {
+  slot      Int      @id
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+}
+
+model ResourceWindow {
+  key       String   @id
+  kind      String
+  scope     String
+  subjectId String   @map("subject_id")
+  startedAt DateTime @map("started_at")
+  used      Int      @default(0)
+
+  @@index([startedAt])
+}
+
+model ResourceLease {
+  execution ResourceExecution?
+  token       String   @id
+  kind        String
+  householdId String   @map("household_id")
+  memberId    String   @map("member_id")
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  taskKey     String?  @map("task_key")
+  waiters     Int      @default(0)
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  member      HouseholdMember @relation(fields: [memberId, householdId], references: [id, householdId], onDelete: Cascade)
+
+  @@index([kind, expiresAt])
+  @@index([householdId, kind, expiresAt])
+  @@index([memberId, kind, expiresAt])
+  @@index([kind, householdId, taskKey, expiresAt])
+}
+
+model ResourceExecution {
+  token     String   @id
+  createdAt DateTime @default(now()) @map("created_at")
+  chargedAt DateTime? @map("charged_at")
+  chargedCalls Int @default(0) @map("charged_calls")
+  lease     ResourceLease @relation(fields: [token], references: [token], onDelete: Cascade)
+}
+
+model BillAnalysisReport {
+  id                String   @id @default(cuid())
+  householdId       String   @map("household_id")
+  createdByMemberId String   @map("created_by_member_id")
+  definition        Json?
+  content           Json?
+  inputHash         String?  @map("input_hash")
+  generation        Int      @default(0)
+  activeRequestId   String?  @map("active_request_id")
+  generatedAt       DateTime? @map("generated_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  encryptedPayload  String?  @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  household         Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByMember   HouseholdMember @relation(fields: [createdByMemberId, householdId], references: [id, householdId], onDelete: Restrict)
+  requests          BillAnalysisRequest[]
+  applications      BillReconciliationApplication[]
+
+  @@unique([id, householdId])
+  @@index([householdId, generatedAt, id])
+  @@index([householdId, updatedAt, id])
+  @@index([householdId, activeRequestId])
+}
+
+model BillAnalysisRequest {
+  id                   String   @id @default(cuid())
+  householdId          String   @map("household_id")
+  createdByMemberId    String   @map("created_by_member_id")
+  originalAppSessionId String   @map("original_app_session_id")
+  clientRequestId      String   @map("client_request_id")
+  status               BillAnalysisRequestStatus
+  reportId             String?  @map("report_id")
+  generation           Int?
+  definition           Json?
+  errorCode            String?  @map("error_code")
+  modeRevision         Int      @map("mode_revision")
+  configMode           String   @map("config_mode")
+  leaseToken           String?  @map("lease_token")
+  deadlineAt           DateTime? @map("deadline_at")
+  ownerId              String?  @map("owner_id")
+  ownerRuntime         String?  @map("owner_runtime")
+  ownerPid             Int?     @map("owner_pid")
+  ownerStartedAt       DateTime? @map("owner_started_at")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  encryptedPayload     String?  @map("encrypted_payload")
+  encryptionRevision   String?  @map("encryption_revision")
+  household            Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByMember      HouseholdMember @relation(fields: [createdByMemberId, householdId], references: [id, householdId], onDelete: Restrict)
+  report               BillAnalysisReport? @relation(fields: [reportId, householdId], references: [id, householdId], onDelete: Restrict)
+
+  @@unique([householdId, createdByMemberId, clientRequestId], map: "BillAnalysisRequest_household_member_request_key")
+  @@index([householdId, status])
+  @@index([householdId, reportId, createdAt, id])
+  @@index([ownerRuntime, ownerPid, status])
+  @@index([leaseToken])
+}
+
+model BillReconciliationApplication {
+  id                   String   @id @default(cuid())
+  householdId          String   @map("household_id")
+  createdByMemberId    String   @map("created_by_member_id")
+  clientRequestId      String   @map("client_request_id")
+  reportId             String?  @map("report_id")
+  generation           Int?
+  status               String
+  definition           Json?
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  encryptedPayload     String?  @map("encrypted_payload")
+  encryptionRevision   String?  @map("encryption_revision")
+  household            Household @relation(fields: [householdId], references: [id], onDelete: Cascade, map: "BillReconciliationApplication_household_fkey")
+  createdByMember      HouseholdMember @relation(fields: [createdByMemberId, householdId], references: [id, householdId], onDelete: Restrict, map: "BillReconciliationApplication_member_household_fkey")
+  report               BillAnalysisReport? @relation(fields: [reportId, householdId], references: [id, householdId], onDelete: Restrict, map: "BillReconciliationApplication_report_household_fkey")
+
+  @@unique([householdId, createdByMemberId, clientRequestId], map: "BillReconciliationApplication_household_member_request_key")
+  @@index([householdId, reportId, generation], map: "BillReconciliationApplication_household_report_generation_idx")
+}
+
+model VoiceProcessingAdmission {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id              String   @id @default(uuid())
+  clientRequestId String   @map("client_request_id")
+  userId          String   @map("user_id")
+  householdId     String   @map("household_id")
+  memberId        String   @map("member_id")
+  ledgerId        String   @map("ledger_id")
+  appSessionId    String   @map("app_session_id")
+  audioHash       String   @map("audio_hash")
+  textHash        String?  @map("text_hash")
+  expiresAt       DateTime @map("expires_at")
+  consumedAt      DateTime? @map("consumed_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  household       Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  member          HouseholdMember @relation(fields: [memberId, householdId], references: [id, householdId], onDelete: Cascade)
+  ledger          Ledger @relation(fields: [ledgerId, householdId], references: [id, householdId], onDelete: Cascade)
+
+  @@unique([householdId, memberId, clientRequestId])
+  @@index([expiresAt])
+}
+
+model Ledger {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id                     String                   @id @default(cuid())
+  householdId            String                   @map("household_id")
+  name                   String
+  isDefault              Boolean                  @default(false) @map("is_default")
+  acceptsLegacyDrafts    Boolean                  @default(false) @map("accepts_legacy_drafts")
+  archivedAt             DateTime?                @map("archived_at")
+  createdAt              DateTime                 @default(now()) @map("created_at")
+  updatedAt              DateTime                 @updatedAt @map("updated_at")
+  household              Household                @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  transactions           Transaction[]
+  importDrafts           ImportDraft[]
+  naturalLanguageRequests NaturalLanguageRequest[]
+  auditLogs              LedgerAuditLog[]
+  voiceAdmissions        VoiceProcessingAdmission[]
+
+  @@unique([id, householdId])
+  @@index([householdId])
+}
+
+model LedgerAuditLog {
+  id          String            @id @default(cuid())
+  householdId String            @map("household_id")
+  memberId    String            @map("member_id")
+  ledgerId    String            @map("ledger_id")
+  action      LedgerAuditAction
+  targetId    String            @map("target_id")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  household   Household         @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  member      HouseholdMember   @relation(fields: [memberId, householdId], references: [id, householdId])
+  ledger      Ledger            @relation(fields: [ledgerId, householdId], references: [id, householdId])
+
+  @@index([householdId, createdAt])
+  @@index([targetId])
+}
+
+model Category {
+  id             String                  @id @default(cuid())
+  type           CategoryType
+  name           String
+  sortOrder      Int                     @map("sort_order")
+  isActive       Boolean                 @default(true) @map("is_active")
+  transactions   Transaction[]
+  importMappings ImportCategoryMapping[]
+
+  @@unique([type, name], name: "type_name")
+}
+
+model Transaction {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id                String          @id @default(cuid())
+  householdId       String          @map("household_id")
+  ledgerId          String          @map("ledger_id")
+  type              TransactionType
+  actorMemberId     String          @map("actor_member_id")
+  createdByMemberId String          @map("created_by_member_id")
+  clientRequestId   String?         @map("client_request_id")
+  categoryId        String          @map("category_id")
+  amountFen         Int             @map("amount_fen")
+  occurredAt        DateTime        @map("occurred_at")
+  note              String?
+  source            String?
+  sourceFingerprint String?         @map("source_fingerprint")
+  sourceImportedAt  DateTime?       @map("source_imported_at")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  deletedAt         DateTime?       @map("deleted_at")
+  household         Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  category          Category        @relation(fields: [categoryId], references: [id])
+  actorMember       HouseholdMember @relation("ActorTransactions", fields: [actorMemberId, householdId], references: [id, householdId])
+  createdByMember   HouseholdMember @relation("CreatedTransactions", fields: [createdByMemberId, householdId], references: [id, householdId])
+  ledger            Ledger          @relation(fields: [ledgerId, householdId], references: [id, householdId])
+
+  @@unique([id, householdId], name: "id_householdId")
+  @@unique([createdByMemberId, clientRequestId], map: "Transaction_created_by_member_id_client_request_id_key")
+  @@index([householdId, occurredAt])
+  @@index([ledgerId, occurredAt])
+  @@index([actorMemberId, occurredAt])
+  @@index([categoryId, occurredAt])
+  @@index([householdId, source, sourceFingerprint])
+}
+
+model NaturalLanguageRequest {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id                String                       @id @default(cuid())
+  householdId       String                       @map("household_id")
+  ledgerId          String                       @map("ledger_id")
+  createdByMemberId String                       @map("created_by_member_id")
+  clientRequestId   String                       @map("client_request_id")
+  inputHash         String?                      @map("input_hash")
+  referenceAt       DateTime?                    @map("reference_at")
+  status            NaturalLanguageRequestStatus
+  attemptId         String?                      @map("attempt_id")
+  leaseExpiresAt    DateTime?                    @map("lease_expires_at")
+  result            Json?
+  errorCode         String?                      @map("error_code")
+  issues            Json?
+  createdAt         DateTime                     @default(now()) @map("created_at")
+  updatedAt         DateTime                     @updatedAt @map("updated_at")
+  household         Household                    @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByMember   HouseholdMember              @relation(fields: [createdByMemberId, householdId], references: [id, householdId], onDelete: Cascade)
+  ledger            Ledger                       @relation(fields: [ledgerId, householdId], references: [id, householdId])
+
+  @@unique([householdId, createdByMemberId, clientRequestId], map: "NaturalLanguageRequest_household_member_request_key")
+  @@index([householdId, createdByMemberId, status])
+}
+
+model ImportCategoryMapping {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id                String          @id @default(cuid())
+  householdId       String          @map("household_id")
+  source            String
+  transactionType   TransactionType @map("transaction_type")
+  primaryCategory   String          @map("primary_category")
+  secondaryCategory String          @map("secondary_category")
+  categoryId        String?         @map("category_id")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  household         Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  category          Category?       @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([householdId, source, transactionType, primaryCategory, secondaryCategory], name: "household_source_type_primary_secondary", map: "household_source_type_primary_secondary")
+  @@index([categoryId])
+}
+
+model ImportMemberMapping {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id           String          @id @default(cuid())
+  householdId  String          @map("household_id")
+  source       String
+  externalName String          @map("external_name")
+  memberId     String          @map("member_id")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  household    Household       @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  member       HouseholdMember @relation(fields: [memberId, householdId], references: [id, householdId], onDelete: Cascade)
+
+  @@unique([householdId, source, externalName], name: "household_source_external_name", map: "household_source_external_name")
+  @@index([memberId])
+}
+
+model AppEvent {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id          String           @id @default(cuid())
+  eventType   AppEventType     @map("event_type")
+  householdId String?          @map("household_id")
+  memberId    String?          @map("member_id")
+  path        String?
+  summary     String?
+  metadata    Json?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  household   Household?       @relation(fields: [householdId], references: [id], onDelete: SetNull)
+  member      HouseholdMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([eventType, createdAt])
+  @@index([householdId, createdAt])
+  @@index([memberId, createdAt])
+}
+
+model ImportDraft {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id                String            @id @default(cuid())
+  householdId       String            @map("household_id")
+  ledgerId          String            @map("ledger_id")
+  source            String
+  status            ImportDraftStatus @default(PENDING)
+  fileName          String            @map("file_name")
+  createdByMemberId String            @map("created_by_member_id")
+  completedAt       DateTime?         @map("completed_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  household         Household         @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByMember   HouseholdMember   @relation(fields: [createdByMemberId, householdId], references: [id, householdId])
+  ledger            Ledger            @relation(fields: [ledgerId, householdId], references: [id, householdId])
+  rows              ImportDraftRow[]
+
+  @@index([householdId, status, createdAt])
+}
+
+model ImportDraftRow {
+  encryptedPayload String? @map("encrypted_payload")
+  encryptionRevision String? @map("encryption_revision")
+  id                     String               @id @default(cuid())
+  draftId                String               @map("draft_id")
+  rowNumber              Int                  @map("row_number")
+  transactionType        TransactionType?     @map("transaction_type")
+  occurredAt             DateTime?            @map("occurred_at")
+  occurredDate           String?              @map("occurred_date")
+  amountFen              Int?                 @map("amount_fen")
+  actorMemberId          String?              @map("actor_member_id")
+  createdByMemberId      String?              @map("created_by_member_id")
+  actorExternalName      String?              @map("actor_external_name")
+  creatorExternalName    String?              @map("creator_external_name")
+  categoryId             String?              @map("category_id")
+  primaryCategory        String?              @map("primary_category")
+  secondaryCategory      String?              @map("secondary_category")
+  mappingKey             String?              @map("mapping_key")
+  note                   String?
+  sourceFingerprint      String?              @map("source_fingerprint")
+  refundOriginalAmountFen Int?                 @map("refund_original_amount_fen")
+  refundSourceFingerprints String[]            @default([]) @map("refund_source_fingerprints")
+  status                 ImportDraftRowStatus
+  userDecision           ImportRowDecision    @default(KEEP) @map("user_decision")
+  skipReason             String?              @map("skip_reason")
+  duplicateCandidates    Json?                @map("duplicate_candidates")
+  actorFallbackApplied   Boolean              @default(false) @map("actor_fallback_applied")
+  creatorFallbackApplied Boolean              @default(false) @map("creator_fallback_applied")
+  rawTransactionType     String?              @map("raw_transaction_type")
+  rawDate                String?              @map("raw_date")
+  rawAmount              String?              @map("raw_amount")
+  rawMember              String?              @map("raw_member")
+  rawCreatedBy           String?              @map("raw_created_by")
+  rawCurrency            String?              @map("raw_currency")
+  createdAt              DateTime             @default(now()) @map("created_at")
+  updatedAt              DateTime             @updatedAt @map("updated_at")
+  draft                  ImportDraft          @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  actorMember            HouseholdMember?     @relation("ImportRowActor", fields: [actorMemberId], references: [id])
+  createdByMember        HouseholdMember?     @relation("ImportRowCreator", fields: [createdByMemberId], references: [id])
+
+  @@index([draftId, status])
+  @@index([mappingKey])
+  @@index([sourceFingerprint])
+  @@index([refundSourceFingerprints], type: Gin)
+}
+
+model LoginThrottle {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  attemptCount Int       @default(0) @map("attempt_count")
+  lockedUntil  DateTime? @map("locked_until")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+}
+
+model LoginBudget {
+  id         Int      @id
+  tokens     Int
+  refilledAt DateTime @map("refilled_at")
+}
+
+model LoginAttemptLease {
+  slot      Int      @id
+  token     String   @unique
+  userId    String?  @unique @map("user_id")
+  expiresAt DateTime @map("expires_at")
+}
+
+model AppSession {
+  id           String        @id @default(cuid())
+  sessionKey   String        @unique @map("session_key")
+  userId       String        @map("user_id")
+  memberId     String?       @map("member_id")
+  userAgent    String?       @map("user_agent")
+  loginAt      DateTime      @default(now()) @map("login_at")
+  lastSeenAt   DateTime      @default(now()) @map("last_seen_at")
+  expiresAt    DateTime      @map("expires_at")
+  revokedAt    DateTime?     @map("revoked_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  member       HouseholdMember? @relation(fields: [memberId, userId], references: [id, userId], onDelete: Cascade)
+  opsAuditLogs OpsAuditLog[] @relation("OpsAuditTargetSession")
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+model OpsAuditLog {
+  id              String         @id @default(cuid())
+  action          OpsAuditAction
+  operator        String         @default("ops-admin")
+  targetUserId    String?        @map("target_user_id")
+  targetSessionId String?        @map("target_session_id")
+  targetAccessApplicationId String? @map("target_access_application_id")
+  summary         String?
+  createdAt       DateTime       @default(now()) @map("created_at")
+  targetUser      User?          @relation("OpsAuditTargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+  targetSession   AppSession?    @relation("OpsAuditTargetSession", fields: [targetSessionId], references: [id], onDelete: SetNull)
+  targetAccessApplication AccessApplication? @relation(fields: [targetAccessApplicationId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([targetSessionId, createdAt])
+  @@index([targetAccessApplicationId, createdAt])
+}

@@ -1,0 +1,78 @@
+{
+  "name": "billboard",
+  "version": "1.67.11",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 2500",
+    "build": "next build",
+    "start": "next start",
+    "ops": "next start --hostname 127.0.0.1 --port 32768",
+    "lint": "node --import tsx ops/testing/run.ts lint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node --env-file=.env.example --env-file-if-exists=.env --import tsx prisma/seed.ts",
+    "test:prepare": "node --import tsx ops/testing/prepare.ts",
+    "test:unit": "node --import tsx ops/testing/run.ts unit",
+    "test:integration": "node --import tsx ops/testing/run.ts integration",
+    "test:e2e": "node --import tsx ops/testing/run.ts e2e",
+    "verify:full": "node --import tsx ops/testing/run.ts full",
+    "android:signing:init": "node ops/android/init-signing.mjs",
+    "android:check": "node ops/android/check-android.mjs",
+    "android:test:device": "node android/test-device.mjs",
+    "android:build": "node ops/android/build-apk.mjs",
+    "android:publish": "node ops/android/publish-apk.mjs",
+    "desktop:signing:init": "node ops/desktop/init-signing.mjs",
+    "desktop:check": "node ops/desktop/check-desktop.mjs",
+    "desktop:test:windows": "node desktop/test-windows.mjs",
+    "desktop:test:web": "node desktop/test-web.mjs",
+    "desktop:build": "node ops/desktop/build-exe.mjs",
+    "desktop:publish": "node ops/desktop/publish-exe.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@zip.js/zip.js": "^2.23.0",
+    "argon2": "^0.44.0",
+    "exceljs": "^4.4.0",
+    "lucide-react": "^1.11.0",
+    "motion": "^12.42.2",
+    "next": "^16.4.2",
+    "next-auth": "5.0.0-beta.32",
+    "pdfjs-dist": "^6.4.299",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "recharts": "^3.8.1",
+    "smtp-mailer": "npm:nodemailer@10.1.7",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^22.19.18",
+    "@types/nodemailer": "^7.0.12",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.4.2",
+    "postcss": "^8.5.31",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4.2.2",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.1"
+    },
+    "exceljs": {
+      "uuid": "11.1.1"
+    },
+    "next": {
+      "postcss": "8.5.31"
+    }
+  }
+}

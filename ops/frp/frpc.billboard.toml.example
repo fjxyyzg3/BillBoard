@@ -1,0 +1,21 @@
+serverAddr = "<frps-server-address>"
+serverPort = 7000
+# Current ingress: HTTPS domain forwarding service -> frps remote 3000 -> frpc.
+# Verify remote-port access restrictions against the forwarding provider's sources.
+# The optional nginx sample does not describe an already deployed proxy.
+# Do not add a proxy for the container-internal import agent.
+
+auth.method = "token"
+auth.token = "<private-frp-token>"
+
+[[proxies]]
+name = "billboard-web"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3000
+remotePort = 3000
+healthCheck.type = "http"
+healthCheck.path = "/login"
+healthCheck.intervalSeconds = 30
+healthCheck.timeoutSeconds = 5
+healthCheck.maxFailed = 3

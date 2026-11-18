@@ -1,0 +1,141 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+plugins {
+    id 'com.android.application'
+}
+
+def metadata = new JsonSlurper().parse(file('../../package.json'))
+def parts = metadata.version.tokenize('.').collect { it.toInteger() }
+def appOrigin = System.getenv('BILLBOARD_ANDROID_ORIGIN') ?: 'https://billboard.example'
+def releaseKeys = ['BILLBOARD_ANDROID_KEYSTORE', 'BILLBOARD_ANDROID_STORE_PASSWORD',
+                   'BILLBOARD_ANDROID_KEY_ALIAS', 'BILLBOARD_ANDROID_KEY_PASSWORD']
+def releaseConfigured = releaseKeys.every { System.getenv(it) }
+
+android {
+    namespace 'com.billboard.app'
+    compileSdk 36
+    buildToolsVersion '36.0.0'
+
+    defaultConfig {
+        applicationId 'com.billboard.app'
+        minSdk 29
+        targetSdk 36
+        versionCode parts[0] * 1000000 + parts[1] * 1000 + parts[2]
+        versionName metadata.version
+        buildConfigField 'String', 'APP_ORIGIN', JsonOutput.toJson(appOrigin)
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    signingConfigs {
+        if (releaseConfigured) {
+            release {
+                storeFile file(System.getenv('BILLBOARD_ANDROID_KEYSTORE'))
+                storePassword System.getenv('BILLBOARD_ANDROID_STORE_PASSWORD')
+                keyAlias System.getenv('BILLBOARD_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('BILLBOARD_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (releaseConfigured) signingConfig signingConfigs.release
+            minifyEnabled false
+            debuggable false
+        }
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+        updateFixture {
+            initWith debug
+            matchingFallbacks = ['debug']
+            versionNameSuffix ''
+            buildConfigField 'String', 'APP_ORIGIN', JsonOutput.toJson('https://billboard.example')
+        }
+    }
+    buildFeatures { buildConfig true }
+    bundle { language { enableSplit = false } }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets.main.res.srcDir layout.buildDirectory.dir('generated/billboard-res')
+    sourceSets.androidTest.assets.srcDir layout.buildDirectory.dir('generated/update-fixtures')
+    lint { abortOnError true }
+}
+
+androidComponents {
+    onVariants(selector().withBuildType('updateFixture')) { variant ->
+        variant.outputs.each {
+            it.versionCode.set(parts[0] * 1000000 + parts[1] * 1000 + parts[2] + 1)
+            it.versionName.set("${parts[0]}.${parts[1]}.${parts[2] + 1}")
+        }
+    }
+}
+
+// Instrumentation exercises real APK verification and PackageInstaller with an isolated debug identity.
+def prepareUpdateFixtures = tasks.register('prepareUpdateFixtures') {
+    dependsOn 'assembleUpdateFixture'
+    def sourceApk = layout.buildDirectory.file('outputs/apk/updateFixture/app-updateFixture.apk')
+    def fixtureDirectory = layout.buildDirectory.dir('generated/update-fixtures')
+    inputs.file(sourceApk)
+    outputs.dir(fixtureDirectory)
+    doLast {
+        def destination = fixtureDirectory.get().asFile
+        destination.mkdirs()
+        copy { from sourceApk; into destination; rename { 'valid-update.apk' } }
+        def key = layout.buildDirectory.file('fixture-signing/untrusted.jks').get().asFile
+        if (!key.exists()) {
+            key.parentFile.mkdirs()
+            exec {
+                commandLine new File(System.getProperty('java.home'), 'bin/keytool'), '-genkeypair',
+                    '-keystore', key, '-storepass', 'fixture-password', '-keypass', 'fixture-password',
+                    '-alias', 'fixture', '-keyalg', 'RSA', '-keysize', '2048', '-validity', '3650',
+                    '-dname', 'CN=Untrusted Test Fixture', '-noprompt'
+            }
+        }
+        exec {
+            commandLine new File(System.getProperty('java.home'), 'bin/java'), '-jar',
+                new File(android.sdkDirectory, 'build-tools/36.0.0/lib/apksigner.jar'), 'sign',
+                '--ks', key, '--ks-pass', 'pass:fixture-password', '--key-pass', 'pass:fixture-password',
+                '--out', new File(destination, 'wrong-signer.apk'), new File(destination, 'valid-update.apk')
+        }
+    }
+}
+tasks.matching { it.name in ['mergeDebugAndroidTestAssets', 'lintAnalyzeDebugAndroidTest', 'generateDebugAndroidTestLintModel'] }
+    .configureEach { dependsOn prepareUpdateFixtures }
+
+def generateResources = tasks.register('generateBillBoardResources', Exec) {
+    workingDir file('../..')
+    commandLine System.getenv('BILLBOARD_NODE_EXECUTABLE') ?: 'node', '--import', 'tsx', 'ops/android/generate-resources.ts'
+    inputs.file('../../src/lib/i18n.ts')
+    inputs.file('../../ops/android/generate-resources.ts')
+    outputs.dir(layout.buildDirectory.dir('generated/billboard-res'))
+}
+tasks.named('preBuild').configure { dependsOn generateResources }
+
+tasks.register('validateReleaseInputs') {
+    doLast {
+        if (!releaseConfigured) throw new GradleException('Private release signing configuration is required')
+        URI origin
+        try { origin = new URI(appOrigin) }
+        catch (URISyntaxException ignored) { throw new GradleException('A private HTTPS root origin is required for release') }
+        if (origin.scheme != 'https' || !origin.host || origin.userInfo || origin.query || origin.fragment
+                || (origin.path && origin.path != '/') || origin.host.endsWith('.example')) {
+            throw new GradleException('A private HTTPS root origin is required for release')
+        }
+    }
+}
+tasks.matching { it.name == 'preReleaseBuild' }.configureEach { dependsOn 'validateReleaseInputs' }
+
+dependencies {
+    implementation 'androidx.activity:activity:1.11.0'
+    implementation 'androidx.webkit:webkit:1.15.0'
+    implementation 'com.android.tools.build:apksig:8.13.2'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:core:1.6.1'
+}

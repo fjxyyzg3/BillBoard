@@ -1,0 +1,2739 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <title>BillBoard · B2 轻盈暖色设计预览</title>
+  <style>
+    :root {
+      color-scheme:light;
+      --accent:#bd4938;
+      --action:#c64d3b;
+      --coral:#ef745d;
+      --accent-soft:#fff0eb;
+      --ink:#303138;
+      --muted:#6b6e76;
+      --line:#eeece9;
+      --surface:#fff;
+      --canvas:#fcfbfa;
+      --green:#2b815b;
+      --blue:#3883b5;
+      --amber:#ab762a;
+      --radius:20px;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      font-size:14px;
+      color:var(--ink);
+      background:#f4f3f1;
+      font-synthesis:none
+    }
+    * {
+      box-sizing:border-box
+    }
+    body {
+      margin:0
+    }
+    button,input,select,textarea {
+      font:inherit
+    }
+    button,a,input,select,textarea {
+      -webkit-tap-highlight-color:transparent
+    }
+    button {
+      cursor:pointer;
+      color:inherit
+    }
+    button {
+      border:0;
+      background:none
+    }
+    a {
+      color:var(--accent)
+    }
+    button:active {
+      transform:translateY(1px)
+    }
+    button:disabled {
+      opacity:.5;
+      cursor:not-allowed
+    }
+    button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {
+      outline:2px solid var(--accent);
+      outline-offset:3px
+    }
+    input,select,textarea {
+      min-width:0;
+      color:var(--ink)
+    }
+    h1,h2,h3,h4,p {
+      margin:0
+    }
+    h1,h2,h3,h4,strong,b {
+      font-weight:550
+    }
+    svg {
+      display:inline-block;
+      flex-shrink:0;
+      vertical-align:middle
+    }
+    button svg {
+      pointer-events:none
+    }
+    .icon {
+      width:20px;
+      height:20px;
+      stroke-width:1.6
+    }
+    .hidden,[hidden] {
+      display:none!important
+    }
+    .sr-only {
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0
+    }
+    ::selection {
+      background:#fbd6cb
+    }
+    .studio-header {
+      height:72px;
+      background:rgba(255,255,255,.9);
+      border-bottom:1px solid #e9e7e3;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 28px;
+      gap:20px;
+      position:sticky;
+      top:0;
+      z-index:20;
+      backdrop-filter:blur(20px)
+    }
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:12px
+    }
+    .brand-mark {
+      width:35px;
+      height:35px;
+      display:grid;
+      place-items:center;
+      border:1px solid #efcfc5;
+      background:#fff4ee;
+      border-radius:11px;
+      color:var(--accent)
+    }
+    .brand-name {
+      font-size:17px;
+      font-weight:550;
+      letter-spacing:-.03em
+    }
+    .brand-caption {
+      color:var(--muted);
+      font-size:11px;
+      margin-top:3px
+    }
+    .studio-tools {
+      display:flex;
+      align-items:center;
+      gap:14px
+    }
+    .studio-segment {
+      display:flex;
+      padding:3px;
+      background:#f0efed;
+      border-radius:10px;
+      gap:3px
+    }
+    .studio-segment button {
+      min-height:34px;
+      padding:0 12px;
+      font-size:12px;
+      color:var(--muted);
+      border-radius:7px
+    }
+    .studio-segment button[aria-pressed=true] {
+      background:white;
+      color:var(--ink);
+      box-shadow:0 1px 4px #2020200d
+    }
+    .tool-button {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      min-height:40px;
+      min-width:40px;
+      font-size:12px;
+      border-radius:10px
+    }
+    .tool-button:hover {
+      background:#f1efec
+    }
+    .tool-button .icon {
+      width:17px;
+      height:17px
+    }
+    .studio {
+      display:grid;
+      grid-template-columns:226px minmax(0,1fr);
+      min-height:calc(100vh - 72px)
+    }
+    .directory {
+      background:#faf9f7;
+      border-right:1px solid #e9e7e3;
+      position:sticky;
+      top:72px;
+      height:calc(100vh - 72px);
+      overflow:auto;
+      padding:24px 15px;
+      scrollbar-width:thin
+    }
+    .directory-intro {
+      padding:0 10px 15px;
+      font-size:11px;
+      line-height:1.7;
+      color:var(--muted)
+    }
+    .directory h2 {
+      padding:16px 12px 7px;
+      font-size:10px;
+      letter-spacing:.06em;
+      color:#81818a;
+      font-weight:500
+    }
+    .page-link {
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:10px;
+      min-height:40px;
+      text-align:left;
+      font-size:12px;
+      color:#64646d
+    }
+    .page-link .icon {
+      width:16px;
+      height:16px
+    }
+    .page-link:hover {
+      background:#efeeeb
+    }
+    .page-link[aria-current=page] {
+      background:#f8e9e2;
+      color:#9c4334
+    }
+    .page-index {
+      margin-left:auto;
+      color:#909099;
+      font-size:10px;
+      font-variant-numeric:tabular-nums
+    }
+    .directory-footer {
+      border-top:1px solid #e9e7e3;
+      margin:25px 10px 0;
+      padding-top:18px;
+      line-height:1.8;
+      font-size:10px;
+      color:var(--muted)
+    }
+    .palette {
+      display:flex;
+      gap:6px;
+      margin-bottom:10px
+    }
+    .swatch {
+      width:17px;
+      height:17px;
+      border-radius:50%;
+      border:1px solid #00000009
+    }
+    .workspace {
+      min-width:0
+    }
+    .canvas-header {
+      padding:24px 30px 17px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px
+    }
+    .canvas-label {
+      font-size:16px;
+      font-weight:500
+    }
+    .canvas-description {
+      font-size:12px;
+      line-height:1.7;
+      color:var(--muted);
+      margin-top:5px;
+      max-width:620px
+    }
+    .canvas-meta {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      white-space:nowrap;
+      color:var(--muted);
+      font-size:11px
+    }
+    .status-dot {
+      height:5px;
+      width:5px;
+      background:var(--green);
+      border-radius:50%
+    }
+    .canvas-stage {
+      padding:8px 30px 42px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      min-height:800px
+    }
+    .device {
+      width:390px;
+      height:844px;
+      flex-shrink:0;
+      position:relative;
+      background:var(--canvas);
+      border:1px solid #dfdcd7;
+      border-radius:38px;
+      overflow:hidden;
+      box-shadow:0 22px 55px -28px #52493d3b,0 3px 8px #52493d05;
+      container:device / inline-size
+    }
+    .device.desktop {
+      width:100%;
+      max-width:1260px;
+      height:820px;
+      border-radius:18px
+    }
+    .statusbar {
+      height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 25px;
+      font-size:12px;
+      font-weight:550;
+      flex-shrink:0
+    }
+    .system-icons {
+      display:flex;
+      align-items:center;
+      gap:5px
+    }
+    .system-icons .icon {
+      width:14px;
+      height:14px;
+      stroke-width:1.8
+    }
+    .battery {
+      width:20px;
+      height:9px;
+      border-radius:3px;
+      border:1px solid currentColor;
+      padding:1px;
+      position:relative
+    }
+    .battery:before {
+      content:'';
+      display:block;
+      background:currentColor;
+      height:5px;
+      border-radius:1px
+    }
+    .battery:after {
+      content:'';
+      position:absolute;
+      width:2px;
+      height:3px;
+      right:-4px;
+      top:2px;
+      background:currentColor;
+      border-radius:1px
+    }
+    .app-layout {
+      display:flex;
+      height:calc(100% - 42px)
+    }
+    .app-sidebar {
+      display:none;
+      width:188px;
+      flex-shrink:0;
+      background:#f5f3f0;
+      border-right:1px solid var(--line);
+      padding:24px 14px
+    }
+    .app-sidebar .brand-name {
+      padding:0 10px;
+      margin-bottom:30px;
+      color:var(--accent)
+    }
+    .app-sidebar button {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      text-align:left;
+      border-radius:10px;
+      min-height:44px;
+      padding:10px;
+      color:var(--muted);
+      font-size:13px
+    }
+    .app-sidebar button.selected {
+      color:var(--accent);
+      background:var(--accent-soft)
+    }
+    .app-sidebar .icon {
+      width:18px;
+      height:18px
+    }
+    .app-main {
+      position:relative;
+      flex:1;
+      min-width:0;
+      height:100%;
+      display:flex;
+      flex-direction:column
+    }
+    .app-toolbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 20px;
+      height:46px;
+      flex-shrink:0;
+      gap:12px
+    }
+    .scope-button {
+      display:flex;
+      align-items:center;
+      gap:7px;
+      background:#f1efec;
+      border-radius:20px;
+      padding:0 11px;
+      min-height:32px;
+      font-size:12px
+    }
+    .scope-button .icon {
+      width:13px;
+      height:13px
+    }
+    .icon-button {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:44px;
+      min-height:44px;
+      border-radius:50%
+    }
+    .icon-button:hover {
+      background:#efeeeb
+    }
+    .app-scroll {
+      overflow:auto;
+      overscroll-behavior:contain;
+      padding:12px 19px 100px;
+      flex:1;
+      scrollbar-width:thin;
+      scrollbar-color:#dedbd5 transparent
+    }
+    .app-scroll.no-tabs {
+      padding-bottom:30px
+    }
+    .app-scroll>*+* {
+      margin-top:16px
+    }
+    .bottom-nav {
+      position:absolute;
+      bottom:24px;
+      left:14px;
+      right:14px;
+      height:58px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      align-items:center;
+      background:rgba(255,255,255,.84);
+      border:1px solid #ffffffb3;
+      box-shadow:0 3px 16px #43382c0b,0 0 0 1px #39312905;
+      backdrop-filter:blur(20px) saturate(1.25);
+      border-radius:30px;
+      z-index:5;
+      padding:4px
+    }
+    .bottom-nav button {
+      height:48px;
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+      align-items:center;
+      justify-content:center;
+      border-radius:24px;
+      font-size:10px
+    }
+    .bottom-nav button[aria-current=page] {
+      color:var(--accent);
+      background:#fceee8
+    }
+    .bottom-nav .icon {
+      height:19px;
+      width:19px
+    }
+    .plus-disc {
+      width:23px;
+      height:23px;
+      background:var(--coral);
+      border-radius:50%;
+      color:white;
+      display:grid;
+      place-items:center
+    }
+    .plus-disc .icon {
+      height:17px;
+      width:17px
+    }
+    .home-indicator {
+      position:absolute;
+      width:112px;
+      height:4px;
+      border-radius:4px;
+      background:#34353b;
+      bottom:8px;
+      left:calc(50% - 56px);
+      z-index:8
+    }
+    .desktop .statusbar {
+      height:34px;
+      background:#fff;
+      border-bottom:1px solid var(--line);
+      font-size:10px
+    }
+    .desktop .app-layout {
+      height:calc(100% - 34px)
+    }
+    .desktop .home-indicator {
+      display:none
+    }
+    .mobile-page-selector {
+      display:none
+    }
+    .gallery {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(325px,1fr));
+      align-items:start;
+      gap:30px;
+      width:100%;
+      max-width:1600px
+    }
+    .gallery-item {
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px
+    }
+    .gallery-item .device {
+      width:min(100%,390px);
+      height:790px;
+      border-radius:30px
+    }
+    .gallery-caption {
+      width:100%;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:12px;
+      gap:10px;
+      padding:0 4px
+    }
+    .gallery-caption span {
+      color:var(--muted);
+      font-size:11px
+    }
+    .gallery-caption button {
+      min-height:36px;
+      color:var(--accent)
+    }
+    .stack {
+      display:flex;
+      flex-direction:column;
+      gap:16px
+    }
+    .stack>* {
+      margin:0
+    }
+    .page-head {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:20px
+    }
+    .page-title {
+      font-size:24px;
+      line-height:1.25;
+      letter-spacing:-.025em;
+      font-weight:500;
+      text-wrap:balance
+    }
+    .page-subtitle {
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.65;
+      margin-top:7px
+    }
+    .page-head-actions {
+      display:flex;
+      align-items:center;
+      gap:3px;
+      flex-shrink:0
+    }
+    .page-head-actions .button {
+      padding:0 10px;
+      min-height:32px;
+      font-size:12px
+    }
+    .muted {
+      color:var(--muted)
+    }
+    .caption {
+      font-size:12px;
+      line-height:1.6;
+      color:var(--muted)
+    }
+    .body-copy {
+      font-size:14px;
+      line-height:1.75
+    }
+    .kicker {
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5
+    }
+    .section-title {
+      font-size:15px;
+      line-height:1.45;
+      font-weight:500
+    }
+    .panel {
+      background:#fff;
+      border:1px solid #f1efec;
+      border-radius:var(--radius);
+      padding:17px;
+      box-shadow:0 2px 6px #473b2603;
+      min-width:0
+    }
+    .panel-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:16px
+    }
+    .panel-head h2,.panel-head h3 {
+      font-size:15px;
+      font-weight:500
+    }
+    .panel-head .text-link {
+      font-size:11px;
+      min-height:28px
+    }
+    .panel:has(.row-list) {
+      padding-bottom:8px
+    }
+    .split {
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px
+    }
+    .grid-two {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px
+    }
+    .divider {
+      border:0;
+      border-top:1px solid var(--line);
+      margin:16px 0
+    }
+    .button {
+      display:inline-flex;
+      flex-shrink:0;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:44px;
+      line-height:1.4;
+      border:1px solid transparent;
+      border-radius:12px;
+      padding:10px 16px;
+      font-size:14px;
+      font-weight:500;
+      text-align:center
+    }
+    .button.primary {
+      background:var(--action);
+      color:#fff
+    }
+    .button.primary:hover {
+      background:#b94937
+    }
+    .button.secondary {
+      background:#f5f3f0;
+      color:var(--ink)
+    }
+    .button.subtle {
+      background:transparent;
+      color:var(--accent);
+      padding-inline:5px
+    }
+    .button.danger {
+      background:#fff1ee;
+      color:#ae3e31
+    }
+    .button.full {
+      width:100%
+    }
+    .button .icon {
+      width:17px;
+      height:17px
+    }
+    .text-link {
+      color:var(--accent);
+      font-size:13px;
+      min-height:44px;
+      display:inline-flex;
+      align-items:center;
+      gap:5px
+    }
+    .text-link .icon {
+      width:14px;
+      height:14px
+    }
+    .chip,.badge {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:4px 8px;
+      border-radius:7px;
+      font-size:10px;
+      line-height:1.4;
+      background:#f2f1ef;
+      color:var(--muted);
+      white-space:nowrap
+    }
+    .chip.success,.badge.success {
+      background:#eaf5ee;
+      color:#28754b
+    }
+    .chip.warning,.badge.warning {
+      background:#fff5e2;
+      color:#8a6023
+    }
+    .chip.accent,.badge.accent {
+      background:var(--accent-soft);
+      color:var(--accent)
+    }
+    .chips {
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px
+    }
+    .notice {
+      display:flex;
+      gap:9px;
+      align-items:flex-start;
+      border-radius:12px;
+      padding:13px;
+      background:#f5f3f0;
+      font-size:12px;
+      line-height:1.65;
+      color:#66646a
+    }
+    .notice .icon {
+      width:17px;
+      height:17px;
+      margin-top:1px
+    }
+    .notice.success {
+      background:#eef7f1;
+      color:#357253
+    }
+    .notice.warning {
+      background:#fff6e8;
+      color:#85612d
+    }
+    .notice.danger {
+      background:#fff0ec;
+      color:#a64233
+    }
+    .row-list {
+      display:flex;
+      flex-direction:column
+    }
+    .setting-row {
+      display:flex;
+      align-items:center;
+      gap:11px;
+      min-height:58px;
+      padding:11px 0;
+      border-bottom:1px solid var(--line);
+      width:100%;
+      text-align:left
+    }
+    .setting-row:last-child {
+      border-bottom:0
+    }
+    .setting-row>button {
+      flex:1
+    }
+    .row-icon {
+      width:32px;
+      height:32px;
+      display:grid;
+      place-items:center;
+      flex-shrink:0;
+      background:#f8f4ef;
+      border-radius:10px;
+      color:var(--accent)
+    }
+    .row-icon .icon {
+      width:17px;
+      height:17px
+    }
+    .row-copy {
+      flex:1;
+      min-width:0
+    }
+    .row-label {
+      font-size:14px;
+      font-weight:400;
+      line-height:1.5
+    }
+    .row-detail {
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.6;
+      margin-top:3px;
+      overflow-wrap:anywhere
+    }
+    .row-value {
+      font-size:12px;
+      color:var(--muted);
+      flex-shrink:0;
+      max-width:45%;
+      text-align:right
+    }
+    .setting-row>.icon {
+      width:14px;
+      height:14px;
+      color:#919096
+    }
+    .form {
+      display:flex;
+      flex-direction:column;
+      gap:16px
+    }
+    .field {
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      font-size:12px;
+      min-width:0
+    }
+    .field>span:first-child {
+      color:#55555e
+    }
+    .input {
+      width:100%;
+      background:#fcfbfa;
+      border:1px solid #e7e4df;
+      border-radius:11px;
+      padding:11px 12px;
+      min-height:44px;
+      font-size:14px;
+      line-height:1.5
+    }
+    .input::placeholder {
+      color:#85828a;
+      font-size:12px
+    }
+    .input:hover {
+      border-color:#d3ccc4
+    }
+    textarea.input {
+      resize:vertical;
+      min-height:94px
+    }
+    .field select,.input:is(select) {
+      padding-right:24px
+    }
+    .field-help {
+      font-size:11px;
+      line-height:1.6;
+      color:var(--muted)
+    }
+    .segmented {
+      display:flex;
+      padding:3px;
+      border-radius:12px;
+      background:#f3f1ef;
+      gap:3px
+    }
+    .segmented button {
+      flex:1;
+      min-width:0;
+      border-radius:9px;
+      min-height:36px;
+      font-size:13px;
+      color:var(--muted);
+      padding:6px
+    }
+    .segmented button.selected {
+      color:var(--accent);
+      background:#fff0eb;
+      font-weight:500
+    }
+    .segmented.neutral button.selected {
+      background:white;
+      color:var(--ink);
+      box-shadow:0 1px 3px #00000006
+    }
+    .empty-state {
+      text-align:center;
+      padding:40px 16px;
+      display:flex;
+      align-items:center;
+      flex-direction:column;
+      gap:12px
+    }
+    .empty-state>.icon {
+      width:36px;
+      height:36px;
+      color:#bcb6ac;
+      stroke-width:1.2
+    }
+    .empty-state h2,.empty-state h3 {
+      font-size:16px;
+      font-weight:500
+    }
+    .empty-state p {
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.7;
+      max-width:290px
+    }
+    .switch {
+      position:relative;
+      width:40px;
+      height:24px;
+      flex-shrink:0;
+      background:#d8d5d0;
+      border-radius:15px;
+      min-width:40px
+    }
+    .switch:before {
+      content:'';
+      position:absolute;
+      top:3px;
+      left:3px;
+      width:18px;
+      height:18px;
+      background:white;
+      border-radius:50%;
+      box-shadow:0 1px 3px #0002;
+      transition:transform 160ms ease-out
+    }
+    .switch[aria-checked=true] {
+      background:var(--action)
+    }
+    .switch[aria-checked=true]:before {
+      transform:translateX(16px)
+    }
+    .switch:after {
+      content:'';
+      position:absolute;
+      inset:-10px -3px
+    }
+    .switch-row {
+      display:flex;
+      align-items:center;
+      gap:18px;
+      justify-content:space-between;
+      padding:14px 0
+    }
+    .switch-row+.switch-row {
+      border-top:1px solid var(--line)
+    }
+    .switch-row>div:first-child {
+      flex:1
+    }
+    .member-avatar {
+      height:38px;
+      width:38px;
+      border-radius:50%;
+      background:#f6e7e0;
+      display:grid;
+      place-items:center;
+      color:#9d5c4a;
+      font-size:13px;
+      flex-shrink:0
+    }
+    .member-avatar.blue {
+      background:#e8f0f6;
+      color:#497e9e
+    }
+    .identity-card {
+      display:grid;
+      grid-template-columns:48px minmax(0,1fr);
+      gap:7px 14px;
+      align-items:center
+    }
+    .identity-card>.member-avatar {
+      grid-row:1 / 3
+    }
+    .identity-card>.badge {
+      grid-column:2;
+      justify-self:start
+    }
+    .identity-card p {
+      overflow-wrap:anywhere
+    }
+    .identity-card .member-avatar {
+      width:48px;
+      height:48px;
+      font-size:18px
+    }
+    .identity-card h2 {
+      font-size:18px;
+      font-weight:500
+    }
+    .identity-card p {
+      font-size:12px;
+      color:var(--muted);
+      margin-top:5px
+    }
+    .privacy-options {
+      display:flex;
+      flex-direction:column
+    }
+    .help-section {
+      display:flex;
+      flex-direction:column;
+      gap:12px
+    }
+    .help-section summary {
+      font-size:14px;
+      min-height:44px;
+      padding:12px 0;
+      cursor:pointer;
+      list-style-position:outside
+    }
+    .help-section details {
+      border-bottom:1px solid var(--line)
+    }
+    .help-section details p {
+      padding-bottom:15px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8
+    }
+    .step-list {
+      list-style:none;
+      counter-reset:steps;
+      margin:0;
+      padding:0
+    }
+    .step-list li {
+      counter-increment:steps;
+      position:relative;
+      padding:0 0 17px 32px;
+      font-size:12px;
+      line-height:1.7
+    }
+    .step-list li:before {
+      content:counter(steps);
+      position:absolute;
+      top:0;
+      left:0;
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      background:var(--accent-soft);
+      color:var(--accent);
+      display:grid;
+      place-items:center;
+      font-size:11px
+    }
+    .step-list li:last-child {
+      padding-bottom:0
+    }
+    .source-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:9px
+    }
+    .source-tile {
+      padding:14px 10px;
+      border:1px solid var(--line);
+      border-radius:13px;
+      min-height:78px;
+      text-align:left;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:7px;
+      font-size:13px
+    }
+    .source-tile .icon {
+      color:var(--accent)
+    }
+    .source-tile.selected,.source-tile[aria-pressed=true] {
+      background:var(--accent-soft);
+      border-color:#efb5a4
+    }
+    .upload-zone {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:24px 12px;
+      border:1px dashed #dbcdc1;
+      border-radius:15px;
+      gap:10px;
+      background:#fdfbf8;
+      text-align:center
+    }
+    .upload-zone>.icon {
+      width:28px;
+      height:28px;
+      color:#c6a188
+    }
+    .upload-zone input[type=file] {
+      width:100%;
+      font-size:11px
+    }
+    .table-wrap {
+      overflow:auto;
+      max-width:100%
+    }
+    .data-table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+      line-height:1.6
+    }
+    .data-table th {
+      text-align:left;
+      font-size:11px;
+      color:var(--muted);
+      font-weight:400;
+      padding:9px 8px;
+      border-bottom:1px solid var(--line);
+      white-space:nowrap
+    }
+    .data-table td {
+      padding:12px 8px;
+      border-bottom:1px solid var(--line);
+      vertical-align:middle
+    }
+    .data-table th:first-child,.data-table td:first-child {
+      padding-left:0
+    }
+    .data-table tr:last-child td {
+      border-bottom:0
+    }
+    .data-table select {
+      max-width:120px
+    }
+    .ledger-card {
+      display:flex;
+      flex-direction:column;
+      gap:14px
+    }
+    .ledger-card .row-icon {
+      height:40px;
+      width:40px
+    }
+    .progress-track {
+      height:5px;
+      background:#edeae5;
+      border-radius:4px;
+      overflow:hidden
+    }
+    .progress-fill {
+      height:100%;
+      border-radius:4px;
+      background:var(--coral)
+    }
+    .comparison-row {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      font-size:12px;
+      padding:11px 0;
+      border-bottom:1px solid var(--line)
+    }
+    .month-heading {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin:0 0 17px
+    }
+    .month-button {
+      display:flex;
+      align-items:center;
+      gap:7px;
+      font-size:24px;
+      letter-spacing:-.025em;
+      min-height:40px;
+      padding:0;
+      font-weight:500
+    }
+    .month-button .icon {
+      width:16px;
+      height:16px
+    }
+    .month-caption {
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:6px
+    }
+    .month-caption button {
+      min-height:40px;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      gap:4px
+    }
+    .month-caption .icon {
+      width:12px;
+      height:12px
+    }
+    .summary-card {
+      padding:17px 17px 16px
+    }
+    .summary-main {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin:7px 0 18px
+    }
+    .hero-amount {
+      font-size:32px;
+      letter-spacing:-.035em;
+      font-weight:450;
+      font-variant-numeric:tabular-nums;
+      line-height:1.2;
+      white-space:nowrap
+    }
+    .hero-amount .currency {
+      font-size:20px;
+      margin-right:3px
+    }
+    .record-count {
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      min-height:32px;
+      white-space:nowrap
+    }
+    .record-count .icon {
+      width:13px;
+      height:13px
+    }
+    .summary-secondary {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      border-top:1px solid var(--line);
+      padding-top:14px;
+      gap:12px
+    }
+    .summary-secondary>div+div {
+      border-left:1px solid var(--line);
+      padding-left:17px
+    }
+    .metric {
+      font-size:18px;
+      font-weight:450;
+      font-variant-numeric:tabular-nums;
+      letter-spacing:-.025em;
+      margin-top:5px
+    }
+    .income {
+      color:var(--green)
+    }
+    .expense {
+      color:var(--ink)
+    }
+    .chart-key {
+      display:flex;
+      gap:12px;
+      font-size:10px;
+      color:var(--muted)
+    }
+    .chart-key span {
+      display:flex;
+      gap:5px;
+      align-items:center
+    }
+    .chart-key i {
+      width:14px;
+      height:3px;
+      background:var(--coral);
+      border-radius:2px
+    }
+    .chart-key i.green {
+      background:#549777
+    }
+    .chart-top {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:5px
+    }
+    .chart-svg {
+      width:100%;
+      height:134px;
+      display:block;
+      overflow:visible
+    }
+    .chart-svg text {
+      font:10px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      fill:#7f7e84
+    }
+    .chart-button {
+      width:100%;
+      padding:0;
+      text-align:initial;
+      display:block
+    }
+    .chart-footer {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-top:1px solid var(--line);
+      padding-top:7px;
+      margin-top:7px
+    }
+    .chart-footer .caption {
+      font-size:10px
+    }
+    .chart-footer button {
+      font-size:11px;
+      min-height:30px;
+      color:var(--muted)
+    }
+    .category-bars {
+      display:flex;
+      flex-direction:column;
+      gap:14px
+    }
+    .category-bar {
+      display:grid;
+      grid-template-columns:28px minmax(0,1fr) auto;
+      column-gap:9px;
+      align-items:center;
+      text-align:left;
+      padding:0;
+      width:100%;
+      min-height:36px
+    }
+    .category-icon {
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:#f7f4ef;
+      color:var(--accent)
+    }
+    .category-icon .icon {
+      width:17px;
+      height:17px
+    }
+    .coral {
+      --category:#d26650;
+      --category-bg:#fff0e9
+    }
+    .blue {
+      --category:#3983b5;
+      --category-bg:#edf5fa
+    }
+    .amber {
+      --category:#b97e2b;
+      --category-bg:#fcf4e7
+    }
+    .sage {
+      --category:#59815c;
+      --category-bg:#f0f5eb
+    }
+    .lilac {
+      --category:#9171b8;
+      --category-bg:#f5f0fa
+    }
+    .gray {
+      --category:#77747e;
+      --category-bg:#f4f2ef
+    }
+    .category-icon[class] {
+      color:var(--category,var(--accent));
+      background:var(--category-bg,#f8f4ef)
+    }
+    .category-bar-label {
+      display:block;
+      font-size:12px;
+      margin-bottom:6px
+    }
+    .category-bar-track {
+      display:block;
+      height:4px;
+      background:#f1efed;
+      overflow:hidden;
+      border-radius:5px;
+      width:100%
+    }
+    .category-bar-track span {
+      display:block;
+      height:100%;
+      background:#ed907a;
+      border-radius:5px
+    }
+    .category-bar-value {
+      font-size:12px;
+      font-variant-numeric:tabular-nums;
+      padding-left:8px
+    }
+    .compact-filters {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      font-size:12px;
+      margin:0 0 15px
+    }
+    .compact-filters button {
+      display:flex;
+      align-items:center;
+      gap:7px;
+      min-height:36px;
+      padding:0
+    }
+    .compact-filters .icon {
+      width:14px;
+      height:14px
+    }
+    .compact-filters button:first-child .icon:first-child {
+      color:#9c948a
+    }
+    .record-search {
+      display:flex;
+      align-items:center;
+      gap:9px;
+      margin-bottom:15px
+    }
+    .search-input {
+      display:flex;
+      align-items:center;
+      flex:1;
+      gap:8px;
+      min-height:40px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:0 12px
+    }
+    .search-input>.icon {
+      color:#777981;
+      width:16px;
+      height:16px
+    }
+    .search-input input {
+      border:0;
+      background:none;
+      min-height:40px;
+      width:100%;
+      font-size:12px;
+      outline-offset:0
+    }
+    .search-input input::placeholder {
+      color:#777981
+    }
+    .record-search>.icon-button {
+      min-height:40px;
+      min-width:40px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:white
+    }
+    .record-date {
+      font-size:12px;
+      color:var(--muted);
+      font-weight:400;
+      margin:23px 0 4px
+    }
+    .record-row {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      min-height:70px;
+      padding:13px 0;
+      border-bottom:1px solid var(--line);
+      text-align:left
+    }
+    .record-row:last-child {
+      border-bottom:0
+    }
+    .record-title {
+      font-size:14px;
+      font-weight:450;
+      line-height:1.5
+    }
+    .record-meta {
+      font-size:11px;
+      color:var(--muted);
+      line-height:1.6;
+      margin-top:2px
+    }
+    .record-money {
+      font-size:15px;
+      font-weight:450;
+      font-variant-numeric:tabular-nums;
+      text-align:right;
+      white-space:nowrap
+    }
+    .record-time {
+      font-size:11px;
+      color:var(--muted);
+      text-align:right;
+      margin-top:4px
+    }
+    .records-foot {
+      font-size:11px;
+      color:var(--muted);
+      text-align:center;
+      padding:18px
+    }
+    .compose-device .app-toolbar {
+      background:#e4e1dc
+    }
+    .compose-device .app-main {
+      background:#e4e1dc
+    }
+    .compose-device .app-scroll {
+      background:var(--canvas);
+      border-radius:28px 28px 0 0;
+      padding-top:14px;
+      padding-bottom:22px
+    }
+    .compose-device .app-toolbar {
+      height:65px;
+      align-items:flex-start;
+      padding-top:6px
+    }
+    .compose-shell>.page-head {
+      margin-bottom:16px;
+      align-items:center
+    }
+    .compose-shell .page-title {
+      font-size:20px
+    }
+    .compose-shell .page-head .icon-button {
+      min-width:30px;
+      min-height:30px;
+      background:#f2f0ed
+    }
+    .compose-shell .page-head .icon {
+      width:16px;
+      height:16px
+    }
+    .sheet-handle {
+      width:31px;
+      height:4px;
+      background:#d6d3ce;
+      border-radius:3px;
+      margin:0 auto 16px
+    }
+    .ledger-target {
+      display:flex;
+      align-items:center;
+      gap:7px;
+      font-size:12px;
+      min-height:36px;
+      padding:0;
+      margin-bottom:9px
+    }
+    .ledger-target .icon {
+      width:13px;
+      height:13px
+    }
+    .compose-form {
+      display:flex;
+      flex-direction:column;
+      gap:14px
+    }
+    .amount-field {
+      display:block;
+      margin:14px 0 12px
+    }
+    .amount-field>.kicker {
+      font-size:12px;
+      display:block;
+      margin-bottom:3px
+    }
+    .amount-input-wrap {
+      display:flex;
+      align-items:baseline;
+      gap:2px;
+      line-height:1.3
+    }
+    .amount-input-wrap>span {
+      font-size:23px;
+      font-weight:400
+    }
+    .amount-input {
+      border:0;
+      background:none;
+      font-size:34px;
+      font-weight:450;
+      letter-spacing:-.025em;
+      line-height:1.2;
+      width:100%;
+      padding:0;
+      outline-offset:5px;
+      font-variant-numeric:tabular-nums
+    }
+    .category-grid {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:9px
+    }
+    .category-tile {
+      min-height:65px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      font-size:11px;
+      border:1px solid #f0ece8;
+      border-radius:13px;
+      background:#fdfcfa
+    }
+    .category-tile .icon {
+      color:var(--category,#888);
+      width:21px;
+      height:21px
+    }
+    .category-tile.selected {
+      background:#fff3ed;
+      border-color:#e6a290
+    }
+    .compact-form-row {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-height:48px;
+      border-bottom:1px solid var(--line);
+      font-size:12px
+    }
+    .compact-form-row:last-child {
+      border-bottom:0
+    }
+    .compact-form-row>span:first-child {
+      white-space:nowrap;
+      min-width:60px
+    }
+    .compact-form-row select,.compact-form-row input {
+      margin-left:auto;
+      border:0;
+      background:none;
+      text-align:right;
+      min-height:44px;
+      width:100%;
+      max-width:220px;
+      font-size:12px;
+      padding:3px 0
+    }
+    .compact-form-row select {
+      text-align-last:right
+    }
+    .compact-form-row input::placeholder {
+      color:#8b8690
+    }
+    .save-bar {
+      position:sticky;
+      bottom:-23px;
+      padding:13px 0 19px;
+      background:linear-gradient(#fcfbfaee,var(--canvas) 20%);
+      margin-top:2px;
+      z-index:2
+    }
+    .save-bar .button {
+      width:100%;
+      min-height:46px
+    }
+    .mode-switch {
+      margin:0 0 14px
+    }
+    .natural-example {
+      padding:15px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid var(--line);
+      font-size:13px;
+      line-height:1.7
+    }
+    .natural-result {
+      padding:14px;
+      background:#fff;
+      border:1px solid #e3ede4;
+      border-radius:15px
+    }
+    .natural-result .panel-head {
+      margin-bottom:8px
+    }
+    .entry-intro {
+      font-size:12px;
+      line-height:1.7;
+      color:var(--muted);
+      margin:14px 0
+    }
+    .auth-mark {
+      height:49px;
+      width:49px;
+      border:1px solid #f0d9cc;
+      background:#fff1e8;
+      color:var(--accent);
+      border-radius:15px;
+      display:grid;
+      place-items:center;
+      margin-bottom:23px
+    }
+    .auth-mark .icon {
+      width:24px;
+      height:24px
+    }
+    .auth-body .page-title {
+      font-size:24px
+    }
+    .auth-body {
+      padding-top:20px
+    }
+    .auth-body .button.primary {
+      width:100%
+    }
+    .readonly-pill {
+      background:#f0eeea;
+      color:#79736b;
+      border-radius:7px;
+      font-size:10px;
+      padding:3px 7px
+    }
+    .stat-strip {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:10px;
+      text-align:center
+    }
+    .stat-strip strong {
+      display:block;
+      font-size:19px;
+      font-weight:450;
+      line-height:1.6
+    }
+    .stat-strip span {
+      font-size:11px;
+      color:var(--muted)
+    }
+    .badge.coral {
+      color:var(--accent);
+      background:var(--accent-soft)
+    }
+    .badge.green {
+      color:var(--green);
+      background:#edf6ef
+    }
+    .step-list li>span:first-child {
+      display:none
+    }
+    .step-list:has([aria-current]) {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:6px
+    }
+    .step-list:has([aria-current]) li {
+      padding:29px 0 0;
+      text-align:center;
+      font-size:11px
+    }
+    .step-list:has([aria-current]) li:before {
+      left:calc(50% - 11px)
+    }
+    .step-list li[aria-current]:before {
+      background:var(--action);
+      color:#fff
+    }
+    /* Preserve comfortable touch targets without enlarging typography. */
+    :is(.scope-button,.segmented button,.compact-filters button,.record-count,.ledger-target,.month-caption button,.panel-head .text-link,.compose-shell .page-head .icon-button,.dialog-header .icon-button) {
+      position:relative
+    }
+    :is(.scope-button,.segmented button,.compact-filters button,.record-count,.ledger-target,.month-caption button,.panel-head .text-link,.compose-shell .page-head .icon-button,.dialog-header .icon-button)::after {
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:50%;
+      height:44px;
+      transform:translateY(-50%)
+    }
+    .toast {
+      position:fixed;
+      bottom:26px;
+      left:50%;
+      transform:translateX(-50%);
+      padding:13px 18px;
+      max-width:min(90vw,520px);
+      border:1px solid #ddd7ce;
+      background:#fff;
+      color:var(--ink);
+      border-radius:13px;
+      box-shadow:0 6px 30px #2e272a16;
+      z-index:100;
+      font-size:13px;
+      line-height:1.6;
+      display:flex;
+      gap:10px;
+      align-items:center
+    }
+    .toast .icon {
+      color:var(--green);
+      width:18px;
+      height:18px
+    }
+    .dialog {
+      border:1px solid #eee9e2;
+      border-radius:26px;
+      padding:0;
+      width:390px;
+      max-width:calc(100vw - 24px);
+      max-height:calc(100dvh - 50px);
+      color:var(--ink);
+      background:#fff;
+      box-shadow:0 20px 90px #231d2330;
+      overflow:hidden
+    }
+    .dialog::backdrop {
+      background:#28252742;
+      backdrop-filter:blur(3px)
+    }
+    .dialog-content {
+      max-height:calc(100dvh - 60px);
+      padding:22px;
+      overflow:auto;
+      overscroll-behavior:contain
+    }
+    .dialog-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px
+    }
+    .dialog-header h2 {
+      font-size:20px;
+      font-weight:500;
+      letter-spacing:-.02em
+    }
+    .dialog-header .icon-button {
+      background:#f5f3f0;
+      min-height:32px;
+      min-width:32px
+    }
+    .dialog-header .icon {
+      width:17px;
+      height:17px
+    }
+    .dialog .form {
+      gap:16px
+    }
+    .dialog .stack {
+      gap:12px
+    }
+    .dialog .menu-list {
+      margin:-8px 0
+    }
+    .dialog .menu-list .setting-row {
+      min-height:53px
+    }
+    .dialog .category-grid {
+      margin:0
+    }
+    .noscript {
+      padding:32px;
+      line-height:1.8;
+      background:#fff2eb
+    }
+    .gallery-item .frame-title {
+      font-size:12px
+    }
+    .dialog .error-message {
+      font-size:12px;
+      color:#aa382e;
+      line-height:1.65
+    }
+    .device select,.device option {
+      font-size:13px
+    }
+    .studio-note {
+      font-size:11px;
+      color:#828089;
+      text-align:center;
+      padding-bottom:22px;
+      line-height:1.7
+    }
+    @container device (min-width:700px) {
+      .app-sidebar {
+        display:flex;
+        flex-direction:column
+      }
+      .app-toolbar {
+        padding:12px 30px;
+        height:64px;
+        border-bottom:1px solid var(--line);
+        background:#fff
+      }
+      .app-scroll {
+        padding:28px 30px 35px
+      }
+      .bottom-nav {
+        display:none
+      }
+      .desktop-columns {
+        display:grid;
+        grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);
+        gap:18px;
+        align-items:start
+      }
+      .desktop-columns>* {
+        margin:0!important
+      }
+      .desktop-columns .wide {
+        grid-column:1 / -1
+      }
+      .form-width {
+        max-width:560px;
+        margin-left:auto;
+        margin-right:auto
+      }
+      .page-title {
+        font-size:26px
+      }
+      .page-head {
+        margin-bottom:24px
+      }
+      .panel {
+        padding:22px
+      }
+      .record-row {
+        padding:15px 0
+      }
+      .app-scroll.no-tabs {
+        padding-bottom:35px
+      }
+      .compose-shell {
+        max-width:640px;
+        margin:auto;
+        border-radius:22px
+      }
+      .source-grid {
+        grid-template-columns:repeat(4,minmax(0,1fr))
+      }
+      .app-scroll>.stack {
+        max-width:1000px;
+        margin-inline:auto
+      }
+      .auth-body {
+        max-width:420px;
+        margin:35px auto!important
+      }
+      .identity-card {
+        padding:6px
+      }
+      .data-table {
+        font-size:13px
+      }
+    }
+    @media(max-width:1050px) {
+      .studio-header {
+        padding:0 18px
+      }
+      .studio {
+        grid-template-columns:190px minmax(0,1fr)
+      }
+      .directory {
+        padding:20px 10px
+      }
+      .studio-tools {
+        gap:7px
+      }
+      .studio-segment button {
+        padding:0 9px
+      }
+      .canvas-header {
+        padding-inline:20px
+      }
+      .canvas-stage {
+        padding-inline:20px
+      }
+      .brand-caption {
+        max-width:180px
+      }
+      .canvas-meta {
+        display:none
+      }
+    }
+    @media(max-width:760px) {
+      .studio-header {
+        height:auto;
+        min-height:68px;
+        padding:12px 16px;
+        flex-wrap:wrap;
+        gap:12px;
+        position:relative
+      }
+      .brand-name {
+        font-size:16px
+      }
+      .brand-caption {
+        font-size:10px
+      }
+      .studio-tools {
+        width:100%;
+        justify-content:space-between;
+        gap:4px
+      }
+      .studio-tools .tool-button {
+        font-size:11px
+      }
+      .studio-segment button {
+        min-height:34px;
+        padding-inline:8px;
+        font-size:11px;
+        white-space:nowrap
+      }
+      .studio-tools .tool-button {
+        min-width:32px
+      }
+      .studio-tools [data-action=language] .icon {
+        display:none
+      }
+      .studio {
+        display:block
+      }
+      .directory {
+        display:none
+      }
+      .canvas-header {
+        padding:16px;
+        display:block
+      }
+      .canvas-description {
+        font-size:11px
+      }
+      .mobile-page-selector {
+        display:block;
+        width:100%;
+        margin-top:12px;
+        border:1px solid #e4dfd7;
+        border-radius:10px;
+        background:white;
+        padding:11px;
+        font-size:13px
+      }
+      .canvas-stage {
+        padding:0 10px 28px;
+        min-height:0
+      }
+      .device {
+        width:100%;
+        max-width:390px;
+        height:830px;
+        border-radius:29px
+      }
+      .device.desktop {
+        max-width:100%;
+        min-width:0;
+        min-height:800px
+      }
+      .gallery {
+        grid-template-columns:minmax(0,1fr);
+        gap:25px;
+        max-width:390px
+      }
+      .gallery-item .device {
+        height:800px
+      }
+      .studio-note {
+        padding-inline:20px
+      }
+      .canvas-label {
+        font-size:15px
+      }
+      .tool-button.reset-tool span {
+        display:none
+      }
+      .dialog {
+        border-radius:24px
+      }
+      .dialog-content {
+        padding:20px
+      }
+      .page-title {
+        font-size:23px
+      }
+    }
+    @media(prefers-reduced-motion:reduce) {
+      *,*:before,*:after {
+        scroll-behavior:auto!important;
+        transition:none!important;
+        animation:none!important
+      }
+      button:active {
+        transform:none
+      }
+    }
+    @media(prefers-reduced-transparency:reduce) {
+      .bottom-nav,.studio-header {
+        background:#fff;
+        backdrop-filter:none
+      }
+      .dialog::backdrop {
+        backdrop-filter:none
+      }
+    }
+    @media(prefers-contrast:more) {
+      :root {
+        --muted:#4e5058;
+        --line:#b8b2aa
+      }
+      .panel,.input {
+        border-color:#aaa49c
+      }
+      .bottom-nav {
+        background:#fff;
+        border-color:#aaa49c
+      }
+      .caption,.row-detail {
+        color:#4e5058
+      }
+    }
+    @media print {
+      .studio-header,.directory,.canvas-header,.studio-note,.toast,.dialog {
+        display:none
+      }
+      .studio {
+        display:block
+      }
+      .canvas-stage {
+        padding:0
+      }
+      .gallery {
+        display:block
+      }
+      .gallery-item {
+        break-inside:avoid;
+        margin-bottom:24px
+      }
+      .device {
+        box-shadow:none
+      }
+      .gallery-item .device {
+        width:390px
+      }
+      .app-scroll {
+        overflow:visible
+      }
+      .device {
+        height:auto;
+        min-height:844px;
+        overflow:hidden
+      }
+      .app-main {
+        height:auto
+      }
+      .app-layout {
+        height:auto
+      }
+      .bottom-nav,.home-indicator {
+        display:none
+      }
+    }
+  </style>
+</head>
+<body>
+  <noscript><p class="noscript">此单文件预览使用内嵌 JavaScript 切换页面，请在浏览器中启用 JavaScript。所有数据为虚构示例，文件不会连接外部服务。</p></noscript>
+  <header class="studio-header" id="studioHeader"></header>
+  <div class="studio"><aside class="directory" id="directory" aria-label="页面目录"></aside><main class="workspace"><div class="canvas-header" id="canvasHeader"></div><div class="canvas-stage" id="stage"></div><p class="studio-note" id="studioNote"></p></main></div>
+  <dialog class="dialog" id="dialog" aria-labelledby="dialogTitle"><div class="dialog-content" id="dialogContent"></div></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script>
+    'use strict';
+    const iconPaths = {
+      home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
+      plus:'<path d="M12 5v14M5 12h14"/>',list:'<path d="M9 6h12M9 12h12M9 18h12m-18-12h.01M3 12h.01M3 18h.01"/>',
+      'chevron-down':'<path d="m6 9 6 6 6-6"/>','chevron-right':'<path d="m9 5 7 7-7 7"/>','arrow-right':'<path d="M4 12h16m-6-6 6 6-6 6"/>','arrow-left':'<path d="M20 12H4m6-6-6 6 6 6"/>',
+      more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+      calendar:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2"/>',
+      users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m2-16a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v3"/>',
+      user:'<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
+      search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>',
+      sliders:'<path d="M3 6h5m4 0h9M3 12h11m4 0h3M3 18h2m4 0h12"/><circle cx="10" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="7" cy="18" r="2"/>',
+      download:'<path d="M12 3v12m-5-5 5 5 5-5M4 15v5h16v-5"/>',upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/>',
+      book:'<path d="M5 3h14v18H5a3 3 0 0 1 0-6h14M5 3a3 3 0 0 0-3 3v12"/><path d="M7 7h7m-7 4h5"/>',
+      dining:'<path d="M4 3v6a3 3 0 0 0 6 0V3M7 3v18M17 3c-2 2-3 5-3 9h5V3h-2Zm2 9v9"/>',
+      bus:'<rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 10h16M8 18v3m8-3v3M8 14h.01M16 14h.01M8 6h8"/>',
+      bag:'<path d="M5 7h14l2 14H3L5 7Zm3 0V5a4 4 0 0 1 8 0v2"/>',
+      game:'<path d="M7 6h10c3 0 4 6 4 10s-3 4-6 0H9c-3 4-6 4-6 0s1-10 4-10Z"/><path d="M8 9v5m-2.5-2.5h5M16 10h.01M18 13h.01"/>',
+      heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0l-1 1-1-1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
+      medical:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M9 5V2h6v3m-3 5v7m-3.5-3.5h7"/>',
+      'book-open':'<path d="M12 5c-3-2-6-2-10-1v16c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1Zm0 0v16"/>',
+      grid:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+      check:'<path d="m5 12 4 4 10-10"/>',x:'<path d="m6 6 12 12M6 18 18 6"/>',
+      'check-circle':'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+      shield:'<path d="m12 2 9 4v6c0 6-9 10-9 10s-9-4-9-10V6l9-4Z"/><path d="m8 12 3 3 5-6"/>',
+      lock:'<rect x="4" y="10" width="16" height="12" rx="3"/><path d="M7 10V7a5 5 0 0 1 10 0v3m-5 5v3"/>',
+      key:'<circle cx="8" cy="8" r="5"/><path d="m11.5 11.5 9 9m-3-3 3-3m-6 0 3-3"/>',
+      mail:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3 7 9 6 9-6"/>',
+      globe:'<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+      logout:'<path d="M10 3H4v18h6m4-14 5 5-5 5M8 12h13"/>',
+      info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>',
+      help:'<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3h.01"/>',
+      smartphone:'<rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4M10 5h4"/>',
+      monitor:'<rect x="2" y="3" width="20" height="14" rx="3"/><path d="M12 17v4m-5 0h10"/>',
+      mic:'<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/>',
+      sparkles:'<path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6L12 3ZM20 2v4m-2-2h4"/>',
+      chart:'<path d="M3 3v18h18M7 15l4-5 4 3 5-7"/>',
+      folder:'<path d="M3 6V4h7l3 3h8v14H3V6Z"/>',
+      trash:'<path d="M3 6h18M6 6l1 15h10l1-15M9 6V3h6v3M10 10v7m4-7v7"/>',
+      history:'<path d="M3 11a9 9 0 1 1 2 7M3 4v7h7m2-4v6l4 2"/>',
+      refresh:'<path d="M20 9a8 8 0 0 0-14-5L3 7m0-5v5h5m-4 8a8 8 0 0 0 14 5l3-3m0 5v-5h-5"/>',
+      settings:'<path d="m10 2-1 3-3 1-3-1-2 4 2 2v3l-2 2 2 4 3-1 3 1 1 3h4l1-3 3-1 3 1 2-4-2-2v-3l2-2-2-4-3 1-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>',
+      wallet:'<path d="M20 7V4H5a3 3 0 0 0 0 6h16v11H5a3 3 0 0 1-3-3V7m19 7h-6v4h6"/>',
+      wifi:'<path d="M2 8a17 17 0 0 1 20 0M5 12a11 11 0 0 1 14 0m-11 4a5 5 0 0 1 8 0m-4 4h.01"/>',
+      signal:'<path d="M4 20v-3m5 3v-7m5 7V9m5 11V5"/>',
+      archive:'<rect x="3" y="3" width="18" height="5" rx="1"/><path d="M5 8v13h14V8m-10 5h6"/>',
+      file:'<path d="M14 2H4v20h16V8l-6-6Zm0 0v6h6M8 13h8m-8 4h6"/>'
+    };
+    const iconAliases={utensils:'dining',shopping:'bag',transport:'bus',bookOpen:'book-open',arrowRight:'arrow-right',chevronRight:'chevron-right',chevronDown:'chevron-down',receipt:'file',fileText:'file',fileSpreadsheet:'file',coins:'wallet',creditCard:'wallet',clock:'history',alert:'info',alertCircle:'info','alert-circle':'info',checkCircle:'check-circle',logOut:'logout',externalLink:'arrow-right','arrow-up-right':'arrow-right',scan:'file',eye:'info',copy:'file'};
+    function icon(name){const key=iconAliases[name]||name;return `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[key]||iconPaths.info}</svg>`;}
+    function esc(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    const t=(zh,en)=>state.locale==='en'?en:zh;
+    const seedRecords=[
+      {id:1,note:['午餐','Lunch'],category:'dining',amountFen:3850,type:'expense',actor:'lin',date:'2026-10-23',time:'12:08'},
+      {id:2,note:['日用品','Daily essentials'],category:'shopping',amountFen:8600,type:'expense',actor:'xia',date:'2026-10-23',time:'10:25'},
+      {id:3,note:['地铁出行','Metro ride'],category:'transport',amountFen:1200,type:'expense',actor:'lin',date:'2026-10-22',time:'18:30'},
+      {id:4,note:['周末聚餐','Weekend dinner'],category:'dining',amountFen:8000,type:'expense',actor:'lin',date:'2026-10-22',time:'12:00'},
+      {id:5,note:['外套','Jacket'],category:'shopping',amountFen:29900,type:'expense',actor:'xia',date:'2026-10-19',time:'14:20'},
+      {id:6,note:['打车','Taxi rides'],category:'transport',amountFen:20000,type:'expense',actor:'lin',date:'2026-10-18',time:'20:10'},
+      {id:7,note:['家庭聚餐','Family meals'],category:'dining',amountFen:236200,type:'expense',actor:'lin',date:'2026-10-15',time:'18:00'},
+      {id:8,note:['生活采购','Household purchases'],category:'shopping',amountFen:127500,type:'expense',actor:'xia',date:'2026-10-12',time:'11:30'},
+      {id:9,note:['交通卡充值','Transit card top-up'],category:'transport',amountFen:90800,type:'expense',actor:'lin',date:'2026-10-08',time:'09:00'},
+      {id:10,note:['生活杂项','Other expenses'],category:'other',amountFen:116800,type:'expense',actor:'xia',date:'2026-10-05',time:'16:20'},
+      {id:11,note:['工资','Salary'],category:'salary',amountFen:1800000,type:'income',actor:'xia',date:'2026-10-01',time:'09:00'}
+    ].map(r=>({...r,ledger:'daily'}));
+    function initialState(){return{page:'home',locale:'zh',mode:window.innerWidth>=1100?'gallery':'focus',device:'phone',records:seedRecords.map(r=>({...r,note:[...r.note]})),viewLedger:'all',member:'all',month:'2026-10',recordType:'all',search:'',sort:'date',filterCategory:'all',filterMin:'',filterMax:'',entryLedger:'daily',entryActor:'lin',entryType:'expense',entryCategory:'dining',entryAmount:'38.50',entryNote:'',entryDate:'2026-10-23',ai:false,voice:false,source:'wechat',importLedger:'daily',importActor:'lin',importSelected:[true,true],nlResult:false,rangeStart:'',rangeEnd:'',newLedgers:[]};}
+    let state=initialState();
+    const categories=[['dining','餐饮','Dining','dining','coral'],['transport','交通','Transport','bus','blue'],['shopping','购物','Shopping','bag','amber'],['home','居家','Home','home','sage'],['entertainment','娱乐','Fun','game','lilac'],['medical','医疗','Health','medical','blue'],['study','学习','Learning','book-open','lilac'],['other','其他','Other','more','gray'],['salary','工资','Salary','wallet','sage'],['bonus','奖金','Bonus','sparkles','amber']];
+    function sourceName(id){return {wechat:t('微信支付','WeChat Pay'),alipay:t('支付宝','Alipay'),suishouji:t('随手记','Sui Shou Ji'),cmb:t('招商银行','CMB debit')}[id]||'';}
+    function categoryInfo(id){const c=categories.find(c=>c[0]===id)||categories[7];return{id:c[0],label:t(c[1],c[2]),icon:c[3],color:c[4]};}
+    const memberName=id=>id==='lin'?t('小林','Lin'):id==='xia'?t('小夏','Xia'):t('全部成员','All members');
+    const ledgerName=id=>id==='all'?t('家庭总览','Household'):id==='daily'?t('日常生活','Everyday'):id==='travel'?t('旅行','Travel'):id==='renovation'?t('装修 · 已归档','Renovation · Archived'):(state.newLedgers.find(l=>l.id===id)?.name||id);
+    function money(fen){const abs=Math.abs(fen);return `${fen<0?'-':''}${Math.floor(abs/100).toLocaleString('en-US')}.${String(abs%100).padStart(2,'0')}`;}
+    function parseFen(value){const match=String(value).trim().match(/^(\d{1,9})(?:\.(\d{1,2}))?$/);return match?Number(match[1])*100+Number((match[2]||'').padEnd(2,'0')):null;}
+    function totals(records){return records.reduce((sum,r)=>{sum[r.type]+=r.amountFen;sum.count++;return sum;},{income:0,expense:0,count:0});}
+    function visibleRecords(){return state.records.filter(r=>(state.viewLedger==='all'||r.ledger===state.viewLedger)&&(state.member==='all'||r.actor===state.member)&&(state.rangeStart?r.date>=state.rangeStart&&r.date<=state.rangeEnd:r.date.startsWith(state.month)));}
+    function actionButton(label,action,value='',kind='secondary'){return `<button class="button ${esc(kind)}" data-action="${esc(action)}" data-value="${esc(value)}" type="button">${label}</button>`;}
+    function pageHead(title,subtitle='',actions=''){return `<div class="page-head"><div><h1 class="page-title">${title}</h1>${subtitle?`<p class="page-subtitle">${subtitle}</p>`:''}</div>${actions?`<div class="page-head-actions">${actions}</div>`:''}</div>`;}
+    function listRow({icon:iconName,label,detail='',value='',action='',target='',tone=''}){const tag=action?'button':'div';return `<${tag} class="setting-row ${esc(tone)}" ${action?`type="button" data-action="${esc(action)}" data-value="${esc(target)}"`:''}>${iconName?`<span class="row-icon">${icon(iconName)}</span>`:''}<span class="row-copy"><span class="row-label">${label}</span>${detail?`<span class="row-detail" style="display:block">${detail}</span>`:''}</span>${value?`<span class="row-value">${value}</span>`:''}${action?icon('chevron-right'):''}</${tag}>`;}
+    let fieldCounter=0;
+    function field(label,type,placeholder,name,value=''){const id=`field-${++fieldCounter}`;return `<label class="field" for="${id}"><span>${label}</span><input class="input" id="${id}" type="${esc(type)}" name="${esc(name)}" placeholder="${esc(placeholder)}" value="${esc(value)}" ${type==='password'?'autocomplete="new-password"':''}></label>`;}
+    function badge(label,tone=''){return `<span class="badge ${esc(tone)}">${label}</span>`;}
+    function notice(text,tone='info'){return `<div class="notice ${esc(tone)}">${icon(tone==='success'?'check-circle':'info')}<span>${text}</span></div>`;}
+    function segment(items,current,action,extra=''){return `<div class="segmented ${extra}">${items.map(([value,label])=>`<button type="button" data-action="${action}" data-value="${value}" class="${current===value?'selected':''}" aria-pressed="${current===value}">${label}</button>`).join('')}</div>`;}
+    function selectField(label,name,options,value){const id=`field-${++fieldCounter}`;return `<label class="field" for="${id}"><span>${label}</span><select class="input" id="${id}" name="${name}">${options.map(([key,text])=>`<option value="${esc(key)}" ${key===value?'selected':''}>${esc(text)}</option>`).join('')}</select></label>`;}
+    const ledgerOptions=()=>[['daily',ledgerName('daily')],['travel',ledgerName('travel')],...state.newLedgers.map(l=>[l.id,l.name])];
+    function categoryGrid(selected=state.entryCategory,action='entry-category',type=state.entryType){return `<div class="category-grid">${categories.filter(c=>type==='income'?['salary','bonus','other'].includes(c[0]):!['salary','bonus'].includes(c[0])).map(c=>`<button type="button" class="category-tile ${c[4]} ${selected===c[0]?'selected':''}" data-action="${action}" data-value="${c[0]}" aria-pressed="${selected===c[0]}">${icon(c[3])}<span>${t(c[1],c[2])}</span></button>`).join('')}</div>`;}
+    function filterControls(){return `<div class="compact-filters"><button data-action="sheet" data-value="date" type="button">${icon('calendar')}${state.rangeStart?`${esc(state.rangeStart.slice(5))} – ${esc(state.rangeEnd.slice(5))}`:t(`${state.month.slice(0,4)}年${Number(state.month.slice(5))}月`,new Date(`${state.month}-01T12:00:00+08:00`).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'Asia/Shanghai'}))}${icon('chevron-down')}</button><button data-action="sheet" data-value="member" type="button">${memberName(state.member)}${icon('chevron-down')}</button></div>`;}
+    function trendChart(records){
+      const daily=Array.from({length:31},()=>({expense:0,income:0}));records.forEach(r=>daily[Math.min(30,Number(r.date.slice(8))-1)][r.type]+=r.amountFen);
+      const sum=totals(records),max=Math.max(10000,Math.ceil(Math.max(sum.expense,sum.income)/1000000)*1000000);let expense=0,income=0;
+      const points=daily.map((v,i)=>{expense+=v.expense;income+=v.income;return{x:36+i*8.4,expense,income};});
+      const path=kind=>points.map((v,i)=>`${i?'L':'M'}${v.x.toFixed(1)} ${(130-v[kind]/max*104).toFixed(1)}`).join(' ');
+      return `<svg class="chart-svg" viewBox="0 0 310 159" role="img" aria-label="${t('当月累计收入和支出趋势','Cumulative monthly income and expenses')}">${[0,.5,1].map(n=>`<line x1="36" y1="${130-n*104}" x2="288" y2="${130-n*104}" stroke="#efedeb"/><text x="29" y="${133-n*104}" text-anchor="end">${Math.round(max*n/100).toLocaleString('en-US')}</text>`).join('')}<path d="${path('income')}" stroke="#549777" fill="none" stroke-width="1.7"/><path d="${path('expense')}" stroke="#e57c65" fill="none" stroke-width="1.9"/><text x="36" y="152">${state.month.slice(5)}/1</text><text x="162" y="152" text-anchor="middle">${state.month.slice(5)}/15</text><text x="288" y="152" text-anchor="end">${state.month.slice(5)}/31</text></svg>`;
+    }
+    function homePage(){const records=visibleRecords(),sum=totals(records);const values=categories.map(c=>({category:categoryInfo(c[0]),fen:records.filter(r=>r.type==='expense'&&r.category===c[0]).reduce((n,r)=>n+r.amountFen,0)})).filter(c=>c.fen).sort((a,b)=>b.fen-a.fen);return `
+      <h1 class="sr-only">${t('家庭总览','Household overview')}</h1><div class="month-heading"><button class="month-button" data-action="sheet" data-value="date">${state.rangeStart?t('自选范围','Custom range'):t(`${Number(state.month.slice(5))}月`,new Date(`${state.month}-01T12:00:00+08:00`).toLocaleDateString('en-US',{month:'long',timeZone:'Asia/Shanghai'}))}${icon('chevron-down')}</button><div class="month-caption"><span>${state.month.slice(0,4)}${t('年','')}</span><span>·</span><button data-action="sheet" data-value="member">${memberName(state.member)}${icon('chevron-down')}</button></div></div>
+      <div class="desktop-columns stack">
+      <section class="panel summary-card wide" aria-label="${t('收支汇总','Summary')}"><p class="kicker">${t('所选范围支出','Selected period expenses')}</p><div class="summary-main"><p class="hero-amount"><span class="currency">¥</span>${money(sum.expense)}</p><button class="record-count" data-action="navigate" data-value="records">${sum.count} ${t('笔','records')}${icon('chevron-right')}</button></div><div class="summary-secondary"><div><p class="kicker">${t('收入','Income')}</p><p class="metric income">¥${money(sum.income)}</p></div><div><p class="kicker">${t('结余','Net')}</p><p class="metric">¥${money(sum.income-sum.expense)}</p></div></div></section>
+      <section class="panel"><div class="chart-top"><h2 class="section-title">${t('收支趋势','Cash flow')}</h2><div class="chart-key"><span><i></i>${t('支出','Expense')}</span><span><i class="green"></i>${t('收入','Income')}</span></div></div>${sum.count?`<button class="chart-button" data-action="navigate" data-value="records" aria-label="${t('查看此范围的记录','View records in this period')}">${trendChart(records)}</button>`:`<div class="empty-state">${icon('chart')}<p>${t('这个范围内还没有记录','No records in this period.')}</p></div>`}</section>
+      <section class="panel"><div class="panel-head"><h2>${t('分类支出','By category')}</h2><button class="text-link" data-action="sheet" data-value="category-analysis">${t('详情','Details')}${icon('chevron-right')}</button></div><div class="category-bars">${values.length?values.map(({category:c,fen})=>`<button class="category-bar" data-action="category-records" data-value="${c.id}"><span class="category-icon ${c.color}">${icon(c.icon)}</span><span><span class="category-bar-label">${c.label}</span><span class="category-bar-track"><span style="width:${Math.max(3,fen/sum.expense*100)}%"></span></span></span><span class="category-bar-value">¥${money(fen)}</span></button>`).join(''):`<p class="caption">${t('暂无支出','No expenses yet.')}</p>`}</div></section>
+      <section class="panel wide"><div class="panel-head"><h2>${t('账本分析','Ledger analysis')}</h2>${badge(t('2026年10月','October 2026'))}</div><div class="row-list">${listRow({icon:'chart',label:t('周期比较','Period comparison'),detail:t('按月份回顾家庭收支','Review household income and expenses by month'),action:'sheet',target:'analysis'})}${listRow({icon:'users',label:t('成员分布','Member breakdown'),detail:t('同时保留每一笔的成员归属','Keep each record attributed to its member'),action:'sheet',target:'member-analysis'})}</div></section></div>`;}
+    function recordList(){let rows=visibleRecords().filter(r=>(state.recordType==='all'||r.type===state.recordType)&&(state.filterCategory==='all'||r.category===state.filterCategory));const query=state.search.trim().toLowerCase();if(query)rows=rows.filter(r=>`${r.note.join(' ')} ${categoryInfo(r.category).label} ${memberName(r.actor)} ${ledgerName(r.ledger)}`.toLowerCase().includes(query));const min=parseFen(state.filterMin),max=parseFen(state.filterMax);if(min!==null)rows=rows.filter(r=>r.amountFen>=min);if(max!==null)rows=rows.filter(r=>r.amountFen<=max);rows.sort((a,b)=>state.sort==='amount-desc'?b.amountFen-a.amountFen:state.sort==='amount-asc'?a.amountFen-b.amountFen:b.date.localeCompare(a.date)||b.time.localeCompare(a.time));if(!rows.length)return `<div class="empty-state">${icon('search')}<h2>${t('暂时没有匹配的记录','No matching records')}</h2><p>${t('试试其他关键词，或清除筛选。','Try another keyword or clear the filters.')}</p>${actionButton(t('清除筛选','Clear filters'),'clear-filters','','secondary')}</div>`;let previous='';return rows.map(r=>{const c=categoryInfo(r.category);const date=r.date!==previous?`<h2 class="record-date">${t(`${Number(r.date.slice(5,7))}月${Number(r.date.slice(8))}日`,new Date(`${r.date}T12:00:00+08:00`).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'Asia/Shanghai'}))}</h2>`:'';previous=r.date;return `${date}<button class="record-row" data-action="edit-record" data-value="${r.id}"><span class="category-icon ${c.color}">${icon(c.icon)}</span><span class="row-copy"><span class="record-title">${esc(t(...r.note))}</span><span class="record-meta" style="display:block">${c.label} · ${memberName(r.actor)} · ${esc(ledgerName(r.ledger))}</span></span><span><span class="record-money ${r.type==='income'?'income':''}" style="display:block">${r.type==='income'?'+':'−'}${money(r.amountFen)}</span><span class="record-time" style="display:block">${r.time}</span></span></button>`;}).join('')+`<p class="records-foot">${t(`共 ${rows.length} 笔示例记录`,`Showing ${rows.length} sample records`)}</p>`;}
+    function recordsPage(){return `${pageHead(t('记录','Records'),'',actionButton(t('导入','Import'),'navigate','import','subtle'))}${filterControls()}<div class="record-search"><label class="search-input">${icon('search')}<input type="search" data-record-search value="${esc(state.search)}" placeholder="${t('搜索备注、分类或成员','Search notes, categories, members')}" aria-label="${t('搜索记录','Search records')}"></label><button class="icon-button" data-action="sheet" data-value="filters" aria-label="${t('筛选与排序','Filter and sort')}">${icon('sliders')}</button></div>${segment([['all',t('全部','All')],['expense',t('支出','Expense')],['income',t('收入','Income')]],state.recordType,'record-type')}<div class="record-list" data-record-list>${recordList()}</div><div class="split">${actionButton(icon('download')+t('导出','Export'),'sheet','export','subtle')}${actionButton(icon('sparkles')+t('AI 对账','AI reconciliation'),'navigate','reconcile','subtle')}</div>`;}
+    function entryPage(natural=false){return `<div class="compose-shell form-width"><div class="sheet-handle"></div>${pageHead(t('记一笔','Add a record'),'',`<button class="icon-button" data-action="navigate" data-value="home" aria-label="${t('关闭记账','Close entry')}">${icon('x')}</button>`)}<button class="ledger-target" data-action="sheet" data-value="entry-ledger">${t('记入账本','Save to')} · <span>${esc(ledgerName(state.entryLedger))}</span>${icon('chevron-down')}</button><div class="mode-switch">${segment([['add',t('手工填写','Manual')],['natural',t('自然语言','Natural language')]],natural?'natural':'add','navigate')}</div>${natural?naturalEntry():`<form class="compose-form" data-form="add">${segment([['expense',t('支出','Expense')],['income',t('收入','Income')]],state.entryType,'entry-type')}<label class="amount-field"><span class="kicker">${t('金额','Amount')}</span><span class="amount-input-wrap"><span>¥</span><input class="amount-input" inputmode="decimal" name="amount" data-model="entryAmount" value="${esc(state.entryAmount)}" required aria-label="${t('金额（元）','Amount in yuan')}" autocomplete="off"></span></label>${categoryGrid()}<div><label class="compact-form-row"><span>${t('归属成员','Member')}</span><select name="actor" data-model="entryActor"><option value="lin" ${state.entryActor==='lin'?'selected':''}>${memberName('lin')}</option><option value="xia" ${state.entryActor==='xia'?'selected':''}>${memberName('xia')}</option></select></label><label class="compact-form-row"><span>${t('日期','Date')}</span><input name="date" type="date" data-model="entryDate" value="${esc(state.entryDate)}" required></label><label class="compact-form-row"><span>${t('备注','Note')}</span><input name="note" data-model="entryNote" value="${esc(state.entryNote)}" placeholder="${t('选填','Optional')}" maxlength="120"></label></div><div class="save-bar"><button class="button primary" type="submit">${t('保存记录','Save record')}</button></div></form>`}</div>`;}
+    function naturalEntry(){return `<div class="stack">${!state.ai?notice(t('自然语言记账需要你先开启 AI 处理。你可以随时在隐私设置中关闭。','Enable AI processing before using natural-language entry. You can turn it off in Privacy settings.')):''}<form class="form" data-form="natural"><label class="field"><span>${t('用一句话记下这笔账','Describe the record')}</span><textarea class="input" name="description" maxlength="500" placeholder="${t('例如：今天午餐38.5元，算小林的','For example: Lunch was ¥38.50 today, attributed to Lin')}">${t('今天午餐38.5元，算小林的','Lunch was ¥38.50 today, attributed to Lin')}</textarea></label><div class="split"><button class="text-link" type="button" data-action="sheet" data-value="voice">${icon('mic')}${t('语音记账','Voice entry')}</button>${badge(t('示例环境','Demo'))}</div>${state.ai?`<button class="button primary" type="submit">${t('解析这句话','Parse entry')}</button>`:actionButton(t('前往隐私设置','Open privacy settings'),'navigate','privacy','primary')}</form>${state.nlResult?`<div class="natural-result"><div class="panel-head"><h2 class="section-title">${t('确认记录','Review record')}</h2>${badge(t('示例解析','Sample result'),'success')}</div>${listRow({icon:'dining',label:t('午餐','Lunch'),detail:`${memberName('lin')} · ${esc(ledgerName(state.entryLedger))}`,value:'−38.50'})}<p class="caption">2026-10-23 · ${t('餐饮','Dining')}</p>${actionButton(t('确认并保存','Confirm and save'),'save-natural','','primary full')}</div>`:`<div class="natural-example"><p class="section-title">${t('先确认，再保存','Review before saving')}</p><p class="entry-intro">${t('金额、分类和成员都会先展示给你，确认后才记入账本。','Review the amount, category, and member before adding the record to the ledger.')}</p></div>`}</div>`;}
+    const corePages={home:homePage,records:recordsPage,add:()=>entryPage(false),natural:()=>entryPage(true)};
+    // Financial workflow pages for the self-contained B2 design preview.
+const financePages = {
+  ledgers: () => `
+    ${pageHead(t('家庭账本', 'Household ledgers'), t('一起记录，也可以分开整理。', 'Keep shared records organized.'), actionButton(t('新建', 'New'), 'sheet', 'create-ledger', 'primary'))}
+    <div class="stack">
+      <section class="panel ledger-card">
+        <div class="split"><span class="row-icon">${icon('book')}</span>${badge(t('默认账本', 'Default'), 'coral')}</div>
+        <h2 class="section-title">${t('日常生活', 'Everyday')}</h2>
+        <p class="body-copy muted">${t('记一笔时默认选择这个账本。', 'The default destination for new entries.')}</p>
+        <div class="chips">
+          ${actionButton(t('查看记录', 'View records'), 'ledger-records', 'daily', 'secondary')}
+          ${actionButton(t('重命名', 'Rename'), 'sheet', 'rename-ledger', 'subtle')}
+        </div>
+      </section>
+      <section class="panel ledger-card">
+        <div class="split"><span class="row-icon">${icon('folder')}</span>${badge(t('使用中', 'Active'), 'green')}</div>
+        <h2 class="section-title">${t('旅行', 'Travel')}</h2>
+        <p class="body-copy muted">${t('单独查看，仍计入家庭总览。', 'View separately, included in household totals.')}</p>
+        <div class="chips">
+          ${actionButton(t('查看记录', 'View records'), 'ledger-records', 'travel', 'secondary')}
+          ${actionButton(t('重命名', 'Rename'), 'sheet', 'rename-ledger', 'subtle')}
+        </div>
+        <div class="divider"></div>
+        <div class="chips">
+          ${actionButton(t('设为默认', 'Make default'), 'demo', '已模拟设为默认账本；没有更改真实数据。|Default ledger previewed; no real data changed.', 'subtle')}
+          ${actionButton(t('归档', 'Archive'), 'sheet', 'archive-ledger', 'subtle')}
+        </div>
+      </section>
+      <section class="panel ledger-card">
+        <div class="split"><span class="row-icon">${icon('folder')}</span>${badge(t('已归档', 'Archived'))}</div>
+        <h2 class="section-title">${t('装修', 'Renovation')}</h2>
+        <p class="body-copy muted">${t('历史记录保留，归档期间仅可查看。', 'History is retained and read-only while archived.')}</p>
+        <div class="chips">
+          ${actionButton(t('查看历史', 'View history'), 'ledger-records', 'renovation', 'secondary')}
+          ${actionButton(t('恢复账本', 'Restore ledger'), 'sheet', 'restore-ledger', 'subtle')}
+        </div>
+      </section>
+      <p class="caption muted">${t('成员可共同新建、重命名账本；默认设置与归档、恢复仅限负责人。', 'Members can create and rename ledgers. Only the owner can change the default, archive, or restore.')}</p>
+    </div>`,
+
+  import: () => `
+    ${pageHead(t('导入账单', 'Import statements'), t('把已有账单整理到家庭账本。', 'Bring existing statements into your household ledger.'), actionButton(t('分类映射', 'Mappings'), 'navigate', 'mappings', 'subtle'))}
+    <div class="stack">
+      <ol class="step-list" aria-label="${t('导入步骤', 'Import steps')}">
+        <li aria-current="step"><span>1</span>${t('上传', 'Upload')}</li>
+        <li><span>2</span>${t('设置', 'Set up')}</li>
+        <li><span>3</span>${t('核对', 'Review')}</li>
+        <li><span>4</span>${t('完成', 'Done')}</li>
+      </ol>
+      <section class="panel stack">
+        <label class="field"><span>${t('记入账本', 'Destination ledger')}</span><select class="input" name="import-ledger"><option value="daily" ${state.importLedger==='daily'?'selected':''}>${t('日常生活', 'Everyday')}</option><option value="travel" ${state.importLedger==='travel'?'selected':''}>${t('旅行', 'Travel')}</option></select></label>
+        <div class="stack">
+          <h2 class="section-title">${t('账单来源', 'Statement source')}</h2>
+          <div class="source-grid">
+            <button class="source-tile" type="button" data-action="select-source" data-value="wechat" aria-pressed="true">${icon('wallet')}<span>${t('微信支付', 'WeChat Pay')}</span><small>.xlsx</small></button>
+            <button class="source-tile" type="button" data-action="select-source" data-value="alipay" aria-pressed="false">${icon('wallet')}<span>${t('支付宝', 'Alipay')}</span><small>.csv</small></button>
+            <button class="source-tile" type="button" data-action="select-source" data-value="suishouji" aria-pressed="false">${icon('book')}<span>${t('随手记', 'Sui Shou Ji')}</span><small>.xlsx</small></button>
+            <button class="source-tile" type="button" data-action="select-source" data-value="cmb" aria-pressed="false">${icon('folder')}<span>${t('招商银行', 'CMB debit')}</span><small>.pdf / .zip</small></button>
+          </div>
+        </div>
+        <label class="upload-zone">
+          ${icon('upload')}
+          <span class="row-label">${t('选择账单文件', 'Choose a statement')}</span>
+          <span class="caption muted">${t('预览不会上传或读取文件内容', 'This preview never uploads or reads file contents')}</span>
+          <input type="file" accept=".xlsx,.csv,.pdf,.zip" name="preview-statement" aria-label="${t('选择账单文件', 'Choose a statement')}" />
+        </label>
+        <details>
+          <summary class="text-link">${t('招商银行 ZIP 解压密码', 'CMB ZIP password')}</summary>
+          <div class="stack">
+            ${field(t('解压密码', 'ZIP password'), 'password', t('仅 ZIP 需要，PDF 无需填写', 'Only needed for ZIP, not PDF'), 'preview-zip-password')}
+            <p class="caption muted">${t('正式流程中仅用于本次解析。此处不解析文件。', 'Used only during parsing in the live app. Files are not parsed here.')}</p>
+          </div>
+        </details>
+        ${actionButton(t('使用示例账单预览', 'Preview a sample statement'), 'navigate', 'import-review', 'primary')}
+      </section>
+      ${notice(t('导入前会先检查分类、成员归属与重复记录，确认后才写入账本。', 'Review categories, member ownership and duplicates before confirming an import.'))}
+      ${actionButton(t('返回记录', 'Back to records'), 'navigate', 'records', 'subtle')}
+    </div>`,
+
+  'import-review': () => `
+    ${pageHead(t('核对导入', 'Review import'), `${t('示例','Sample')} ${sourceName(state.source)} · ${t('2026年10月','October 2026')}`, actionButton(t('重新选择', 'Start over'), 'navigate', 'import', 'subtle'))}
+    <div class="stack">
+      <ol class="step-list" aria-label="${t('导入步骤', 'Import steps')}">
+        <li><span>${icon('check')}</span>${t('上传', 'Upload')}</li>
+        <li><span>${icon('check')}</span>${t('设置', 'Set up')}</li>
+        <li aria-current="step"><span>3</span>${t('核对', 'Review')}</li>
+        <li><span>4</span>${t('完成', 'Done')}</li>
+      </ol>
+      <section class="panel stack">
+        <div class="split"><h2 class="section-title">${t('本次导入', 'Import details')}</h2>${badge(t('示例草稿', 'Sample draft'), 'coral')}</div>
+        <div class="row-list">
+          ${listRow({icon:'book',label:t('记入账本', 'Destination'),value:esc(ledgerName(state.importLedger))})}
+        </div>
+        <label class="field"><span>${t('归属成员', 'Member')}</span><select class="input" name="import-member"><option value="lin" ${state.importActor==='lin'?'selected':''}>${memberName('lin')}</option><option value="xia" ${state.importActor==='xia'?'selected':''}>${memberName('xia')}</option></select><small class="caption muted">${t('统一设置可导入记录的归属成员和记账人。', 'Applied to the member and recorder of all importable rows.')}</small></label>
+        <div class="grid-two">
+          <div><p class="kicker">${t('可导入', 'Importable')}</p><p class="section-title" data-import-selected>${state.importSelected.filter(Boolean).length}</p></div>
+          <div><p class="kicker">${t('同源重复', 'Source duplicate')}</p><p class="section-title">1</p></div>
+        </div>
+      </section>
+      <section class="panel stack">
+        <div class="split"><h2 class="section-title">${t('分类映射', 'Category mapping')}</h2>${actionButton(t('管理', 'Manage'), 'navigate', 'mappings', 'subtle')}</div>
+        <div class="comparison-row"><span>${t('餐饮美食', 'Food & drinks')}</span>${icon('arrow-right')}<span>${t('餐饮', 'Dining')}</span>${badge(t('已匹配', 'Matched'), 'green')}</div>
+        <div class="comparison-row"><span>${t('商户消费', 'Retail purchases')}</span>${icon('arrow-right')}<span>${t('购物', 'Shopping')}</span>${badge(t('已匹配', 'Matched'), 'green')}</div>
+      </section>
+      <section class="stack">
+        <div class="split"><h2 class="section-title">${t('逐条核对', 'Review rows')}</h2><span class="caption muted">${t('共 3 条', '3 rows')}</span></div>
+        <article class="panel stack">
+          <div class="split"><span class="row-label">${t('午餐', 'Lunch')}</span><span class="row-value">−38.50</span></div>
+          <p class="caption muted">${t('10月23日 12:08 · 餐饮','Oct 23, 12:08 · Dining')} · ${memberName(state.importActor)}</p>
+          <label class="split"><span class="body-copy">${t('保留并导入', 'Keep and import')}</span><input type="checkbox" ${state.importSelected[0]?'checked':''} data-import-choice aria-label="${t('导入午餐', 'Import lunch')}" /></label>
+          <details><summary class="caption text-link">${t('查看原始行信息', 'View source details')}</summary><p class="caption muted">${t('示例行 1','Sample row 1')} · ${sourceName(state.source)} · ${esc(ledgerName(state.importLedger))}</p></details>
+        </article>
+        <article class="panel stack">
+          <div class="split"><span class="row-label">${t('日用品', 'Household supplies')}</span><span class="row-value">−86.00</span></div>
+          <p class="caption muted">${t('10月23日 10:25 · 购物','Oct 23, 10:25 · Shopping')} · ${memberName(state.importActor)}</p>
+          <label class="split"><span class="body-copy">${t('保留并导入', 'Keep and import')}</span><input type="checkbox" ${state.importSelected[1]?'checked':''} data-import-choice aria-label="${t('导入日用品', 'Import supplies')}" /></label>
+        </article>
+        <article class="panel stack">
+          <div class="split"><span class="row-label">${t('地铁出行', 'Metro ride')}</span><span class="row-value">−12.00</span></div>
+          <div class="split"><span class="caption muted">${t('10月22日 18:30 · 交通', 'Oct 22, 18:30 · Transport')}</span>${badge(t('同源重复，自动跳过', 'Duplicate · skipped'))}</div>
+        </article>
+      </section>
+      ${notice(t('同源重复记录不会再次导入；这里的确认操作仅展示完成效果。', 'Source duplicates are skipped. Confirmation here only previews the completion state.'))}
+      ${actionButton(t('确认导入所选记录', 'Confirm selected rows'), 'sheet', 'import-complete', 'primary')}
+    </div>`,
+
+  mappings: () => `
+    ${pageHead(t('分类映射', 'Category mappings'), t('家庭共用，下次导入继续沿用。', 'Shared by your household and reused on future imports.'), actionButton(t('返回导入', 'Back'), 'navigate', 'import', 'subtle'))}
+    <form class="stack" data-form="mappings">
+      <section class="panel stack">
+        <label class="field"><span>${t('账单来源', 'Statement source')}</span><select class="input" name="mapping-source" data-mapping-filter><option value="all">${t('全部来源', 'All sources')}</option><option value="wechat">${t('微信支付', 'WeChat Pay')}</option><option value="alipay">${t('支付宝', 'Alipay')}</option><option value="suishouji">${t('随手记', 'Sui Shou Ji')}</option><option value="cmb">${t('招商银行', 'CMB')}</option></select></label>
+        <p class="caption muted">${t('按来源、收支类型和原始分类匹配，只选择已有启用分类。', 'Mapped by source, direction and original categories. Choose an existing enabled category.')}</p>
+      </section>
+      ${[
+        ['wechat', t('微信支付', 'WeChat Pay'), t('餐饮美食', 'Food & drinks'), 'dining', 'expense'],
+        ['alipay', t('支付宝', 'Alipay'), t('交通出行', 'Transport'), 'transport', 'expense'],
+        ['suishouji', t('随手记', 'Sui Shou Ji'), t('购物 / 日用品', 'Shopping / Supplies'), 'shopping', 'expense'],
+        ['cmb', t('招商银行', 'CMB'), t('工资奖金', 'Salary & bonus'), 'salary', 'income']
+      ].map(([source,label,original,selected,type]) => `
+        <section class="panel stack" data-mapping-source="${source}">
+          <div class="split"><span class="caption muted">${label}</span>${badge(type === 'income' ? t('收入', 'Income') : t('支出', 'Expense'), type === 'income' ? 'green' : '')}</div>
+          <div><p class="kicker">${t('原始分类', 'Original category')}</p><p class="row-label">${original}</p></div>
+          <label class="field"><span>${t('记账分类', 'BillBoard category')}</span><select class="input" name="mapping-${source}">
+            ${type === 'income'
+              ? `<option value="salary">${t('工资', 'Salary')}</option><option value="other-income">${t('其他收入', 'Other income')}</option>`
+              : [['dining',t('餐饮','Dining')],['transport',t('交通','Transport')],['shopping',t('购物','Shopping')],['home',t('居家','Home')],['other',t('其他','Other')]].map(([value,text])=>`<option value="${value}"${selected === value ? ' selected' : ''}>${text}</option>`).join('')}
+            <option value="ignore">${t('忽略此类记录', 'Ignore these rows')}</option>
+          </select></label>
+        </section>`).join('')}
+      <button class="button primary" type="submit">${t('保存映射', 'Save mappings')}</button>
+      <p class="caption muted">${t('预览中的选择只保留在当前页面，不会修改真实映射。', 'Preview selections stay on this page and never change real mappings.')}</p>
+    </form>`,
+
+  reconcile: () => `
+    ${pageHead(t('AI 对账', 'AI reconciliation'), t('在所选月份或年份内检查账目。', 'Review records within a selected month or year.'), actionButton(t('返回记录', 'Back'), 'navigate', 'records', 'subtle'))}
+    <div class="stack">
+      <section class="panel stack">
+        <div class="grid-two">
+          <label class="field"><span>${t('时间范围', 'Period')}</span><select class="input" name="reconcile-period"><option>${t('2026年10月', 'October 2026')}</option><option>${t('2026年9月', 'September 2026')}</option><option>${t('2026全年', 'Full year 2026')}</option></select></label>
+          <label class="field"><span>${t('归属成员', 'Member')}</span><select class="input" name="reconcile-member"><option>${t('全部成员', 'All members')}</option><option>${t('小林', 'Lin')}</option><option>${t('小夏', 'Xia')}</option></select></label>
+        </div>
+        ${listRow({icon:'book',label:t('查看范围', 'View scope'),value:t('家庭总览', 'Household')})}
+      </section>
+      <section class="panel stack">
+        <div class="split"><span class="row-icon">${icon('sparkles')}</span>${badge(state.ai?t('AI 已开启', 'AI is on'):t('AI 尚未开启', 'AI is off'),state.ai?'success':'')}</div>
+        <h2 class="section-title">${state.ai?t('准备好核对账目', 'Ready to review records'):t('先选择是否使用 AI', 'Choose whether to use AI')}</h2>
+        <p class="body-copy muted">${state.ai?t('可预览示例对账建议。每项建议都需要核对后再应用。','Preview sample suggestions and review each one before applying it.'):t('开启后可生成对账建议。每项建议都需要你核对，再决定是否应用。', 'Enable AI to generate suggestions. Review each suggestion before choosing what to apply.')}</p>
+        ${actionButton(t('管理 AI 使用选择', 'Manage AI preference'), 'navigate', 'privacy', 'secondary')}
+      </section>
+      <section class="panel stack">
+        <div class="split"><h2 class="section-title">${t('对账结果预览', 'Result preview')}</h2>${badge(t('示例', 'Sample'), 'coral')}</div>
+        <p class="body-copy muted">${t('可能重复的记录集中展示，确认前可比较对家庭统计的影响。', 'Possible duplicates are grouped so you can review their impact before confirming changes.')}</p>
+        <div class="grid-two">
+          <div><p class="kicker">${t('重复建议', 'Duplicate suggestions')}</p><p class="section-title">1 ${t('组', 'group')}</p></div>
+          <div><p class="kicker">${t('需要人工核对', 'Manual review')}</p><p class="section-title">1 ${t('组', 'group')}</p></div>
+        </div>
+        ${actionButton(t('查看示例结果', 'View sample result'), 'sheet', 'reconcile-result', 'primary')}
+      </section>
+      <section class="panel stack">
+        <div class="split"><h2 class="section-title">${t('人工核对', 'Manual review')}</h2>${icon('search')}</div>
+        <p class="body-copy muted">${t('选择已核实为同一事项的重复记录，指定保留哪一条。仅可合并同账本、同成员、同收支方向且金额相同的记录。', 'Choose records verified to describe the same transaction and select one to keep. Ledger, member, direction and amount must match.')}</p>
+        ${actionButton(t('查看核对示例', 'View review example'), 'sheet', 'reconcile-result', 'secondary')}
+      </section>
+      ${notice(t('这里不调用 AI，也不读取或修改实际账目。', 'This preview does not call AI or read or modify real records.'))}
+    </div>`
+};
+
+    const auxiliaryPages = {
+  account: () => `<div class="stack">
+    ${pageHead(t("账号", "Account"), t("管理个人信息与登录安全", "Personal details and sign-in security"))}
+    <section class="panel identity-card"><span class="member-avatar">${t("林", "L")}</span><div class="row-copy"><h2 class="section-title">${t("小林", "Lin")}</h2><p class="muted">lin@example.com</p></div>${badge(t("邮箱已验证", "Email verified"), "success")}</section>
+    <section class="panel row-list">
+      ${listRow({ icon: "mail", label: t("邮箱", "Email"), detail: "lin@example.com", value: t("更换", "Change"), action: "sheet", target: "email" })}
+      ${listRow({ icon: "lock", label: t("登录密码", "Password"), detail: t("修改后需要重新登录", "Sign in again after changing your password"), action: "sheet", target: "password" })}
+      ${listRow({ icon: "users", label: t("家庭管理", "Household"), detail: t("小林的家庭 · 2 位成员", "Lin’s household · 2 members"), action: "navigate", target: "household" })}
+      ${listRow({ icon: "shield", label: t("隐私与处理选择", "Privacy and processing"), detail: state.ai || state.voice ? t("已设置个人处理选择", "Personal processing choices are configured") : t("AI 与语音处理均未开启", "AI and speech processing are off"), action: "navigate", target: "privacy" })}
+    </section>
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("登录会话", "Signed-in sessions")}</h2>${badge(t("2 个会话", "2 sessions"))}</div><p class="caption">${t("撤销后，该会话需要重新登录。", "A revoked session must sign in again.")}</p>
+      <div class="row-list">${listRow({ icon: "smartphone", label: t("手机浏览器", "Mobile browser"), detail: t("当前会话 · 最近活动 10月23日 12:08", "Current session · Active Oct 23, 12:08"), value: t("当前", "Current") })}</div>
+      <div class="split"><span class="caption">${t("登录于 10月20日 · 11月19日到期", "Signed in Oct 20 · Expires Nov 19")}</span>${actionButton(t("退出", "Sign out"), "sheet", "logout", "subtle")}</div>
+      <div class="divider"></div>
+      <div class="row-list">${listRow({ icon: "monitor", label: t("桌面浏览器", "Desktop browser"), detail: t("最近活动 10月22日 21:30", "Active Oct 22, 21:30"), value: "" })}</div>
+      <div class="split"><span class="caption">${t("登录于 10月18日 · 11月17日到期", "Signed in Oct 18 · Expires Nov 17")}</span>${actionButton(t("撤销会话", "Revoke"), "demo", "演示：已撤销桌面会话|Demo: desktop session revoked", "subtle")}</div>
+    </section>
+    <section class="panel row-list">${listRow({ icon: "help", label: t("帮助与下载", "Help and downloads"), action: "navigate", target: "help" })}${listRow({ icon: "globe", label: t("界面语言", "Language"), detail: t("可在预览工具栏切换中英文", "Switch languages in the preview toolbar"), value: t("简体中文 / English", "English / 简体中文"), action: "demo", target: "使用顶部语言按钮切换所有页面|Use the language button above to switch all pages" })}</section>
+    <section class="panel"><h2 class="section-title">${t("停用账号", "Deactivate account")}</h2><p class="body-copy">${t("停用将撤销你的登录会话。共同账务和历史成员身份会保留。负责人需要先转让职责或关闭家庭。", "Deactivation revokes your sessions. Shared records and historical membership are retained. Owners must transfer ownership or close the household first.")}</p><div class="split">${actionButton(t("导出记录", "Export records"), "navigate", "records", "subtle")}${actionButton(t("停用账号", "Deactivate account"), "sheet", "deactivate", "danger")}</div></section>
+    ${actionButton(t("退出登录", "Sign out"), "sheet", "logout", "secondary")}
+  </div>`,
+
+  household: () => `<div class="stack">
+    ${pageHead(t("家庭管理", "Household"), t("小林的家庭 · 负责人", "Lin’s household · Owner"))}
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("家庭成员", "Members")}</h2>${badge(t("2 人", "2 members"))}</div>
+      <div class="row-list">${listRow({ icon: "user", label: t("小林 · 你", "Lin · You"), detail: t("2026年4月加入", "Joined April 2026"), value: t("负责人", "Owner") })}${listRow({ icon: "user", label: t("小夏", "Xia"), detail: t("2026年4月加入", "Joined April 2026"), value: t("成员", "Member") })}</div>
+      <details><summary class="text-link">${t("管理小夏的成员身份", "Manage Xia’s membership")}</summary><div class="stack"><p class="caption">${t("成员离开后，原有记录仍保留其历史归属。", "Leaving preserves the member’s historical attribution on records.")}</p><form class="form" data-form="transfer-member">${field(t("当前密码", "Current password"), "password", t("输入当前密码", "Enter your current password"), "currentPassword")}<label class="body-copy"><input type="checkbox" required> ${t("确认将负责人职责转让给小夏", "Transfer ownership to Xia")}</label><button class="button secondary" type="submit">${t("转让负责人", "Transfer ownership")}</button></form><div class="divider"></div><form class="form" data-form="remove-member">${field(t("当前密码", "Current password"), "password", t("输入当前密码", "Enter your current password"), "currentPassword")}<label class="body-copy"><input type="checkbox" required> ${t("确认结束小夏的家庭访问权限", "End Xia’s access to this household")}</label><button class="button danger" type="submit">${t("移除成员", "Remove member")}</button></form></div></details>
+    </section>
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("邀请成员", "Invite a member")}</h2>${icon("mail")}</div><p class="body-copy">${t("邀请绑定收件邮箱，由对方本人验证并加入。", "Invitations are bound to the recipient’s email. The recipient verifies and joins personally.")}</p>${actionButton(t("发送家庭邀请", "Invite to household"), "sheet", "invite-member", "secondary")}<div class="divider"></div><p class="caption">${t("暂无待接受的邀请", "No pending invitations")}</p></section>
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("家庭加密", "Household encryption")}</h2>${badge(t("未开启", "Off"))}</div><p class="body-copy">${t("开启前，需要保存家庭码、恢复文件和操作回执，并确认备份可用。", "Before enabling encryption, save the household code, recovery file and operation receipt, and confirm your backups work.")}</p><div class="split">${actionButton(t("设置家庭加密", "Set up encryption"), "sheet", "recovery", "secondary")}${actionButton(t("了解恢复方式", "Recovery options"), "sheet", "recovery", "subtle")}</div></section>
+    <section class="panel"><h2 class="section-title">${t("离开与关闭", "Leave or close")}</h2><p class="body-copy">${t("作为负责人，你需要先转让职责再离开，或明确关闭整个家庭。关闭后将结束所有成员的访问，但不会删除共同账务。", "As the owner, transfer ownership before leaving, or explicitly close the household. Closure ends access for all members and preserves shared records.")}</p><div class="split">${actionButton(t("导出记录", "Export records"), "navigate", "records", "subtle")}${actionButton(t("关闭家庭", "Close household"), "sheet", "close-household", "danger")}</div></section>
+    ${actionButton(t("返回账号", "Back to account"), "navigate", "account", "subtle")}
+  </div>`,
+
+  privacy: () => `<div class="stack">
+    ${pageHead(t("隐私与处理选择", "Privacy and processing"), t("由你决定是否使用 AI 与语音服务", "Choose whether to use AI and speech services"))}
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("本人的处理选择", "Your processing choices")}</h2>${icon("shield")}</div><p class="body-copy">${t("两项默认关闭，选择仅适用于你的账号。手工记账和查看记录始终可用。", "Both choices are off by default and apply only to your account. Manual entry and viewing records remain available.")}</p>
+      <div class="privacy-options"><div class="switch-row"><div class="row-copy"><p class="row-label">${t("AI 处理", "AI processing")}</p><p class="row-detail">${t("自然语言记账、分类建议与 AI 对账", "Text entry, category suggestions and AI reconciliation")}</p></div><button class="switch" type="button" role="switch" aria-checked="false" aria-label="${t("AI 处理", "AI processing")}" data-action="toggle" data-value="ai"><span></span></button></div><div class="switch-row"><div class="row-copy"><p class="row-label">${t("语音识别", "Speech recognition")}</p><p class="row-detail">${t("语音记账需要同时开启 AI 处理", "Voice entry also requires AI processing")}</p></div><button class="switch" type="button" role="switch" aria-checked="false" aria-label="${t("语音识别", "Speech recognition")}" data-action="toggle" data-value="voice"><span></span></button></div></div>
+      <p class="caption">${t("关闭后不再受理新任务；已经正式受理的任务可继续完成。", "Turning a choice off prevents new tasks. Tasks already accepted may finish.")}</p>${actionButton(t("保存选择", "Save choices"), "demo", "演示：处理选择已保存，仅在本次预览中生效|Demo: processing choices saved for this preview only", "primary")}
+    </section>
+    <section class="panel"><h2 class="section-title">${t("哪些内容会被处理", "What gets processed")}</h2><div class="row-list">${listRow({ icon: "sparkles", label: t("文字与导入建议", "Text and import suggestions"), detail: t("本次输入及所需分类、成员名称", "Current input and necessary category and member names") })}${listRow({ icon: "check", label: t("AI 对账", "AI reconciliation"), detail: t("所选范围的日期、金额、分类、原始备注及来源类型；由你预览并应用结果", "Dates, amounts, categories, original notes and source types in the selected scope; you preview and apply results") })}${listRow({ icon: "mic", label: t("语音识别", "Speech recognition"), detail: t("本次录音发送至语音识别服务", "The current recording is sent to the speech service") })}</div><p class="caption">${t("备注可能包含个人信息。应用端音频会在完成、取消或到期后清理；这不代表供应商端同步删除。", "Notes may contain personal information. App-side audio is cleared after completion, cancellation or expiry; this does not guarantee deletion by providers.")}</p></section>
+    <section class="panel"><h2 class="section-title">${t("数据保留与删除申请", "Retention and deletion requests")}</h2><p class="body-copy">${t("离开家庭、停用账号或关闭家庭会结束相应访问。共同账务、历史成员与导入来源信息仍保留在原家庭。", "Leaving, deactivating an account or closing a household ends the corresponding access. Shared records, historical members and import provenance remain with the original household.")}</p><p class="body-copy">${t("恢复或永久删除需核实具体申请；历史备份不能承诺即时清除。可通过最初邀请你的维护者联系渠道提出申请。", "Recovery or permanent deletion requires a verified request. Historical backup entries cannot be guaranteed immediate removal. Contact the maintainer through the channel used for your invitation.")}</p></section>
+    ${actionButton(t("返回账号", "Back to account"), "navigate", "account", "subtle")}
+  </div>`,
+
+  login: () => `<div class="stack">
+    ${pageHead(t("欢迎回来", "Welcome back"), t("登录后继续记录家庭收支。", "Sign in to your household records."))}
+    <section class="panel"><form class="form" data-form="login">${field(t("邮箱", "Email"), "email", "lin@example.com", "email")}${field(t("密码", "Password"), "password", t("输入密码", "Enter your password"), "password")}<button class="button primary" type="submit">${t("登录", "Sign in")}</button></form></section>
+    <div class="split">${actionButton(t("忘记密码", "Forgot password"), "navigate", "forgot", "subtle")}${actionButton(t("帮助与下载", "Help and downloads"), "navigate", "help", "subtle")}</div>
+    <p class="caption">${t("账号通过邀请建立。还没有邀请？可在帮助页申请开通独立家庭。", "Accounts are created by invitation. Request access on the help page to start an independent household.")}</p>
+    <details class="panel"><summary class="text-link">${t("查看会话失效提示", "Preview an expired session")}</summary>${notice(t("登录已过期或已被撤销，请重新登录。", "Your session has expired or was revoked. Please sign in again."), "warning")}</details>
+  </div>`,
+
+  forgot: () => `<div class="stack">
+    ${pageHead(t("找回密码", "Recover password"), t("我们会向已验证的邮箱发送重置邮件。", "Request a reset message for your verified email."))}
+    <section class="panel"><form class="form" data-form="forgot">${field(t("邮箱", "Email"), "email", "lin@example.com", "email")}<p class="caption">${t("本次申请不会改变账号状态、家庭成员身份或历史账务。", "This request does not change account status, household membership or historical records.")}</p><button class="button primary" type="submit">${t("发送重置邮件", "Request reset email")}</button></form></section>
+    ${notice(t("若邮箱符合条件，你将收到后续邮件。邮箱未验证或邮件不可用时，请联系原邀请渠道的维护者。", "If the email is eligible, you will receive a follow-up message. For unverified or inaccessible email, contact the maintainer who invited you."))}
+    ${actionButton(t("返回登录", "Back to sign in"), "navigate", "login", "subtle")}
+  </div>`,
+
+  invitation: () => `<div class="stack">
+    ${pageHead(t("接受家庭邀请", "Accept household invitation"), t("验证邮箱后，由你本人完成加入。", "Verify your email and complete joining personally."))}
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("小林的家庭", "Lin’s household")}</h2>${badge(t("待接受", "Pending"), "warm")}</div><div class="row-list">${listRow({ icon: "mail", label: t("受邀邮箱", "Invited email"), value: "xia@example.com" })}${listRow({ icon: "users", label: t("加入后身份", "Membership"), value: t("家庭成员", "Member") })}${listRow({ icon: "history", label: t("示例有效期", "Example expiry"), value: t("2026年11月12日", "Nov 12, 2026") })}</div></section>
+    <section class="panel"><h2 class="section-title">${t("创建账号并验证", "Create account and verify")}</h2><form class="form" data-form="registration">${field(t("显示名称", "Display name"), "text", t("例如：小夏", "For example: Xia"), "displayName")}${field(t("家庭中的称呼", "Member name"), "text", t("例如：小夏", "For example: Xia"), "memberName")}${field(t("新密码", "New password"), "password", t("至少 8 个字符", "At least 8 characters"), "newPassword")}${field(t("确认密码", "Confirm password"), "password", t("再次输入新密码", "Repeat the new password"), "confirmPassword")}<p class="caption">${t("创建后仍需完成邮件确认，邀请本身不会直接授予家庭访问权限。", "Email confirmation is still required. The invitation itself does not grant household access.")}</p><button class="button primary" type="submit">${t("注册并发送确认邮件", "Register and request confirmation")}</button></form>${actionButton(t("已有账号，前往登录", "Already registered? Sign in"), "navigate", "login", "subtle")}</section>
+    <details class="panel"><summary class="text-link">${t("其他邮件链接状态", "Other email-link states")}</summary><div class="stack"><h3 class="section-title">${t("申请邮箱确认", "Confirm an access request")}</h3><p class="body-copy">${t("本人确认邮箱后，申请进入独立审批；此时尚未建立账号或家庭。", "After email confirmation, the request enters independent review. No account or household is created yet.")}</p>${actionButton(t("确认本次申请", "Confirm request"), "demo", "演示：邮箱已确认，申请等待审核|Demo: email confirmed; request pending review", "secondary")}<div class="divider"></div><h3 class="section-title">${t("重置密码", "Reset password")}</h3><form class="form" data-form="reset-password">${field(t("新密码", "New password"), "password", t("至少 8 个字符", "At least 8 characters"), "newPassword")}${field(t("确认密码", "Confirm password"), "password", t("再次输入新密码", "Repeat the new password"), "confirmPassword")}<button class="button secondary" type="submit">${t("设置新密码", "Set new password")}</button></form><div class="divider"></div><h3 class="section-title">${t("平台邀请", "Platform invitation")}</h3><p class="body-copy">${t("平台邀请用于建立独立家庭，不会加入已有家庭。", "A platform invitation starts an independent household instead of joining an existing one.")}</p><form class="form" data-form="platform-registration">${field(t("家庭名称", "Household name"), "text", t("例如：我们的家", "For example: Our home"), "householdName")}<button class="button secondary" type="submit">${t("预览建立独立家庭", "Preview household creation")}</button></form>${notice(t("链接无效、已使用或已过期时，请申请新的邮件链接。", "If a link is invalid, used or expired, request a new email link."), "warning")}</div></details>
+  </div>`,
+
+  help: () => `<div class="stack">
+    ${pageHead(t("帮助与下载", "Help and downloads"), t("记录、导入与家庭管理的使用指南", "A guide to entries, imports and your household"), actionButton(t("进入账本", "Open ledger"), "navigate", "home", "subtle"))}
+    <section class="panel help-section"><h2 class="section-title">${t("从这里开始", "Start here")}</h2><div class="row-list">${listRow({ icon: "book", label: t("记录一笔收支", "Record income or an expense"), detail: t("先选择记入账本，再设置金额、分类与归属成员", "Choose a target ledger, then amount, category and member"), action: "navigate", target: "add" })}${listRow({ icon: "download", label: t("导入已有账单", "Import existing bills"), detail: t("随手记、微信支付、支付宝、招商银行", "Suishouji, WeChat Pay, Alipay and CMB"), action: "navigate", target: "import" })}${listRow({ icon: "users", label: t("和家人一起记账", "Share records with your household"), detail: t("保留每笔记录的成员归属，按整个家庭查看", "Keep member attribution while viewing the whole household"), action: "navigate", target: "household" })}</div></section>
+    <section class="panel"><h2 class="section-title">${t("下载客户端", "Download apps")}</h2><p class="body-copy">${t("也可以直接使用浏览器，登录同一账号查看家庭账务。", "You can also use a browser and sign in with the same account.")}</p><div class="grid-two">${actionButton(t("Android 客户端", "Android app"), "demo", "演示：此处提供 Android 安装包下载|Demo: Android app download", "secondary")}${actionButton(t("Windows 客户端", "Windows app"), "demo", "演示：此处提供 Windows 安装程序下载|Demo: Windows installer download", "secondary")}</div></section>
+    <section class="panel"><h2 class="section-title">${t("申请开通", "Request access")}</h2><p class="body-copy">${t("先确认邮箱，再由维护者审核。批准后会收到平台邀请，由你本人建立独立家庭。", "Confirm your email, then wait for maintainer review. Approval sends a platform invitation so you can create an independent household.")}</p><form class="form" data-form="access-application">${field(t("邮箱", "Email"), "email", "you@example.com", "email")}<label class="field"><span>${t("说明（选填，最多 80 字）", "Note (optional, up to 80 characters)")}</span><textarea class="input" name="note" rows="3" maxlength="80" placeholder="${t("简单说明使用需求", "Briefly describe your intended use")}"></textarea></label><p class="caption">${t("说明仅供本机维护者审核，不会写入确认邮件。申请不直接创建账号或授予访问。", "Your note is only for local maintainer review and is excluded from confirmation emails. Applying does not create an account or grant access.")}</p><button class="button primary" type="submit">${t("发送邮箱确认", "Request email confirmation")}</button></form></section>
+    <section class="panel"><h2 class="section-title">${t("常见问题", "Common questions")}</h2><details><summary class="text-link">${t("家庭总览和记入账本有什么区别？", "How do view scope and target ledger differ?")}</summary><p class="body-copy">${t("家庭总览汇总整个家庭的记录；记入账本决定新记录存入哪一本账本。切换查看范围不会替你决定写入目标。", "Household overview summarizes all household records. The target ledger determines where a new entry is saved. Changing view scope does not choose a write target.")}</p></details><details><summary class="text-link">${t("导入支持哪些文件？", "Which import files are supported?")}</summary><p class="body-copy">${t("随手记 .xlsx、微信支付 .xlsx、支付宝 .csv、招商银行借记卡流水 .pdf。先预览并完成现有分类映射，再确认导入。", "Suishouji .xlsx, WeChat Pay .xlsx, Alipay .csv, and CMB debit-card .pdf statements. Review and map to existing categories before confirming.")}</p></details><details><summary class="text-link">${t("AI 和语音会自动开启吗？", "Are AI and voice enabled automatically?")}</summary><p class="body-copy">${t("不会。两项默认关闭，每位账号分别选择；语音记账需要两项同时开启。", "No. Both are off by default and chosen per account. Voice entry requires both.")}</p>${actionButton(t("查看处理选择", "Review choices"), "navigate", "privacy", "subtle")}</details><details><summary class="text-link">${t("离开家庭后，历史记录会删除吗？", "Does leaving delete historical records?")}</summary><p class="body-copy">${t("不会。成员的访问权限结束，原有共同账务和历史归属仍保留。", "No. Access ends while shared records and historical attribution remain.")}</p></details></section>
+    ${actionButton(t("返回登录", "Back to sign in"), "navigate", "login", "subtle")}
+  </div>`,
+
+  ops: () => `<div class="stack">
+    ${pageHead(t("本机管理", "Local administration"), t("独立 OPS 后台 · 仅示例状态", "Independent OPS console · Example state only"), badge(t("仅本机", "Local only"), "warm"))}
+    ${notice(t("此页为独立后台的视觉预览。所有账号、申请与运行状态均为虚构示例。", "This is a visual preview of the independent console. All accounts, requests and runtime states are fictional."))}
+    <section class="grid-two"><div class="panel"><p class="kicker">${t("待审申请", "Pending requests")}</p><p class="page-title">2</p><p class="caption">${t("均已确认邮箱", "Email confirmation completed")}</p></div><div class="panel"><p class="kicker">${t("有效会话", "Active sessions")}</p><p class="page-title">3</p><p class="caption">${t("1 个家庭 · 2 个账号", "1 household · 2 accounts")}</p></div></section>
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("注册申请", "Access requests")}</h2>${badge(t("待审核", "Pending"), "warm")}</div><div class="row-list">${listRow({ icon: "mail", label: "new@example.com", detail: t("邮箱已确认 · 11月5日 09:20", "Email confirmed · Nov 5, 09:20") })}</div><p class="body-copy">${t("说明：希望和家人整理日常收支。", "Note: I would like to organize daily spending with my household.")}</p><p class="caption">${t("说明仅在本机审批页面展示。", "The note is shown only in this local review view.")}</p><div class="split">${actionButton(t("批准并邀请", "Approve and invite"), "demo", "演示：申请已批准，平台邀请待发送；尚未创建账号或授予家庭访问|Demo: request approved, invitation queued; no account or access granted", "primary")}${actionButton(t("拒绝", "Reject"), "demo", "演示：申请已拒绝，通知邮件不包含审核理由|Demo: request rejected; notification excludes review reasons", "secondary")}</div><div class="divider"></div><div class="row-list">${listRow({ icon: "mail", label: "pending@example.com", detail: t("已批准 · 邀请邮件发送失败", "Approved · Invitation email delivery failed"), value: t("可重试", "Retry available") })}</div>${actionButton(t("重试通知", "Retry notification"), "demo", "演示：仅重试发送通知，不重复审批|Demo: retrying notification without repeating review", "subtle")}</section>
+    <section class="panel"><div class="panel-head"><h2 class="section-title">${t("平台邀请", "Platform invitations")}</h2>${icon("mail")}</div><p class="body-copy">${t("绑定受邀邮箱。由受邀者完成验证后建立独立家庭。", "Bound to an invited email. The recipient completes verification to create an independent household.")}</p>${actionButton(t("发送平台邀请", "Send platform invitation"), "sheet", "ops-invite", "secondary")}</section>
+    <section class="panel"><h2 class="section-title">${t("账号与会话", "Accounts and sessions")}</h2><div class="row-list">${listRow({ icon: "user", label: t("小林", "Lin"), detail: "lin@example.com", value: t("2 个会话", "2 sessions") })}</div><div class="split">${actionButton(t("重置密码", "Reset password"), "sheet", "reset-password", "subtle")}${actionButton(t("撤销会话", "Revoke session"), "demo", "演示：所选会话已撤销|Demo: selected session revoked", "subtle")}</div><div class="divider"></div><div class="row-list">${listRow({ icon: "user", label: t("小夏", "Xia"), detail: "xia@example.com", value: t("1 个会话", "1 session") })}</div><p class="caption">${t("账号由受邀者建立；后台不直接新增或删除账号，也不修改家庭交易。", "Recipients create their accounts. This console does not directly create or delete accounts or edit household transactions.")}</p></section>
+    <section class="panel"><h2 class="section-title">${t("安全与运行", "Security and runtime")}</h2><div class="row-list">${listRow({ icon: "check-circle", label: t("服务状态", "Service status"), value: t("正常（示例）", "Healthy (example)") })}${listRow({ icon: "shield", label: t("登录限流", "Sign-in throttling"), detail: "lin@example.com", value: t("已限制", "Throttled"), action: "demo", target: "演示：该账号的登录限流已解除|Demo: account sign-in throttle released" })}${listRow({ icon: "history", label: t("近期审计", "Recent audit"), detail: t("10:12 · 撤销会话；09:30 · 重试申请通知", "10:12 · Session revoked; 09:30 · Request notification retried") })}</div></section>
+    <details class="panel"><summary class="text-link">${t("查看 OPS 登录状态", "Preview OPS sign-in")}</summary><form class="form" data-form="ops-login">${field(t("后台口令", "Console password"), "password", t("输入后台口令", "Enter the console password"), "opsPassword")}<button class="button primary" type="submit">${t("进入后台", "Open console")}</button></form></details>
+  </div>`
+};
+
+    const pages=[
+      ['home','家庭总览','Overview','home','daily','/home','汇总、趋势、分类与成员分析','Summary, trends, categories and member analysis'],
+      ['add','手工记账','Manual entry','plus','daily','/add','金额、分类、归属与保存','Amount, category, member and save'],
+      ['records','记录与编辑','Records & editing','list','daily','/records','搜索、筛选、编辑及导出','Search, filters, editing and export'],
+      ['natural','自然语言与语音','Text & voice entry','sparkles','daily','/add · 自然语言','处理选择、解析确认与语音状态','Processing choices, review and voice states'],
+      ['ledgers','账本管理','Ledgers','book','finance','/ledgers','默认账本、共同维护与归档','Default ledger, shared management and archive'],
+      ['import','导入账单','Import','upload','finance','/records/import','四种账单来源与目标账本','Four statement sources and destination ledger'],
+      ['import-review','导入核对','Import review','check-circle','finance','/records/import · 草稿','分类映射、成员归属与逐条核对','Mappings, member attribution and row review'],
+      ['mappings','分类映射','Category mappings','grid','finance','/records/import/mappings','复用家庭内已有分类映射','Reuse household category mappings'],
+      ['reconcile','AI 对账','AI reconciliation','chart','finance','/records/reconcile','账单建议与人工核对','Suggestions and manual reconciliation'],
+      ['account','账号设置','Account','user','account','/account','账号安全、设备会话与设置','Security, sessions and preferences'],
+      ['household','家庭与成员','Household','users','account','/account/household','成员、邀请、家庭加密与恢复','Members, invitations, encryption and recovery'],
+      ['privacy','隐私与处理选择','Privacy','shield','account','/account/privacy','本人 AI 与语音处理选择','Personal AI and speech processing choices'],
+      ['login','登录','Sign in','lock','public','/login','账号密码登录与帮助入口','Password sign-in and help'],
+      ['forgot','找回密码','Password recovery','key','public','/forgot-password','统一邮件受理反馈','Uniform email request feedback'],
+      ['invitation','邀请与邮件确认','Email links','mail','public','/account-link','邀请、确认、重置与失效状态','Invitations, confirmation, reset and expired states'],
+      ['help','帮助与开通申请','Help & access','help','public','/help','使用说明、下载与开通申请','Guide, downloads and access request'],
+      ['ops','本机 OPS','Local OPS','monitor','ops','/ops','独立后台的审批与账号安全操作','Independent console for approvals and account security']
+    ].map(([id,zh,en,iconName,group,path,detailZh,detailEn])=>({id,zh,en,icon:iconName,group,path,detailZh,detailEn}));
+    const renderers={...corePages,...financePages,...auxiliaryPages};
+    const groupNames={daily:['日常记账','Everyday'],finance:['账本与账单','Ledgers & statements'],account:['账号与家庭','Account & household'],public:['登录与帮助','Access & help'],ops:['独立后台','Separate console']};
+    let activeRecordId=null,returnFocus=null,toastTimer;
+    const stage=document.getElementById('stage'),dialog=document.getElementById('dialog');
+    function pageById(id){return pages.find(p=>p.id===id)||pages[0];}
+    function renderStudio(){
+      document.documentElement.lang=state.locale==='en'?'en':'zh-CN';
+      document.title=t('BillBoard · B2 轻盈暖色设计预览','BillBoard · B2 design preview');
+      document.getElementById('studioHeader').innerHTML=`<div class="brand"><span class="brand-mark">${icon('book')}</span><div><div class="brand-name">BillBoard <span style="font-weight:400;color:#939099">/ B2</span></div><p class="brand-caption">${t('轻盈暖色 · 全页面设计预览','Warm & light · Complete design preview')}</p></div></div><div class="studio-tools"><div class="studio-segment" aria-label="${t('预览方式','Preview mode')}">${[['focus',t('逐页预览','Page')],['gallery',t('全部页面','All pages')]].map(([v,l])=>`<button data-action="mode" data-value="${v}" aria-pressed="${state.mode===v}">${l}</button>`).join('')}</div><div class="studio-segment" aria-label="${t('屏幕尺寸','Screen size')}">${[['phone','smartphone',t('手机','Phone')],['desktop','monitor',t('桌面','Desktop')]].map(([v,i,l])=>`<button data-action="device" data-value="${v}" aria-pressed="${state.device===v}" aria-label="${l}" title="${l}">${icon(i)}</button>`).join('')}</div><button class="tool-button" data-action="language" aria-label="${t('切换为英文','Switch to Chinese')}">${icon('globe')}<span>${state.locale==='zh'?'EN':'中文'}</span></button><button class="tool-button reset-tool" data-action="reset" aria-label="${t('重置示例','Reset demo')}">${icon('refresh')}<span>${t('重置','Reset')}</span></button></div>`;
+      document.getElementById('directory').setAttribute('aria-label',t('页面目录','Page directory'));
+      document.getElementById('directory').innerHTML=`<p class="directory-intro">${t('一个文件，17 个页面与状态。<br>选择页面，或一次浏览全部设计。','One file, 17 screens and states.<br>Choose a page or view the full collection.')}</p>${Object.entries(groupNames).map(([g,n])=>`<h2>${t(...n)}</h2>${pages.filter(p=>p.group===g).map(p=>`<button class="page-link" data-action="navigate" data-value="${p.id}" ${state.page===p.id?'aria-current="page"':''}>${icon(p.icon)}<span>${t(p.zh,p.en)}</span><span class="page-index">${String(pages.indexOf(p)+1).padStart(2,'0')}</span></button>`).join('')}`).join('')}<div class="directory-footer"><div class="palette"><span class="swatch" style="background:#ef745d"></span><span class="swatch" style="background:#fff0eb"></span><span class="swatch" style="background:#303138"></span><span class="swatch" style="background:#6b6e76"></span><span class="swatch" style="background:#fcfbfa"></span></div>${t('标题 24 / 500<br>正文 14 / 400 · 金额 32 / 450<br>间距 8 · 圆角 12–24','Titles 24 / 500<br>Body 14 / 400 · Amounts 32 / 450<br>Spacing 8 · Corners 12–24')}</div>`;
+      const p=pageById(state.page);document.getElementById('canvasHeader').innerHTML=`<div><p class="canvas-label">${state.mode==='gallery'?t('全部页面','All pages'):t(p.zh,p.en)}</p><p class="canvas-description">${state.mode==='gallery'?t('每个画框都可以滚动。点击页面名称可展开，也可以直接体验页面内的按钮。','Scroll within each frame. Open a page by its name or try its controls directly.'):t(p.detailZh,p.detailEn)} · ${t('示例数据','Sample data')}</p><select class="mobile-page-selector" data-page-select aria-label="${t('选择预览页面','Choose a preview page')}">${pages.map(q=>`<option value="${q.id}" ${q.id===state.page?'selected':''}>${t(q.zh,q.en)}</option>`).join('')}</select></div><span class="canvas-meta"><i class="status-dot"></i>${t('离线可用 · 所有操作均为模拟','Offline · Simulated interactions')}</span>`;
+      document.getElementById('studioNote').textContent=t('设计预览 / 虚构数据。修改只保留在当前打开的页面中；刷新或重置后恢复。请勿输入真实密码或上传真实账单。','Design preview / Fictional data. Changes exist only in this open page and reset on reload. Do not enter real passwords or select real statements.');
+      renderStage();
+    }
+    function renderStage(){fieldCounter=0;stage.innerHTML=state.mode==='gallery'?`<div class="gallery">${pages.map(p=>`<section class="gallery-item"><div class="gallery-caption"><button data-action="navigate" data-value="${p.id}">${String(pages.indexOf(p)+1).padStart(2,'0')} · ${t(p.zh,p.en)} ↗</button><span>${t(p.detailZh,p.detailEn).split('、')[0].split(',')[0]}</span></div>${renderFrame(p.id,true)}</section>`).join('')}</div>`:renderFrame(state.page,false);syncChoices();}
+    function renderFrame(id,mini){const p=pageById(id),compose=['add','natural'].includes(id),publicPage=p.group==='public'||p.group==='ops',showNav=!publicPage&&!compose&&p.group!=='account';const navCurrent=id==='records'||p.group==='finance'?'records':'home';return `<article class="device ${!mini&&state.device==='desktop'?'desktop':''} ${compose?'compose-device':''}" data-page="${id}" aria-label="${t(p.zh,p.en)}"><div class="statusbar"><span>9:41</span><span class="system-icons">${icon('signal')}${icon('wifi')}<i class="battery"></i></span></div><div class="app-layout">${publicPage?'':`<nav class="app-sidebar" aria-label="${t('应用导航','App navigation')}"><p class="brand-name">BillBoard</p>${[['home','home',t('总览','Overview')],['records','list',t('记录','Records')],['add','plus',t('记一笔','Add a record')],['ledgers','book',t('账本','Ledgers')],['reconcile','chart',t('AI 对账','Reconcile')],['account','user',t('账号','Account')]].map(([v,i,l])=>`<button class="${id===v?'selected':''}" data-action="navigate" data-value="${v}">${icon(i)}${l}</button>`).join('')}<div style="margin-top:auto">${actionButton(t('帮助','Help'),'navigate','help','subtle')}</div></nav>`}<div class="app-main"><header class="app-toolbar">${publicPage?`<button class="text-link" data-action="navigate" data-value="${p.group==='ops'?'ops':'home'}">${p.group==='ops'?'BillBoard / OPS':'BillBoard'}</button>${badge(p.group==='ops'?t('本机独立','Local only'):t('示例预览','Preview'))}`:p.group==='account'?`<button class="icon-button" data-action="navigate" data-value="home" aria-label="${t('返回总览','Back to overview')}">${icon('arrow-left')}</button><button class="icon-button" data-action="sheet" data-value="menu" aria-label="${t('更多','More')}">${icon('more')}</button>`:`<button class="scope-button" data-action="sheet" data-value="scope">${esc(ledgerName(state.viewLedger))}${icon('chevron-down')}</button><button class="icon-button" data-action="sheet" data-value="menu" aria-label="${t('更多','More')}">${icon('more')}</button>`}</header><div class="app-scroll ${showNav?'':'no-tabs'}">${['login','forgot','invitation'].includes(id)?'<div class="auth-body">':''}${renderers[id]()}${['login','forgot','invitation'].includes(id)?'</div>':''}${id==='ledgers'&&state.newLedgers.length?state.newLedgers.map(l=>`<section class="panel ledger-card"><div class="split"><h2 class="section-title">${esc(l.name)}</h2>${badge(t('使用中','Active'),'success')}</div>${actionButton(t('记一笔','Add a record'),'new-ledger-entry',l.id,'secondary')}</section>`).join(''):''}</div>${showNav?`<nav class="bottom-nav" aria-label="${t('应用导航','App navigation')}">${[['home','home',t('首页','Home')],['add','plus',t('记一笔','Add')],['records','list',t('记录','Records')]].map(([v,i,l])=>`<button data-action="navigate" data-value="${v}" ${navCurrent===v?'aria-current="page"':''}>${i==='plus'?`<span class="plus-disc">${icon(i)}</span>`:icon(i)}<span>${l}</span></button>`).join('')}</nav>`:''}</div></div><span class="home-indicator" aria-hidden="true"></span></article>`;}
+    function syncChoices(){document.querySelectorAll('[data-action="toggle"]').forEach(el=>el.setAttribute('aria-checked',String(!!state[el.dataset.value])));document.querySelectorAll('[data-action="select-source"]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.value===state.source)));document.querySelectorAll('form input[type="email"],form input[type="password"]').forEach(el=>{el.required=true;});}
+    function navigate(id){if(!pages.some(p=>p.id===id))return;closeDialog();state.page=id;state.mode='focus';history.replaceState(null,'',`#${id}`);renderStudio();}
+    function toast(text){clearTimeout(toastTimer);const el=document.getElementById('toast');el.innerHTML=`${icon('check-circle')}<span>${esc(text)}</span>`;el.hidden=false;toastTimer=setTimeout(()=>{el.hidden=true;},4300);}
+    function demoMessage(value){const parts=value.split('|');return state.locale==='en'?(parts[1]||parts[0]):parts[0];}
+    function closeDialog(){if(dialog.open)dialog.close();}
+    function showDialog(title,body,trigger){if(trigger&&!dialog.open)returnFocus=trigger;document.getElementById('dialogContent').innerHTML=`<header class="dialog-header"><h2 id="dialogTitle">${title}</h2><button type="button" class="icon-button" data-action="close" aria-label="${t('关闭','Close')}">${icon('x')}</button></header>${body}`;if(!dialog.open)dialog.showModal();syncChoices();}
+    function modalForm(name,body,submit=t('保存','Save'),kind='primary'){return `<form class="form" data-form="${name}">${body}<p class="error-message" role="alert" hidden></p><button class="button ${kind}" type="submit">${submit}</button></form>`;}
+    function openSheet(kind,trigger){
+      const row=(name,label,action,value,detail='')=>listRow({icon:name,label,action,target:value,detail});
+      const sheets={
+        menu:()=>[t('更多','More'),`<div class="menu-list">${row('book',t('管理账本','Manage ledgers'),'navigate','ledgers')}${row('upload',t('导入账单','Import statements'),'navigate','import')}${row('download',t('导出记录','Export records'),'sheet','export')}${row('chart',t('AI 对账','AI reconciliation'),'navigate','reconcile')}${row('user',t('账号设置','Account settings'),'navigate','account')}${row('users',t('家庭与成员','Household & members'),'navigate','household')}${row('shield',t('隐私与处理选择','Privacy choices'),'navigate','privacy')}${row('help',t('帮助与下载','Help & downloads'),'navigate','help')}${row('globe',t('切换英文','Switch to Chinese'),'language','')}</div>`],
+        scope:()=>[t('查看范围','Viewing scope'),`<div class="menu-list">${[['all','home'],['daily','book'],['travel','folder'],['renovation','archive'],...state.newLedgers.map(l=>[l.id,'book'])].map(([v,i])=>listRow({icon:i,label:esc(ledgerName(v)),value:state.viewLedger===v?icon('check'):'',detail:v==='all'?t('包含归档账本与历史成员','Includes archived ledgers and historical members'):v==='renovation'?t('归档历史只读','Archived history is read-only'):'',action:'pick-scope',target:v})).join('')}</div>`],
+        'entry-ledger':()=>[t('记入账本','Destination ledger'),`<div class="menu-list">${ledgerOptions().map(([v,l])=>listRow({icon:'book',label:esc(l),value:state.entryLedger===v?icon('check'):'',action:'pick-ledger',target:v})).join('')}</div><p class="caption">${t('仅可记入使用中的账本。','New entries can only go into active ledgers.')}</p>`],
+        member:()=>[t('归属成员','Member'),`<div class="menu-list">${['all','lin','xia'].map(v=>listRow({icon:v==='all'?'users':'user',label:memberName(v),value:state.member===v?icon('check'):'',action:'pick-member',target:v})).join('')}</div>`],
+        date:()=>[t('时间范围','Date range'),modalForm('date',`${field(t('月份','Month'),'month','','month',state.month)}<p class="caption">${t('也可以指定起止日期。填写后优先使用自选范围。','Or enter both dates to use a custom range instead.')}</p><div class="grid-two">${field(t('开始日期','Start date'),'date','','start',state.rangeStart)}${field(t('结束日期','End date'),'date','','end',state.rangeEnd)}</div>`,t('应用范围','Apply range'))],
+        filters:()=>[t('筛选与排序','Filter & sort'),modalForm('filters',`${selectField(t('交易类型','Type'),'type',[['all',t('全部','All')],['expense',t('支出','Expense')],['income',t('收入','Income')]],state.recordType)}${selectField(t('分类','Category'),'category',[['all',t('全部分类','All categories')],...categories.map(c=>[c[0],t(c[1],c[2])])],state.filterCategory)}<div class="grid-two">${field(t('最低金额','Min amount'),'text','0.00','min',state.filterMin)}${field(t('最高金额','Max amount'),'text',t('不限','Any'),'max',state.filterMax)}</div>${selectField(t('排序','Sort'),'sort',[['date',t('时间从新到旧','Newest first')],['amount-desc',t('金额从高到低','Amount: high to low')],['amount-asc',t('金额从低到高','Amount: low to high')]],state.sort)}`,t('应用筛选','Apply filters'))],
+        export:()=>[t('导出记录','Export records'),`<div class="stack">${notice(t('导出当前家庭、账本与所选日期范围内的可见财务字段。','Export visible financial fields within the selected household, ledger and date range.'))}<div class="row-list">${listRow({label:t('查看范围','Scope'),value:esc(ledgerName(state.viewLedger))})}${listRow({label:t('记录数量','Records'),value:String(visibleRecords().length)})}${listRow({label:t('文件格式','Format'),value:'Excel .xlsx'})}</div>${actionButton(t('导出 Excel','Export Excel'),'demo',t('导出完成状态预览；没有生成真实账单。','Export completion preview; no real statement was generated.'),'primary full')}</div>`],
+        analysis:()=>[t('周期比较','Period comparison'),`<div class="stack"><div class="panel"><p class="kicker">${t('本期支出','Current expenses')}</p><p class="hero-amount">¥${money(totals(visibleRecords()).expense)}</p></div>${notice(t('上期没有示例记录，暂不可比较。','There are no sample records for the previous period.'))}${row('users',t('查看成员分布','View members'),'sheet','member-analysis')}${row('grid',t('查看分类明细','View categories'),'sheet','category-analysis')}</div>`],
+        'category-analysis':()=>[t('分类明细','Category details'),`<div class="row-list">${categories.map(c=>{const total=visibleRecords().filter(r=>r.category===c[0]).reduce((v,r)=>v+r.amountFen,0);return total?listRow({icon:c[3],label:t(c[1],c[2]),value:`¥${money(total)}`,action:'category-records',target:c[0]}):'';}).join('')}</div>`],
+        'member-analysis':()=>[t('成员分布','By member'),`<div class="stack">${['lin','xia'].map(id=>{const s=totals(visibleRecords().filter(r=>r.actor===id));return `<div class="panel"><h3 class="section-title">${memberName(id)}</h3><div class="summary-secondary"><div><p class="kicker">${t('支出','Expense')}</p><p class="metric">¥${money(s.expense)}</p></div><div><p class="kicker">${t('收入','Income')}</p><p class="metric income">¥${money(s.income)}</p></div></div></div>`;}).join('')}</div>`],
+        voice:()=>[t('语音记账','Voice entry'),`<div class="stack"><div class="empty-state" style="padding:20px 0">${icon('mic')}<h3>${state.ai&&state.voice?t('可以开始语音记账','Ready for voice entry'):t('先设置处理选择','Choose processing options')}</h3><p>${t('语音记账需要同时开启 AI 处理和语音识别。','Voice entry needs both AI processing and speech recognition.')}</p></div>${state.ai&&state.voice?notice(t('录音状态预览：此文件不会访问麦克风或发送音频。','Recording-state preview: this file never accesses your microphone or sends audio.')):actionButton(t('前往隐私设置','Open privacy settings'),'navigate','privacy','primary full')}</div>`],
+        'create-ledger':()=>[t('新建账本','New ledger'),modalForm('create-ledger',field(t('账本名称','Ledger name'),'text',t('例如：旅行','For example: Travel'),'name'),t('新建','Create'))],
+        'rename-ledger':()=>[t('重命名账本','Rename ledger'),modalForm('rename-ledger',field(t('账本名称','Ledger name'),'text','','name',ledgerName('daily')))],
+        'archive-ledger':()=>[t('归档账本','Archive ledger'),`<div class="stack">${notice(t('归档后，历史仍计入家庭汇总，但不能新增、修改、删除或移入移出记录。','Archived history stays in household totals. Records cannot be added, edited, deleted or moved.'))}${actionButton(t('确认归档','Confirm archive'),'demo','已预览归档完成状态，示例数据未改变。|Archive completion previewed; sample data is unchanged.','danger full')}</div>`],
+        'restore-ledger':()=>[t('恢复账本','Restore ledger'),`<div class="stack"><p class="body-copy">${t('恢复后，家庭成员可以再次向这个账本记账。','Restoring allows household members to add records to this ledger again.')}</p>${actionButton(t('恢复账本','Restore ledger'),'demo','已预览恢复完成状态，示例数据未改变。|Restore completion previewed; sample data is unchanged.','primary full')}</div>`],
+        'import-complete':()=>[t('导入完成','Import complete'),`<div class="empty-state">${icon('check-circle')}<h3>${t('示例账单已核对','Sample statement reviewed')}</h3><p>${t('这里展示完成状态，实际未上传文件或写入账本。','This is the completion state. No files were uploaded and no actual records were written.')}</p>${actionButton(t('查看记录','View records'),'navigate','records','primary')}</div>`],
+        'mapping-category':()=>[t('选择已有分类','Choose a category'),`<div class="row-list">${categories.filter(c=>!['salary','bonus'].includes(c[0])).map(c=>row(c[3],t(c[1],c[2]),'demo',`${c[1]}映射状态已预览|${c[2]} mapping previewed`)).join('')}</div>`],
+        'reconcile-result':()=>[t('对账建议','Reconciliation suggestions'),`<div class="stack">${badge(t('示例建议 · 待人工核对','Sample suggestions · Review required'),'accent')}<section class="panel"><h3 class="section-title">${t('核对重复记录','Review possible duplicates')}</h3><p class="caption" style="margin-top:9px">${t('10月23日 · 午餐 · ¥38.50。核对金额、日期和备注后再处理。','Oct 23 · Lunch · ¥38.50. Review the amount, date and note before acting.')}</p>${actionButton(t('人工核对','Review manually'),'edit-record','1','subtle')}</section>${notice(t('建议不会自动修改账务，确认后再执行。','Suggestions never change records automatically. Review before applying.'))}</div>`],
+        password:()=>[t('修改密码','Change password'),modalForm('password',`${field(t('当前密码','Current password'),'password','','currentPassword')}${field(t('新密码','New password'),'password',t('至少 8 个字符','At least 8 characters'),'newPassword')}${field(t('确认新密码','Confirm new password'),'password','','confirmPassword')}`)],
+        email:()=>[t('更换邮箱','Change email'),modalForm('email',`${field(t('新邮箱','New email'),'email','you@example.com','email')}${field(t('当前密码','Current password'),'password','','currentPassword')}`,t('发送验证邮件','Send verification email'))],
+        'invite-member':()=>[t('邀请家人','Invite a member'),modalForm('invite-member',`${field(t('家人的邮箱','Member email'),'email','member@example.com','email')}${notice(t('受邀者需本人验证邮箱，完成邀请后才能加入家庭。','The recipient must verify their email and complete the invitation to join.'))}`,t('发送邀请','Send invitation'))],
+        recovery:()=>[t('家庭加密与恢复','Household encryption'),`<div class="stack">${notice(t('当前示例家庭未开启加密。开启后请妥善保存家庭码；本预览不生成任何密钥。','The demo household has encryption off. Keep your household code safe after enabling it; this preview generates no keys.'))}${modalForm('recovery',`${field(t('家庭码','Household code'),'password',t('输入你的家庭码','Enter your household code'),'householdCode')}`,t('预览解锁状态','Preview unlock'))}</div>`],
+        privacy:()=>[t('处理选择','Processing choices'),`<div class="stack">${notice(t('AI 与语音由你分别决定，默认关闭。','AI and speech are separate personal choices, off by default.'))}${actionButton(t('管理选择','Manage choices'),'navigate','privacy','primary full')}</div>`],
+        logout:()=>[t('退出登录','Sign out'),`<div class="stack"><p class="body-copy">${t('退出后可重新登录。当前展示的是示例账号。','You can sign in again later. This is a demo account.')}</p>${actionButton(t('退出登录','Sign out'),'navigate','login','primary full')}</div>`],
+        'reset-password':()=>[t('重置账号密码','Reset account password'),modalForm('reset-password',`${field(t('新密码','New password'),'password',t('至少 8 个字符','At least 8 characters'),'newPassword')}${field(t('确认密码','Confirm password'),'password','','confirmPassword')}`)],
+        'ops-invite':()=>[t('发送平台邀请','Send platform invitation'),modalForm('ops-invite',`${field(t('受邀邮箱','Recipient email'),'email','new@example.com','email')}${notice(t('平台邀请让受邀者建立独立家庭，不会加入现有家庭。','Platform invitations create an independent household instead of joining an existing one.'))}`,t('发送邀请','Send invitation'))]
+      };
+      if(['deactivate','close-household','leave-household'].includes(kind)){const title=kind==='deactivate'?t('停用账号','Deactivate account'):kind==='close-household'?t('关闭家庭','Close household'):t('离开家庭','Leave household');showDialog(title,modalForm(kind,`${notice(t('历史成员与共同账务将保留，相关会话与链接会被撤销。','Historical identities and shared records are retained; affected sessions and links are revoked.'),'warning')}${field(t('当前密码','Current password'),'password','','currentPassword')}<label class="body-copy"><input type="checkbox" required name="confirmed"> ${t('我已了解并确认此操作','I understand and confirm this action')}</label>`,t('确认','Confirm'),'danger'),trigger);return;}
+      if(kind==='import-complete'){const checks=trigger?.closest('.device')?.querySelectorAll('[data-import-choice]');if(checks?.length&&![...checks].some(c=>c.checked)){toast(t('请至少选择一条记录。','Select at least one record.'));return;}}
+      const sheet=sheets[kind];if(sheet){const [title,body]=sheet();showDialog(title,body,trigger);}else{showDialog(t('操作预览','Action preview'),notice(t('此操作仅展示设计状态，不修改真实数据。','This action previews the design without changing real data.')),trigger);}
+    }
+    function editRecord(id,trigger){const r=state.records.find(r=>r.id===Number(id));if(!r)return;activeRecordId=r.id;const readonly=r.ledger==='renovation';showDialog(t('编辑记录','Edit record'),readonly?notice(t('此账本已归档，记录仅可查看。','This ledger is archived. Records are read-only.')):modalForm('edit-record',`${selectField(t('记入账本','Ledger'),'ledger',ledgerOptions(),r.ledger)}${selectField(t('交易类型','Type'),'type',[['expense',t('支出','Expense')],['income',t('收入','Income')]],r.type)}${field(t('金额（元）','Amount (yuan)'),'text','0.00','amount',money(r.amountFen).replace(/,/g,''))}${selectField(t('分类','Category'),'category',categories.filter(c=>r.type==='income'?['salary','bonus','other'].includes(c[0]):!['salary','bonus'].includes(c[0])).map(c=>[c[0],t(c[1],c[2])]),r.category)}${selectField(t('归属成员','Member'),'actor',[['lin',memberName('lin')],['xia',memberName('xia')]],r.actor)}${field(t('日期','Date'),'date','','date',r.date)}${field(t('备注','Note'),'text','','note',t(...r.note))}${actionButton(icon('trash')+t('删除这笔记录','Delete record'),'delete-record',String(r.id),'danger')}`,t('保存修改','Save changes')),trigger);}
+    document.addEventListener('click',event=>{
+      const control=event.target.closest('[data-action]');if(!control||control.disabled)return;
+      const action=control.dataset.action,value=control.dataset.value||'';
+      if(state.mode==='gallery'&&control.closest('[data-page]'))state.page=control.closest('[data-page]').dataset.page;
+      if(action==='navigate'){navigate(value);return;}
+      if(action==='sheet'){openSheet(value,control);return;}
+      if(action==='close'){closeDialog();return;}
+      if(action==='mode'){state.mode=value;if(value==='gallery')state.device='phone';renderStudio();return;}
+      if(action==='device'){state.device=value;state.mode='focus';renderStudio();return;}
+      if(action==='language'){closeDialog();state.locale=state.locale==='zh'?'en':'zh';renderStudio();return;}
+      if(action==='reset'){closeDialog();const locale=state.locale,device=state.device;state=initialState();state.locale=locale;state.device=device;history.replaceState(null,'','#home');renderStudio();toast(t('示例已重置。','Demo reset.'));return;}
+      if(action==='demo'){closeDialog();toast(demoMessage(value));return;}
+      if(action==='toggle'){if(['ai','voice'].includes(value)){state[value]=!state[value];syncChoices();toast(t('已更新本次预览的处理选择。','Processing choices updated for this preview.'));}return;}
+      if(action==='pick-scope'){state.viewLedger=value;closeDialog();renderStage();return;}
+      if(action==='pick-member'){state.member=value;closeDialog();renderStage();return;}
+      if(action==='pick-ledger'){if(ledgerOptions().some(([id])=>id===value)){state.entryLedger=value;closeDialog();renderStage();}return;}
+      if(action==='category-records'){state.filterCategory=value;state.recordType=['salary','bonus'].includes(value)?'income':'expense';navigate('records');return;}
+      if(action==='ledger-records'){state.viewLedger=value;state.member='all';state.search='';state.recordType='all';state.filterCategory='all';state.filterMin='';state.filterMax='';navigate('records');return;}
+      if(action==='record-type'){state.recordType=value;renderStage();return;}
+      if(action==='clear-filters'){state.recordType='all';state.search='';state.filterCategory='all';state.filterMin='';state.filterMax='';state.member='all';state.viewLedger='all';state.month='2026-10';state.rangeStart='';state.rangeEnd='';renderStage();return;}
+      if(action==='entry-type'){state.entryType=value;state.entryCategory=value==='income'?'salary':'dining';renderStage();return;}
+      if(action==='entry-category'){state.entryCategory=value;renderStage();return;}
+      if(action==='select-source'){state.source=value;state.importSelected=[true,true];syncChoices();const file=control.closest('[data-page]')?.querySelector('input[type=file]');if(file){file.accept=value==='cmb'?'.pdf,.zip':value==='alipay'?'.csv':'.xlsx';file.value='';}return;}
+      if(action==='edit-record'){editRecord(value,control);return;}
+      if(action==='delete-record'){showDialog(t('删除这笔记录？','Delete this record?'),`<div class="stack">${notice(t('这只会从当前示例中移除记录，不影响真实账务。','This only removes the record from the current demo. Real records are unaffected.'))}${actionButton(t('确认删除','Confirm delete'),'confirm-delete',value,'danger full')}</div>`);return;}
+      if(action==='confirm-delete'){state.records=state.records.filter(r=>r.id!==Number(value));closeDialog();renderStage();toast(t('示例记录已删除。','Sample record deleted.'));return;}
+      if(action==='new-ledger-entry'){state.entryLedger=value;navigate('add');return;}
+      if(action==='save-natural'){if(!state.ai||!state.nlResult)return;state.records.unshift({id:Date.now(),note:['午餐','Lunch'],category:'dining',amountFen:3850,type:'expense',actor:'lin',date:'2026-10-23',time:'12:08',ledger:state.entryLedger});state.nlResult=false;state.viewLedger='all';state.member='all';navigate('records');toast(t('示例记录已保存。','Sample record saved.'));}
+    });
+    document.addEventListener('input',event=>{const el=event.target;if(el.matches('[data-record-search]')){state.search=el.value;el.closest('.device').querySelector('[data-record-list]').innerHTML=recordList();}if(el.matches('[data-model]')&&['entryAmount','entryNote','entryActor','entryDate'].includes(el.dataset.model)){state[el.dataset.model]=el.value;}});
+    document.addEventListener('change',event=>{
+      const el=event.target;if(el.matches('[data-page-select]')){navigate(el.value);return;}
+      if(el.matches('[data-model]')&&['entryActor','entryDate'].includes(el.dataset.model))state[el.dataset.model]=el.value;
+      if(el.matches('[data-mapping-filter]'))el.closest('.device').querySelectorAll('[data-mapping-source]').forEach(row=>{row.hidden=el.value!=='all'&&row.dataset.mappingSource!==el.value;});
+      if(el.matches('[data-import-choice]')){const frame=el.closest('.device');state.importSelected=[...frame.querySelectorAll('[data-import-choice]')].map(item=>item.checked);frame.querySelector('[data-import-selected]').textContent=state.importSelected.filter(Boolean).length;}
+      if(el.matches('[name=import-ledger]'))state.importLedger=el.value;
+      if(el.matches('[name=import-member]')){state.importActor=el.value;const scroller=el.closest('.app-scroll'),position=scroller.scrollTop;renderStage();const replacement=document.querySelector('[data-page=import-review] .app-scroll');if(replacement)replacement.scrollTop=position;}
+      if(el.matches('input[type=file]')&&el.files.length)toast(t(`已选择「${el.files[0].name}」，仅展示文件名，不读取文件。`,`Selected “${el.files[0].name}”. Only the filename is displayed; contents are not read.`));
+      if(el.matches('form[data-form="edit-record"] select[name="type"]')){const select=el.form.elements.category;select.innerHTML=categories.filter(c=>el.value==='income'?['salary','bonus','other'].includes(c[0]):!['salary','bonus'].includes(c[0])).map(c=>`<option value="${c[0]}">${t(c[1],c[2])}</option>`).join('');}
+    });
+    function formError(form,message){let el=form.querySelector('.error-message');if(!el){el=document.createElement('p');el.className='error-message';el.setAttribute('role','alert');form.append(el);}el.hidden=false;el.textContent=message;}
+    document.addEventListener('submit',event=>{
+      event.preventDefault();const form=event.target;if(!(form instanceof HTMLFormElement))return;
+      const values=Object.fromEntries(new FormData(form).entries()),kind=form.dataset.form;
+      if(!form.checkValidity()){form.reportValidity();return;}
+      if(values.newPassword&&values.newPassword.length<8){formError(form,t('新密码至少需要 8 个字符。','Use at least 8 characters for a new password.'));return;}
+      if(values.newPassword&&values.newPassword!==values.confirmPassword){formError(form,t('两次输入的密码不一致。','The passwords do not match.'));return;}
+      if(kind==='date'){if((values.start&&!values.end)||(!values.start&&values.end)||values.start>values.end){formError(form,t('请填写有效的起止日期，结束日期不能早于开始日期。','Enter both dates, with the end on or after the start.'));return;}if(values.month)state.month=values.month;state.rangeStart=values.start||'';state.rangeEnd=values.end||'';closeDialog();renderStage();return;}
+      if(kind==='filters'){const min=parseFen(values.min),max=parseFen(values.max);if((values.min&&min===null)||(values.max&&max===null)||(min!==null&&max!==null&&min>max)){formError(form,t('请输入有效的金额范围，最多保留两位小数。','Enter a valid range with up to two decimal places.'));return;}state.recordType=values.type;state.filterCategory=values.category;state.filterMin=values.min;state.filterMax=values.max;state.sort=values.sort;closeDialog();renderStage();return;}
+      if(kind==='add'||kind==='edit-record'){
+        const amountFen=parseFen(values.amount);if(amountFen===null||amountFen<=0){formError(form,t('请输入大于 0 的金额，最多保留两位小数。','Enter an amount above zero with up to two decimal places.'));return;}
+        const ledger=kind==='add'?state.entryLedger:values.ledger;if(!ledgerOptions().some(([id])=>id===ledger)){formError(form,t('请选择使用中的账本。','Choose an active ledger.'));return;}
+        const actor=values.actor;if(!['lin','xia'].includes(actor)){formError(form,t('请选择家庭成员。','Choose a household member.'));return;}
+        const type=kind==='add'?state.entryType:values.type,category=kind==='add'?state.entryCategory:values.category;
+        const isIncomeCategory=['salary','bonus'].includes(category);if((type==='expense'&&isIncomeCategory)||(type==='income'&&!isIncomeCategory&&category!=='other')){formError(form,t('分类与交易类型不匹配。','The category does not match the record type.'));return;}
+        if(!/^\d{4}-\d{2}-\d{2}$/.test(values.date||'')){formError(form,t('请选择有效日期。','Choose a valid date.'));return;}
+        const note=String(values.note||categoryInfo(category).label).trim().slice(0,120);
+        const patch={amountFen,type,category,actor,date:values.date,ledger,note:[note,note]};
+        if(kind==='add'){state.records.unshift({id:Date.now(),time:'12:08',...patch});state.entryNote='';state.viewLedger='all';state.member='all';state.month=values.date.slice(0,7);state.rangeStart='';state.rangeEnd='';state.search='';state.filterCategory='all';state.recordType='all';navigate('records');}
+        else{const r=state.records.find(r=>r.id===activeRecordId);if(!r||r.ledger==='renovation')return;Object.assign(r,patch);closeDialog();renderStage();}
+        toast(t('已保存到当前示例。','Saved to the current demo.'));return;
+      }
+      if(kind==='natural'){if(!state.ai){formError(form,t('请先开启 AI 处理。','Enable AI processing first.'));return;}if(!String(values.description||'').trim()){formError(form,t('请先输入一段描述。','Enter a description first.'));return;}state.nlResult=true;renderStage();toast(t('已展示固定示例解析，未调用 AI。','Showing a fixed sample result. No AI request was made.'));return;}
+      if(kind==='create-ledger'){const name=String(values.name||'').trim().slice(0,30);if(!name){formError(form,t('请输入账本名称。','Enter a ledger name.'));return;}state.newLedgers.push({id:`demo-${Date.now()}`,name});closeDialog();renderStage();toast(t('示例账本已创建。','Sample ledger created.'));return;}
+      if(kind==='login'){form.querySelectorAll('input[type=password]').forEach(el=>{el.value='';});navigate('home');toast(t('已进入示例家庭。','Demo household opened.'));return;}
+      if(kind==='forgot'||kind==='access-application'){form.querySelectorAll('input,textarea').forEach(el=>{el.value='';});showDialog(t('请求已受理','Request received'),`<div class="stack">${notice(t('如果该邮箱可以接收此类邮件，你将收到后续说明。','If the email is eligible for this request, you will receive further instructions.'),'success')}<p class="caption">${t('这是状态预览，未实际发送邮件。','This is a state preview. No email was sent.')}</p>${actionButton(t('知道了','Done'),'close','','primary full')}</div>`);return;}
+      form.querySelectorAll('input[type=password]').forEach(el=>{el.value='';});
+      if(['registration','platform-registration','invite-member','ops-invite','email'].includes(kind)){closeDialog();toast(t('已展示邮件确认流程，未创建真实账号、家庭或发送邮件。','Email confirmation flow previewed. No accounts, households or emails were created.'));return;}
+      closeDialog();toast(t('已预览完成状态；真实数据未改变。','Completion state previewed; real data is unchanged.'));
+    });
+    dialog.addEventListener('click',event=>{if(event.target===dialog){const bounds=dialog.getBoundingClientRect();if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)closeDialog();}});
+    dialog.addEventListener('close',()=>{const target=returnFocus?.isConnected?returnFocus:document.querySelector('.page-link[aria-current=page]');if(target)target.focus({preventScroll:true});returnFocus=null;});
+    window.addEventListener('hashchange',()=>{const id=location.hash.slice(1);if(pages.some(p=>p.id===id)){state.page=id;state.mode='focus';renderStudio();}});
+    const initialPage=location.hash.slice(1);if(pages.some(p=>p.id===initialPage)){state.page=initialPage;state.mode='focus';}
+    renderStudio();
+  </script>
+</body>
+</html>

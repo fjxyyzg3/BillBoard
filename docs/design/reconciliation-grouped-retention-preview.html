@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#fcfbfa">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <title>BillBoard · AI 对账分组预览</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #fcfbfa;
+      --surface: #fff;
+      --ink: #303138;
+      --muted: #6b6e76;
+      --primary: #c64d3b;
+      --primary-hover: #ad4030;
+      --accent-ink: #a44232;
+      --accent-soft: #fff0eb;
+      --line: #eeece9;
+      --line-strong: #dcdad7;
+      --warm: #f6f5f3;
+      --green: #2b815b;
+      --green-soft: #e6f3ec;
+      --danger: #bb2e28;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: 14px;
+      font-synthesis: none;
+      background: #f2f1ef;
+      color: var(--ink);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+    button, input { font: inherit; }
+    button { color: inherit; cursor: pointer; border: 0; background: none; touch-action: manipulation; }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3, p, dl, dd, ul { margin: 0; }
+    h1, h2, h3, strong { font-weight: 600; }
+    ul { padding: 0; list-style: none; }
+    svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+    [hidden] { display: none !important; }
+    :focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+    ::selection { background: #fbd6cb; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .preview-bar { position: sticky; top: 0; z-index: 30; min-height: 54px; padding: 5px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border-bottom: 1px solid var(--line-strong); }
+    .preview-brand, .preview-tools, .device-switch { display: flex; align-items: center; gap: 12px; }
+    .preview-brand { font-size: 12px; }
+    .preview-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+    .preview-tag { color: var(--muted); padding-left: 12px; border-left: 1px solid var(--line-strong); }
+    .device-switch { background: var(--warm); border-radius: 8px; padding: 3px; gap: 2px; }
+    .device-switch button { min-height: 32px; border-radius: 5px; padding: 3px 12px; font-size: 12px; color: var(--muted); }
+    .device-switch button[aria-pressed="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px #3031380b; }
+    .locale-button { min-height: 42px; min-width: 44px; font-size: 12px; font-weight: 600; }
+    .app-frame { container: app / inline-size; width: 100%; min-height: calc(100dvh - 54px); background: var(--bg); }
+    body[data-device="phone"] .app-frame { max-width: 420px; margin: 24px auto; border: 1px solid var(--line-strong); border-radius: 16px 16px 0 0; }
+    .app-layout { display: grid; grid-template-columns: 208px minmax(0, 1fr); min-height: inherit; }
+    .sidebar { position: sticky; top: 54px; align-self: start; height: calc(100dvh - 54px); display: flex; flex-direction: column; padding: 28px 12px 22px; background: #f8f7f5; border-right: 1px solid var(--line); }
+    .brand-block { padding: 0 16px 30px; }
+    .wordmark { font-size: 19px; letter-spacing: -.5px; font-weight: 600; color: var(--primary); }
+    .tagline { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; min-height: 47px; padding: 10px 16px; color: var(--muted); font-size: 13px; border-radius: 11px; }
+    .nav-item.active { color: var(--accent-ink); background: var(--accent-soft); font-weight: 600; }
+    .nav-divider { height: 1px; background: var(--line); margin: 16px; }
+    .sidebar-foot { margin-top: auto; padding: 24px 16px 0; font-size: 11px; color: var(--muted); line-height: 1.8; }
+    .workspace { width: 100%; max-width: 1200px; margin: 0 auto; padding: 26px 40px 56px; min-width: 0; }
+    .breadcrumb { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; margin-bottom: 17px; }
+    .breadcrumb svg { width: 15px; height: 15px; }
+    .heading-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    h1 { font-size: 28px; letter-spacing: -.8px; line-height: 1.25; }
+    .text-button { min-height: 44px; padding: 8px 0 8px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: var(--muted); font-size: 12px; flex: none; }
+    .text-button svg { width: 15px; height: 15px; }
+    .intro { color: var(--muted); line-height: 1.8; margin-top: 9px; font-size: 13px; max-width: 620px; }
+    .scope-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 20px; }
+    .scope-chip { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; min-height: 32px; padding: 5px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; }
+    .scope-chip svg { width: 14px; height: 14px; color: var(--muted); }
+    .scan-note { margin-left: 3px; color: var(--muted); font-size: 11px; }
+    .report-grid { display: grid; grid-template-columns: minmax(0, 1fr) 286px; align-items: start; gap: 26px; margin-top: 31px; }
+    .review-column { min-width: 0; }
+    .review-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 13px; }
+    h2 { font-size: 16px; letter-spacing: -.25px; }
+    .review-meta { font-size: 11px; color: var(--muted); }
+    .help-line { display: flex; align-items: start; gap: 8px; font-size: 12px; color: var(--accent-ink); padding: 11px 13px; border-radius: 8px; background: var(--accent-soft); margin-bottom: 18px; line-height: 1.7; }
+    .help-line svg { width: 15px; height: 15px; margin-top: 2px; }
+    .groups { display: grid; gap: 18px; }
+    .group { min-width: 0; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); overflow: clip; }
+    .group.is-invalid { border-color: var(--danger); }
+    .group-head { padding: 17px 18px 12px; }
+    .group-heading { display: flex; align-items: flex-start; gap: 10px; }
+    .group-number { display: grid; place-items: center; flex: none; width: 27px; height: 27px; margin-top: 1px; border-radius: 7px; color: var(--muted); background: var(--warm); font-size: 11px; font-weight: 600; }
+    .group-title { min-width: 0; flex: 1; }
+    h3 { font-size: 14px; line-height: 1.8; }
+    .group-context { display: flex; flex-wrap: wrap; gap: 4px 8px; color: var(--muted); font-size: 12px; margin-top: 2px; line-height: 1.8; }
+    .keep-all { color: var(--accent-ink); min-height: 44px; font-size: 11px; padding: 0 0 0 9px; flex: none; margin: -6px 0; }
+    .group-reason { margin: 12px 0 0 37px; font-size: 12px; color: var(--muted); line-height: 1.75; }
+    .record-list { min-width: 0; margin: 0; border: 0; padding: 0 8px; }
+    .record-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 91px; padding: 13px 10px; border-top: 1px solid var(--line); cursor: pointer; border-radius: 0; }
+    .record-row.is-kept { background: #fff8f4; border-radius: 7px; border-top-color: transparent; }
+    .record-row.is-kept + .record-row { border-top-color: transparent; }
+    .record-row:focus-within { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: 7px; }
+    .record-choice { align-self: start; display: flex; flex-direction: column; align-items: center; gap: 5px; padding-top: 2px; font-size: 11px; white-space: nowrap; color: var(--muted); }
+    .record-choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary); cursor: pointer; }
+    .is-kept .record-choice { color: var(--accent-ink); font-weight: 600; }
+    .record-note { font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+    .record-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 6px; font-size: 11px; color: var(--muted); line-height: 1.6; }
+    .source { color: #555861; }
+    .meta-dot { width: 2px; height: 2px; border-radius: 50%; background: #b7b6b3; }
+    .record-amount { font-size: 14px; font-weight: 550; align-self: start; margin-top: 1px; letter-spacing: -.25px; text-align: right; white-space: nowrap; }
+    .record-category { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 6px; letter-spacing: 0; }
+    .precision { display: inline-block; font-size: 10px; color: var(--muted); padding: 1px 5px; background: var(--warm); border-radius: 4px; }
+    .group-bottom { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-top: 5px; padding: 10px 18px 12px; font-size: 11px; color: var(--muted); }
+    .group-effect { color: var(--accent-ink); }
+    .is-skipped .group-effect { color: var(--green); }
+    .group-error { margin: 0 16px 13px; color: var(--danger); font-size: 12px; }
+    .summary { position: sticky; top: 77px; min-width: 0; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); padding: 21px 20px 18px; }
+    .summary-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .summary-head h2 { font-size: 14px; }
+    .summary-head svg { width: 17px; height: 17px; color: var(--muted); }
+    .summary-subtitle { color: var(--muted); font-size: 11px; margin-top: 6px; }
+    .count-grid { display: grid; grid-template-columns: 1fr 1fr; padding: 21px 0 20px; border-bottom: 1px solid var(--line); }
+    .count-grid > div + div { border-left: 1px solid var(--line); padding-left: 22px; }
+    .count-grid dt { color: var(--muted); font-size: 11px; }
+    .count-grid dd { font-size: 29px; letter-spacing: -1px; line-height: 1.3; margin-top: 6px; }
+    .count-grid b { font-weight: 550; }
+    .count-grid dd span { font-size: 11px; letter-spacing: 0; color: var(--muted); margin-left: 5px; }
+    .delete-count { color: var(--accent-ink); }
+    .change-table { width: 100%; border-collapse: collapse; margin-top: 17px; font-size: 12px; font-variant-numeric: tabular-nums; }
+    .change-table th { font-weight: 400; color: var(--muted); padding: 0 0 9px; text-align: right; }
+    .change-table th:first-child, .change-table td:first-child { text-align: left; }
+    .change-table td { padding: 9px 0; text-align: right; }
+    .change-table .net-row td { border-top: 1px solid var(--line); padding-top: 12px; font-weight: 600; }
+    .net-effect { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 11px 12px; background: var(--green-soft); color: #1f5c42; border-radius: 7px; margin-top: 12px; font-size: 11px; }
+    .net-effect strong { font-size: 15px; letter-spacing: -.3px; }
+    .net-effect.is-negative { background: #fff0eb; color: var(--accent-ink); }
+    .period { border-top: 1px solid var(--line); margin-top: 17px; }
+    .period summary { display: flex; align-items: center; justify-content: space-between; min-height: 44px; cursor: pointer; color: var(--muted); font-size: 11px; list-style: none; }
+    .period summary::-webkit-details-marker { display: none; }
+    .period summary svg { width: 13px; height: 13px; }
+    .period[open] summary svg { transform: rotate(180deg); }
+    .period-row { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); padding: 6px 0; }
+    .apply-note { display: flex; align-items: start; gap: 7px; padding: 13px 0; color: var(--muted); font-size: 10px; line-height: 1.8; }
+    .apply-note svg { width: 13px; height: 13px; margin-top: 2px; }
+    .primary-button { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 46px; border-radius: 9px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; }
+    .primary-button svg { width: 15px; height: 15px; }
+    .demo-note { text-align: center; color: var(--muted); font-size: 10px; margin-top: 9px; }
+    .summary-error { font-size: 11px; color: var(--danger); line-height: 1.7; margin-top: 10px; }
+    .empty-note { margin-top: 12px; font-size: 11px; line-height: 1.7; color: var(--muted); }
+    .evidence-note { display: flex; align-items: start; gap: 8px; color: var(--muted); font-size: 11px; line-height: 1.8; margin-top: 17px; padding: 0 3px; }
+    .evidence-note svg { margin-top: 2px; width: 15px; height: 15px; }
+    .mobile-dock, .mobile-nav { display: none; }
+    dialog { width: min(410px, calc(100% - 32px)); max-height: calc(100dvh - 40px); overflow-y: auto; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 29px 25px 24px; box-shadow: 0 18px 60px #30313821; }
+    dialog::backdrop { background: #30313840; }
+    .result-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--green); background: var(--green-soft); margin-bottom: 16px; }
+    .result-title { font-size: 20px; letter-spacing: -.4px; }
+    .result-copy { color: var(--muted); font-size: 13px; line-height: 1.9; margin-top: 11px; }
+    .result-values { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 15px 0; margin: 20px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .result-values dt { font-size: 11px; color: var(--muted); }
+    .result-values dd { font-size: 24px; margin-top: 5px; }
+    .result-note { font-size: 11px; color: var(--muted); line-height: 1.8; margin-bottom: 19px; }
+    @media (hover: hover) and (pointer: fine) {
+      .text-button:hover, .keep-all:hover, .locale-button:hover { color: var(--primary-hover); }
+      .primary-button:not(:disabled):hover { background: var(--primary-hover); }
+      .record-row:not(.is-kept):hover { background: #faf9f7; }
+    }
+    @container app (max-width: 1170px) {
+      .app-layout { grid-template-columns: minmax(0, 1fr); }
+      .sidebar { display: none; }
+      .workspace { max-width: 1100px; }
+    }
+    @container app (max-width: 920px) {
+      .workspace { padding: 24px 28px 48px; }
+      .report-grid { grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; }
+      .summary { padding: 18px 16px; }
+    }
+    @container app (max-width: 760px) {
+      .workspace { padding: 20px 16px 188px; }
+      .breadcrumb { margin-bottom: 13px; font-size: 11px; }
+      h1 { font-size: 25px; }
+      .heading-row { gap: 8px; }
+      .heading-row .text-button { font-size: 11px; }
+      .heading-row .text-button svg { display: none; }
+      .intro { font-size: 13px; margin-top: 6px; }
+      .scope-line { margin-top: 14px; gap: 6px; }
+      .scope-chip { font-size: 11px; padding: 4px 8px; min-height: 29px; }
+      .scan-note { display: none; }
+      .report-grid { grid-template-columns: minmax(0, 1fr); margin-top: 25px; gap: 23px; }
+      .review-heading { margin-bottom: 12px; }
+      h2 { font-size: 15px; }
+      .review-meta { font-size: 11px; }
+      .help-line { font-size: 11px; padding: 10px 11px; margin-bottom: 15px; }
+      .groups { gap: 15px; }
+      .group-head { padding: 15px 13px 11px; }
+      .group-heading { gap: 8px; }
+      .group-number { width: 25px; height: 25px; font-size: 10px; }
+      h3 { font-size: 14px; }
+      .group-context { font-size: 11px; gap: 3px 7px; }
+      .group-reason { margin: 10px 0 0 33px; font-size: 11px; }
+      .keep-all { font-size: 11px; padding-left: 7px; }
+      .record-list { padding: 0 6px; }
+      .record-row { grid-template-columns: 43px minmax(0,1fr) auto; gap: 7px; padding: 13px 8px; min-height: 94px; }
+      .record-note { font-size: 13px; }
+      .record-amount { font-size: 14px; }
+      .record-meta { gap: 3px 5px; font-size: 11px; }
+      .record-choice { font-size: 11px; }
+      .group-bottom { padding: 9px 14px 12px; gap: 5px; flex-wrap: wrap; }
+      .summary { position: static; padding: 20px; }
+      .summary .primary-button, .summary .demo-note, .summary .apply-note { display: none; }
+      .mobile-dock { display: block; position: fixed; z-index: 20; inset: auto 0 calc(60px + env(safe-area-inset-bottom)); padding: 11px 16px 12px; background: #fff; border-top: 1px solid var(--line-strong); }
+      .dock-content { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 700px; margin: 0 auto; }
+      .dock-stats { font-size: 11px; min-width: 0; line-height: 1.7; }
+      .dock-stats strong { font-size: 15px; font-weight: 600; }
+      .dock-caption { font-size: 9px; color: var(--muted); }
+      .mobile-dock .primary-button { width: auto; min-width: 124px; min-height: 44px; padding: 9px 16px; font-size: 12px; }
+      .mobile-nav { position: fixed; z-index: 20; inset: auto 0 0; height: calc(60px + env(safe-area-inset-bottom)); padding: 7px 18px calc(6px + env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); display: flex; justify-content: space-around; gap: 16px; }
+      .mobile-nav span { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); font-size: 9px; }
+      .mobile-nav svg { width: 21px; height: 21px; }
+    }
+    body[data-device="phone"] .mobile-dock, body[data-device="phone"] .mobile-nav { max-width: 420px; margin-inline: auto; border-left: 1px solid var(--line-strong); border-right: 1px solid var(--line-strong); }
+    @media (max-width: 600px) {
+      .preview-bar { min-height: 48px; padding: 3px 15px; gap: 5px; }
+      .preview-brand { gap: 7px; font-size: 11px; }
+      .preview-tag { padding-left: 8px; font-size: 10px; }
+      .device-switch { display: none; }
+      .preview-tools { gap: 2px; }
+      .locale-button { min-height: 40px; }
+      .app-frame { min-height: calc(100dvh - 48px); }
+      body[data-device="phone"] .app-frame { margin: 0 auto; border: 0; border-radius: 0; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .primary-button { transition: background-color 120ms ease; }
+    }
+  </style>
+</head>
+<body data-device="auto">
+  <svg class="sr-only" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-8H9v8H4a1 1 0 0 1-1-1Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h14v18H6a2 2 0 0 1 0-4h14M8 3v14"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V4h4m8 0h4v4m0 8v4h-4M8 20H4v-4M4 12h16"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7h.01"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Z"/><path d="m8 12 3 3 5-6"/></symbol>
+  </svg>
+  <header class="preview-bar">
+    <div class="preview-brand"><span class="preview-dot" aria-hidden="true"></span><strong data-copy="prototype">交互预览</strong><span class="preview-tag" data-copy="synthetic">合成数据 · 不连接账本</span></div>
+    <div class="preview-tools">
+      <div class="device-switch" role="group" aria-label="预览尺寸" data-label="previewSize">
+        <button type="button" data-device-button="auto" aria-pressed="true" data-copy="responsive">自适应</button>
+        <button type="button" data-device-button="phone" aria-pressed="false" data-copy="phone">手机</button>
+      </div>
+      <button class="locale-button" type="button" id="locale-button" aria-label="Switch to English">EN</button>
+    </div>
+  </header>
+  <div class="app-frame">
+    <div class="app-layout">
+      <aside class="sidebar" aria-label="应用导航示意" data-label="navPreview">
+        <div class="brand-block"><p class="wordmark">BillBoard</p><p class="tagline" data-copy="tagline">把日子记清楚</p></div>
+        <div class="nav-item"><svg aria-hidden="true"><use href="#i-home"/></svg><span data-copy="home">首页</span></div>
+        <div class="nav-item"><svg aria-hidden="true"><use href="#i-plus"/></svg><span data-copy="add">记一笔</span></div>
+        <div class="nav-item"><svg aria-hidden="true"><use href="#i-list"/></svg><span data-copy="records">记录</span></div>
+        <div class="nav-divider"></div>
+        <div class="nav-item"><svg aria-hidden="true"><use href="#i-book"/></svg><span data-copy="ledgers">账本管理</span></div>
+        <a class="nav-item active" href="#manual-review" aria-current="page"><svg aria-hidden="true"><use href="#i-scan"/></svg><span data-copy="title">AI 对账</span></a>
+        <p class="sidebar-foot" data-copy="previewFooter">分组与多选保留<br>界面设计预览</p>
+      </aside>
+      <main class="workspace" id="manual-review">
+        <span class="breadcrumb"><svg aria-hidden="true"><use href="#i-back"/></svg><span data-copy="back">记录 / AI 对账</span></span>
+        <div class="heading-row"><h1 data-copy="title">AI 对账</h1><button type="button" class="text-button" id="reset-button"><svg aria-hidden="true"><use href="#i-reset"/></svg><span data-copy="reset">恢复默认选择</span></button></div>
+        <p class="intro" data-copy="intro">疑似重复的账单已放在一起。勾选要保留的记录，其余将在应用后删除。</p>
+        <div class="scope-line" aria-label="报告范围" data-label="scope">
+          <span class="scope-chip"><svg aria-hidden="true"><use href="#i-calendar"/></svg><span data-copy="month">2026 年 11 月</span></span>
+          <span class="scope-chip"><svg aria-hidden="true"><use href="#i-book"/></svg><span data-copy="dailyLedger">日常账本</span></span>
+          <span class="scope-chip"><svg aria-hidden="true"><use href="#i-user"/></svg><span data-copy="allMembers">全部成员</span></span>
+          <span class="scan-note" data-copy="snapshot">扫描快照 · 11 月 5 日 09:20</span>
+        </div>
+        <div class="report-grid">
+          <section class="review-column" aria-labelledby="review-heading">
+            <div class="review-heading"><h2 id="review-heading" data-copy="suspected">疑似重复账单</h2><p class="review-meta" data-copy="groupMeta">4 组 · 10 笔 · 时间从早到晚</p></div>
+            <p class="help-line"><svg aria-hidden="true"><use href="#i-check"/></svg><span data-copy="help">默认保留每组第一笔，可多选。全部勾选则不对该组去重。</span></p>
+            <div class="groups" id="groups"></div>
+            <p class="evidence-note"><svg aria-hidden="true"><use href="#i-info"/></svg><span data-copy="evidence">分组仅表示疑似重复，请结合时间、来源和备注核对。保留记录的金额、日期和备注均不改变。</span></p>
+          </section>
+          <aside class="summary" aria-labelledby="summary-title">
+            <div class="summary-head"><h2 id="summary-title" data-copy="summaryTitle">应用预览</h2><svg aria-hidden="true"><use href="#i-list"/></svg></div>
+            <p class="summary-subtitle" id="summary-subtitle"></p>
+            <dl class="count-grid">
+              <div><dt data-copy="keepLabel">保留</dt><dd><b id="keep-count" class="tabular">4</b><span data-copy="entries">笔</span></dd></div>
+              <div><dt data-copy="deleteLabel">待删除</dt><dd class="delete-count"><b id="delete-count" class="tabular">6</b><span data-copy="entries">笔</span></dd></div>
+            </dl>
+            <table class="change-table"><caption class="sr-only" data-copy="changes">本次选集应用前后的收支变化</caption><thead><tr><th data-copy="selectedRecords">本次选集</th><th data-copy="before">应用前</th><th data-copy="after">应用后</th></tr></thead><tbody id="totals"></tbody></table>
+            <div class="net-effect" id="net-effect"><span data-copy="netChange">结余变化</span><strong class="tabular" id="net-value"></strong></div>
+            <details class="period"><summary><span data-copy="dayChanges">查看分日变化</span><svg aria-hidden="true"><use href="#i-down"/></svg></summary><div id="days"></div></details>
+            <p class="apply-note" id="apply-explanation"><svg aria-hidden="true"><use href="#i-info"/></svg><span data-copy="applyNote">未调整的组也将按默认选择处理。应用前，请确认所有待删除记录。</span></p>
+            <button class="primary-button apply-button" type="button" aria-describedby="apply-explanation"><span data-apply-label>应用 4 组去重</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+            <p class="summary-error" id="summary-error" role="alert" hidden></p>
+            <p class="empty-note" id="empty-note" hidden data-copy="nothing">已保留全部记录，没有需要应用的去重操作。</p>
+            <p class="demo-note" data-copy="demoNote">此页仅演示，不会修改真实账单</p>
+          </aside>
+        </div>
+      </main>
+    </div>
+    <div class="mobile-dock" aria-label="应用本次选择" data-label="applySelection"><div class="dock-content"><div class="dock-stats"><p id="dock-stats"></p><p class="dock-caption" id="dock-caption"></p></div><button class="primary-button apply-button" type="button" aria-describedby="apply-explanation"><span data-apply-label>应用去重</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div>
+    <div class="mobile-nav" aria-label="主导航示意" data-label="navPreview"><span><svg aria-hidden="true"><use href="#i-home"/></svg><span data-copy="home">首页</span></span><span><svg aria-hidden="true"><use href="#i-plus"/></svg><span data-copy="add">记一笔</span></span><span><svg aria-hidden="true"><use href="#i-list"/></svg><span data-copy="records">记录</span></span></div>
+  </div>
+  <dialog id="result-dialog" aria-labelledby="result-title" aria-describedby="result-copy result-note">
+    <div class="result-icon"><svg aria-hidden="true"><use href="#i-check"/></svg></div>
+    <h2 class="result-title" id="result-title" data-copy="resultTitle">模拟应用完成</h2>
+    <p class="result-copy" id="result-copy"></p>
+    <dl class="result-values"><div><dt data-copy="keepLabel">保留</dt><dd id="result-kept" class="tabular"></dd></div><div><dt data-copy="deleteLabel">待删除</dt><dd id="result-deleted" class="tabular"></dd></div></dl>
+    <p class="result-note" id="result-note" data-copy="resultNote">这只是交互演示，未写入真实账本。返回后可以继续调整勾选，比较不同保留方式的效果。</p>
+    <button type="button" class="primary-button" id="close-result" autofocus data-copy="returnPreview">返回预览</button>
+  </dialog>
+  <div id="live-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <noscript><p style="padding:24px">此交互预览需要 JavaScript；页面不连接服务器或真实账本。</p></noscript>
+  <script>
+    // Synthetic data only. This preview performs no requests or persistent writes.
+    const messages = {
+      zh: {
+        prototype: "交互预览", synthetic: "合成数据 · 不连接账本", previewSize: "预览尺寸", responsive: "自适应", phone: "手机",
+        navPreview: "应用导航示意", tagline: "把日子记清楚", home: "首页", add: "记一笔", records: "记录", ledgers: "账本管理",
+        title: "AI 对账", previewFooter: "分组与多选保留 · 界面设计预览", back: "记录 / AI 对账", reset: "恢复默认选择",
+        intro: "疑似重复的账单已放在一起。勾选要保留的记录，其余将在应用后删除。",
+        scope: "报告范围", month: "2026 年 11 月", dailyLedger: "日常账本", allMembers: "全部成员", snapshot: "扫描快照 · 11 月 5 日 09:20",
+        suspected: "疑似重复账单", groupMeta: "4 组 · 10 笔 · 时间从早到晚",
+        help: "默认保留每组第一笔，可多选。全部勾选则不对该组去重。",
+        evidence: "分组仅表示疑似重复，请结合时间、来源和备注核对。保留记录的金额、日期和备注均不改变。",
+        summaryTitle: "应用预览", keepLabel: "保留", deleteLabel: "待删除", entries: "笔", changes: "示例账单应用前后的收支变化",
+        selectedRecords: "示例账单", before: "应用前", after: "应用后", netChange: "结余变化", dayChanges: "查看分日变化",
+        applyNote: "未调整的组也将按默认选择处理。应用前，请确认所有待删除记录。",
+        demoNote: "此页仅演示，不会修改真实账单", nothing: "已保留全部记录，没有需要应用的去重操作。",
+        applySelection: "应用本次选择", resultTitle: "模拟应用完成", returnPreview: "返回预览",
+        resultNote: "这只是交互演示，未写入真实账本。返回后可以继续调整勾选，比较不同保留方式的效果。",
+        keepAll: "全部保留", restore: "恢复默认", skip: "全部保留 · 不去重", keep: "保留", remove: "待删除",
+        expense: "支出", income: "收入", net: "结余", food: "餐饮", transit: "交通", daily: "日用品", reimbursement: "报销",
+        lunch: "午餐", metro: "地铁出行", reimbursementEntry: "报销入账", householdShopping: "日用品采购",
+        lin: "林可", chen: "陈言", wechat: "微信支付", alipay: "支付宝", cmb: "招商银行", suishouji: "随手记", manual: "手工记录",
+        lunchNote1: "工作日午餐", lunchNote2: "午餐 · 同事聚餐", lunchNote3: "午餐记账",
+        metroNote1: "地铁乘车", metroNote2: "地铁出行",
+        reimbursementNote1: "差旅报销到账", reimbursementNote2: "差旅报销",
+        shoppingNote1: "超市消费", shoppingNote2: "生活用品补货", shoppingNote3: "洗衣液、纸巾等日用品",
+        reasonLunch: "AI 线索：多来源出现相近的午餐记录，请核对是否为同一笔支付。",
+        reasonMetro: "AI 线索：同日同额的出行记录，可能重复记账。",
+        reasonIncome: "AI 线索：同额报销收入，可能在不同来源中重复记录。",
+        reasonShopping: "AI 线索：同日同额的采购记录，需结合来源和备注核对。",
+        dayOnly: "仅日期", unknownPrecision: "精度未知", minimum: "每组至少保留一笔，或选择全部保留以跳过该组。",
+        summaryInvalid: "有分组未保留任何记录，请先调整勾选。",
+        groupStats: (kept, removed) => `保留 ${kept} 笔 · 待删除 ${removed} 笔`,
+        groupEffect: (type, amount) => `${type === "expense" ? "支出" : "收入"}减少 ${amount}`,
+        summaryGroups: (active, skipped) => `${active} 组待去重 · ${skipped} 组全部保留`,
+        apply: (count) => count ? `应用 ${count} 组去重` : "暂无去重操作",
+        dockStats: (kept, removed) => `保留 <strong>${kept}</strong> 笔<span aria-hidden="true"> · </span>待删除 <strong>${removed}</strong> 笔`,
+        dockCaption: "未调整组也将处理 · 仅演示",
+        live: (kept, removed) => `当前保留 ${kept} 笔，待删除 ${removed} 笔。`,
+        resultCopy: (active, skipped) => `按当前选择，对 ${active} 组账单去重${skipped ? `，另有 ${skipped} 组全部保留` : ""}。保留记录的原始信息不变。`,
+        checkboxLabel: (title, date, source) => `保留${title}，${date}，${source}`,
+        chooseGroup: (title) => `${title}：勾选要保留的记录`,
+      },
+      en: {
+        prototype: "Interactive preview", synthetic: "Sample data · Offline", previewSize: "Preview size", responsive: "Responsive", phone: "Phone",
+        navPreview: "Application navigation preview", tagline: "A clearer picture of daily life", home: "Home", add: "Add entry", records: "Records", ledgers: "Ledgers",
+        title: "AI reconciliation", previewFooter: "Grouped duplicates · Design preview", back: "Records / Reconciliation", reset: "Reset selection",
+        intro: "Review possible duplicates together. Check the entries to keep; the rest will be deleted when applied.",
+        scope: "Report scope", month: "November 2026", dailyLedger: "Daily ledger", allMembers: "All members", snapshot: "Snapshot · Nov 5, 09:20",
+        suspected: "Possible duplicates", groupMeta: "4 groups · 10 entries · Oldest first",
+        help: "The first entry in each group is kept by default. Keep more than one, or keep all to skip a group.",
+        evidence: "These are possible duplicates. Check the time, source and note. Kept entries retain their original amount, date and note.",
+        summaryTitle: "Application preview", keepLabel: "Keep", deleteLabel: "To delete", entries: "entries", changes: "Income and expenses before and after applying the sample selection",
+        selectedRecords: "Sample records", before: "Before", after: "After", netChange: "Net change", dayChanges: "See daily changes",
+        applyNote: "Unchanged groups will also use their default selection. Review all entries marked for deletion before applying.",
+        demoNote: "Preview only. No real records will be changed.", nothing: "All entries are kept. There is nothing to apply.",
+        applySelection: "Apply this selection", resultTitle: "Simulation complete", returnPreview: "Return to preview",
+        resultNote: "This is an interactive demonstration. No real records were changed. Return to adjust your selection and compare outcomes.",
+        keepAll: "Keep all", restore: "Reset group", skip: "Keep all · Skip group", keep: "Keep", remove: "To delete",
+        expense: "Expenses", income: "Income", net: "Net", food: "Food", transit: "Transport", daily: "Household", reimbursement: "Reimbursement",
+        lunch: "Lunch", metro: "Metro journey", reimbursementEntry: "Reimbursement received", householdShopping: "Household shopping",
+        lin: "Lin", chen: "Chen", wechat: "WeChat Pay", alipay: "Alipay", cmb: "CMB", suishouji: "SuiShouJi", manual: "Manual entry",
+        lunchNote1: "Weekday lunch", lunchNote2: "Lunch with colleagues", lunchNote3: "Lunch entry",
+        metroNote1: "Metro fare", metroNote2: "Metro journey",
+        reimbursementNote1: "Travel reimbursement received", reimbursementNote2: "Travel reimbursement",
+        shoppingNote1: "Supermarket purchase", shoppingNote2: "Household essentials", shoppingNote3: "Laundry detergent, tissues and supplies",
+        reasonLunch: "AI finding: similar lunch entries across sources. Check whether they represent one payment.",
+        reasonMetro: "AI finding: same-day travel entries with the same amount may be duplicates.",
+        reasonIncome: "AI finding: the same reimbursement may have been recorded across different sources.",
+        reasonShopping: "AI finding: same-day purchases with the same amount. Compare the sources and notes.",
+        dayOnly: "Date only", unknownPrecision: "Unknown precision", minimum: "Keep at least one entry, or keep all to skip this group.",
+        summaryInvalid: "A group has no entries kept. Adjust your selection first.",
+        groupStats: (kept, removed) => `Keep ${kept} · Delete ${removed}`,
+        groupEffect: (type, amount) => `${type === "expense" ? "Expenses" : "Income"} decrease ${amount}`,
+        summaryGroups: (active, skipped) => `${active} groups to process · ${skipped} skipped`,
+        apply: (count) => count ? `Apply ${count} groups` : "Nothing to apply",
+        dockStats: (kept, removed) => `Keep <strong>${kept}</strong><span aria-hidden="true"> · </span>Delete <strong>${removed}</strong>`,
+        dockCaption: "Defaults also apply · Demo only",
+        live: (kept, removed) => `${kept} entries kept, ${removed} entries to delete.`,
+        resultCopy: (active, skipped) => `Process ${active} groups${skipped ? ` and skip ${skipped} groups` : ""} with this selection. Kept entries retain all original information.`,
+        checkboxLabel: (title, date, source) => `Keep ${title}, ${date}, ${source}`,
+        chooseGroup: (title) => `${title}: check entries to keep`,
+      },
+    };
+
+    const groups = [
+      { id: "lunch", title: "lunch", type: "expense", amountFen: 2800, member: "lin", category: "food", reason: "reasonLunch", rows: [
+        { ref: "r1", at: "2026-11-02T12:16:04+08:00", source: "wechat", note: "lunchNote1" },
+        { ref: "r2", at: "2026-11-02T12:16:21+08:00", source: "suishouji", note: "lunchNote2" },
+        { ref: "r3", at: "2026-11-02T12:17:00+08:00", source: "manual", note: "lunchNote3", precision: "unknownPrecision" },
+      ] },
+      { id: "metro", title: "metro", type: "expense", amountFen: 400, member: "lin", category: "transit", reason: "reasonMetro", rows: [
+        { ref: "r4", at: "2026-11-03T08:24:00+08:00", source: "alipay", note: "metroNote1" },
+        { ref: "r5", at: "2026-11-03T08:25:00+08:00", source: "suishouji", note: "metroNote2" },
+      ] },
+      { id: "reimbursement", title: "reimbursementEntry", type: "income", amountFen: 18600, member: "chen", category: "reimbursement", reason: "reasonIncome", rows: [
+        { ref: "r6", at: "2026-11-03T18:30:00+08:00", source: "wechat", note: "reimbursementNote1" },
+        { ref: "r7", at: "2026-11-03T18:32:00+08:00", source: "suishouji", note: "reimbursementNote2" },
+      ] },
+      { id: "shopping", title: "householdShopping", type: "expense", amountFen: 12680, member: "chen", category: "daily", reason: "reasonShopping", rows: [
+        { ref: "r8", at: "2026-11-04T00:00:00+08:00", source: "cmb", note: "shoppingNote1", precision: "dayOnly" },
+        { ref: "r9", at: "2026-11-04T20:06:18+08:00", source: "alipay", note: "shoppingNote2" },
+        { ref: "r10", at: "2026-11-04T20:08:00+08:00", source: "suishouji", note: "shoppingNote3", precision: "unknownPrecision" },
+      ] },
+    ];
+    groups.forEach((group) => group.rows.sort((a, b) => Date.parse(a.at) - Date.parse(b.at) || Number(a.ref.slice(1)) - Number(b.ref.slice(1))));
+    groups.sort((a, b) => Date.parse(a.rows[0].at) - Date.parse(b.rows[0].at));
+    const kept = new Map(groups.map((group) => [group.id, new Set([group.rows[0].ref])]));
+    let locale = "zh";
+    let lastApplyButton = null;
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+    const t = (key, ...args) => typeof messages[locale][key] === "function" ? messages[locale][key](...args) : messages[locale][key];
+    const escapeText = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+    const money = (fen, signed = false) => `${signed && fen > 0 ? "+" : fen < 0 ? "−" : ""}${new Intl.NumberFormat(locale === "zh" ? "zh-CN" : "en-US", { style: "currency", currency: "CNY", currencyDisplay: "narrowSymbol", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(fen) / 100)}`;
+    function dateText(row) {
+      return new Intl.DateTimeFormat(locale === "zh" ? "zh-CN" : "en-US", {
+        timeZone: "Asia/Shanghai", month: "2-digit", day: "2-digit",
+        ...(row.precision !== "dayOnly" ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23", ...(row.precision ? {} : { second: "2-digit" }) } : {}),
+      }).format(new Date(row.at));
+    }
+
+    function renderGroups() {
+      $("#groups").innerHTML = groups.map((group, index) => `
+        <article class="group" id="group-${group.id}" aria-labelledby="title-${group.id}">
+          <div class="group-head">
+            <div class="group-heading">
+              <span class="group-number tabular" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+              <div class="group-title"><h3 id="title-${group.id}">${escapeText(t(group.title))} <span class="tabular">· ${money(group.amountFen)}</span></h3>
+              <p class="group-context"><span>${escapeText(t(group.type))}</span><span>·</span><span>${escapeText(t(group.member))}</span><span>·</span><span>${escapeText(t("dailyLedger"))}</span></p></div>
+              <button type="button" class="keep-all" data-keep-all="${group.id}" aria-label="${escapeText(t(group.title) + ' · ' + t("keepAll"))}">${escapeText(t("keepAll"))}</button>
+            </div>
+            <p class="group-reason" id="reason-${group.id}">${escapeText(t(group.reason))}</p>
+          </div>
+          <fieldset class="record-list" aria-describedby="reason-${group.id} error-${group.id}">
+            <legend class="sr-only">${escapeText(t("chooseGroup", t(group.title)))}</legend>
+            ${group.rows.map((row) => `
+              <label class="record-row" data-row="${row.ref}">
+                <span class="record-choice"><input type="checkbox" data-group="${group.id}" data-ref="${row.ref}" aria-label="${escapeText(t("checkboxLabel", t(group.title), dateText(row), t(row.source)))}"><span data-row-status></span></span>
+                <span class="record-content"><span class="record-note">${escapeText(t(row.note))}</span><span class="record-meta"><span class="source">${escapeText(t(row.source))}</span><span class="meta-dot" aria-hidden="true"></span><time class="tabular" datetime="${row.at}">${escapeText(dateText(row))}</time>${row.precision ? `<span class="precision">${escapeText(t(row.precision))}</span>` : ""}</span></span>
+                <span class="record-amount tabular">${group.type === "income" ? "+" : "−"}${money(group.amountFen)}<span class="record-category" style="display:block">${escapeText(t(group.category))}</span></span>
+              </label>`).join("")}
+          </fieldset>
+          <div class="group-bottom"><span data-group-stats></span><span class="group-effect" data-group-effect></span></div>
+          <p class="group-error" id="error-${group.id}" role="alert" hidden>${escapeText(t("minimum"))}</p>
+        </article>`).join("");
+    }
+
+    function selectionTotals() {
+      const before = { income: 0, expense: 0 };
+      const after = { income: 0, expense: 0 };
+      const days = new Map();
+      let keepCount = 0, deleteCount = 0, active = 0, invalid = false;
+      groups.forEach((group) => {
+        const selection = kept.get(group.id);
+        keepCount += selection.size;
+        deleteCount += group.rows.length - selection.size;
+        if (selection.size < group.rows.length) active++;
+        if (selection.size === 0) invalid = true;
+        group.rows.forEach((row) => {
+          before[group.type] += group.amountFen;
+          if (selection.has(row.ref)) after[group.type] += group.amountFen;
+          else {
+            // All fixture timestamps include the Shanghai +08:00 offset.
+            const day = row.at.slice(0, 10);
+            days.set(day, (days.get(day) || 0) + (group.type === "expense" ? 1 : -1) * group.amountFen);
+          }
+        });
+      });
+      before.net = before.income - before.expense;
+      after.net = after.income - after.expense;
+      return { before, after, keepCount, deleteCount, active, skipped: groups.length - active, invalid, days };
+    }
+
+    function update(announce = true) {
+      groups.forEach((group) => {
+        const article = $(`#group-${group.id}`);
+        const selection = kept.get(group.id);
+        const removed = group.rows.length - selection.size;
+        article.classList.toggle("is-invalid", selection.size === 0);
+        article.classList.toggle("is-skipped", removed === 0);
+        article.querySelector("[data-group-stats]").textContent = t("groupStats", selection.size, removed);
+        article.querySelector("[data-group-effect]").textContent = removed ? t("groupEffect", group.type, money(removed * group.amountFen)) : t("skip");
+        article.querySelector(".group-error").hidden = selection.size !== 0;
+        const allButton = article.querySelector("[data-keep-all]");
+        allButton.textContent = t(removed ? "keepAll" : "restore");
+        allButton.setAttribute("aria-label", `${t(group.title)} · ${allButton.textContent}`);
+        article.querySelectorAll("input").forEach((input) => {
+          const checked = selection.has(input.dataset.ref);
+          input.checked = checked;
+          input.setAttribute("aria-invalid", String(selection.size === 0));
+          input.setAttribute("aria-describedby", `error-${group.id}`);
+          input.closest(".record-row").classList.toggle("is-kept", checked);
+          input.parentElement.querySelector("[data-row-status]").textContent = t(checked ? "keep" : "remove");
+        });
+      });
+      const totals = selectionTotals();
+      $("#keep-count").textContent = totals.keepCount;
+      $("#delete-count").textContent = totals.deleteCount;
+      $("#summary-subtitle").textContent = t("summaryGroups", totals.active, totals.skipped);
+      $("#totals").innerHTML = ["income", "expense", "net"].map((key) => `<tr class="${key === "net" ? "net-row" : ""}"><td>${escapeText(t(key))}</td><td>${money(totals.before[key])}</td><td>${money(totals.after[key])}</td></tr>`).join("");
+      const netDelta = totals.after.net - totals.before.net;
+      $("#net-value").textContent = money(netDelta, true);
+      $("#net-effect").classList.toggle("is-negative", netDelta < 0);
+      $("#days").innerHTML = [...totals.days].sort(([a], [b]) => a.localeCompare(b)).map(([day, delta]) => `<div class="period-row tabular"><span>${day}</span><span>${money(delta, true)}</span></div>`).join("") || `<p class="period-row">${escapeText(t("nothing"))}</p>`;
+      $("#summary-error").hidden = !totals.invalid;
+      $("#summary-error").textContent = t("summaryInvalid");
+      $("#empty-note").hidden = totals.deleteCount !== 0;
+      $$(".apply-button").forEach((button) => {
+        button.disabled = totals.invalid || totals.deleteCount === 0;
+        button.setAttribute("aria-describedby", totals.invalid ? "summary-error" : totals.deleteCount === 0 ? "empty-note" : "apply-explanation");
+      });
+      $$("[data-apply-label]").forEach((label) => { label.textContent = t("apply", totals.active); });
+      $("#dock-stats").innerHTML = t("dockStats", totals.keepCount, totals.deleteCount);
+      $("#dock-caption").textContent = totals.invalid ? t("summaryInvalid") : t("dockCaption");
+      if (announce) $("#live-status").textContent = t("live", totals.keepCount, totals.deleteCount) + (totals.invalid ? t("summaryInvalid") : "");
+    }
+
+    function setLanguage(nextLocale) {
+      locale = nextLocale;
+      document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
+      document.title = locale === "zh" ? "BillBoard · AI 对账分组预览" : "BillBoard · Grouped reconciliation preview";
+      $$("[data-copy]").forEach((element) => { element.textContent = t(element.dataset.copy); });
+      $$("[data-label]").forEach((element) => { element.setAttribute("aria-label", t(element.dataset.label)); });
+      $("#locale-button").textContent = locale === "zh" ? "EN" : "中文";
+      $("#locale-button").setAttribute("aria-label", locale === "zh" ? "Switch to English" : "切换为中文");
+      renderGroups();
+      update(false);
+    }
+
+    $("#groups").addEventListener("change", (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement)) return;
+      const selection = kept.get(input.dataset.group);
+      if (input.checked) selection.add(input.dataset.ref);
+      else selection.delete(input.dataset.ref);
+      update();
+    });
+    $("#groups").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-keep-all]");
+      if (!button) return;
+      const group = groups.find((item) => item.id === button.dataset.keepAll);
+      const allSelected = kept.get(group.id).size === group.rows.length;
+      kept.set(group.id, new Set(allSelected ? [group.rows[0].ref] : group.rows.map((row) => row.ref)));
+      update();
+    });
+    $("#reset-button").addEventListener("click", () => {
+      groups.forEach((group) => kept.set(group.id, new Set([group.rows[0].ref])));
+      update();
+    });
+    $("#locale-button").addEventListener("click", () => setLanguage(locale === "zh" ? "en" : "zh"));
+    $$("[data-device-button]").forEach((button) => button.addEventListener("click", () => {
+      document.body.dataset.device = button.dataset.deviceButton;
+      $$("[data-device-button]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+    }));
+    $$(".apply-button").forEach((button) => button.addEventListener("click", () => {
+      const totals = selectionTotals();
+      if (totals.invalid || !totals.deleteCount) return;
+      lastApplyButton = button;
+      $("#result-copy").textContent = t("resultCopy", totals.active, totals.skipped);
+      $("#result-kept").textContent = totals.keepCount;
+      $("#result-deleted").textContent = totals.deleteCount;
+      $("#result-dialog").showModal();
+    }));
+    $("#close-result").addEventListener("click", () => $("#result-dialog").close());
+    $("#result-dialog").addEventListener("close", () => lastApplyButton?.focus());
+    setLanguage("zh");
+  </script>
+</body>
+</html>

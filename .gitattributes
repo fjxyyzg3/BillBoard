@@ -1,0 +1,13 @@
+tests/fixtures/imports/cmb/*.pdf binary
+
+# Keep the reviewed, applied migration bytes stable on Windows and Linux.
+prisma/migrations/20260516113000_add_app_sessions_and_ops_audit/migration.sql text eol=lf
+prisma/migrations/20260717090000_add_transaction_client_request_id/migration.sql text eol=lf
+prisma/migrations/20261009090000_add_cmb_refund_metadata/migration.sql text eol=lf
+prisma/migrations/20261010180000_bound_login_admission/migration.sql text eol=lf
+prisma/migrations/20261021000000_household_ledger_foundation/migration.sql text eol=lf
+prisma/migrations/20261021144000_identity_self_service/migration.sql -text whitespace=cr-at-eol,-blank-at-eof
+prisma/migrations/20261021145000_identity_mail_budget/migration.sql -text
+prisma/migrations/20261023000000_multi_ledger_workflows/migration.sql -text
+prisma/migrations/20261023010000_opening_safeguards/migration.sql -text
+prisma/migrations/20261023020000_resource_task_keys/migration.sql -text

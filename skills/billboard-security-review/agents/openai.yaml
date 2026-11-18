@@ -1,0 +1,4 @@
+interface:
+  display_name: "BillBoard Security Review"
+  short_description: "Review BillBoard household finance security"
+  default_prompt: "Use $billboard-security-review to review a BillBoard change before acceptance."

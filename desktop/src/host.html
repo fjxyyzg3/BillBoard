@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BillBoard</title>
+  <link rel="stylesheet" href="host.css">
+</head>
+<body>
+  <main>
+    <p class="brand">BillBoard</p>
+    <h1>家庭记账</h1>
+    <p id="message" role="status" aria-live="polite">正在连接家庭账本…</p>
+    <button id="retry" type="button" hidden>重试</button>
+  </main>
+  <script src="host.js"></script>
+</body>
+</html>

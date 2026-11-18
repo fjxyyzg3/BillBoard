@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#fcfbfa">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <title>BillBoard · 首页月度结余预览</title>
+  <!-- Editable CSS source: home-monthly-balance-preview.css. Embedded for standalone previews. -->
+  <style id="preview-style">
+:root {
+  color-scheme: light;
+  --bg: #fcfbfa;
+  --surface: #ffffff;
+  --ink: #303138;
+  --muted: #6b6e76;
+  --primary: #c64d3b;
+  --primary-hover: #ad4030;
+  --accent-ink: #a44232;
+  --accent-soft: #fff0eb;
+  --coral: #ef745d;
+  --income: #2b815b;
+  --income-ink: #1f5c42;
+  --income-soft: #e6f3ec;
+  --danger: #bb2e28;
+  --warm: #f6f5f3;
+  --line: #eeece9;
+  --line-strong: #dcdad7;
+  --shadow: 0 2px 8px rgb(48 49 56 / 1.8%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 14px;
+  font-synthesis: none;
+  color: var(--ink);
+  background: #f2f1ef;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; line-height: 1.5; text-rendering: optimizeLegibility; -webkit-tap-highlight-color: transparent; }
+button, input, select { font: inherit; }
+button, select { color: inherit; cursor: pointer; }
+button { border: 0; background: none; touch-action: manipulation; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+select { min-width: 0; font-size: 16px; }
+h1, h2, h3, p, dl, dd, ul { margin: 0; }
+h1, h2, h3, strong { font-weight: 550; }
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+ul { padding: 0; list-style: none; }
+svg { display: inline-block; flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
+button svg, label svg { pointer-events: none; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+[hidden] { display: none !important; }
+::selection { background: #fbd6cb; }
+.svg-definitions { position: absolute; width: 0; height: 0; overflow: hidden; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.amount, .summary-value, .secondary-value, .trend-value, .detail-values dd, .category-amount, .category-share, .record-amount { font-variant-numeric: tabular-nums; }
+.income { color: var(--income-ink); }
+.negative, .deficit { color: var(--danger); }
+.muted { color: var(--muted); }
+
+/* Preview controls are separate from the application surface. */
+.preview-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 18px; min-height: 64px; padding: 8px 24px; border-bottom: 1px solid var(--line-strong); background: var(--surface); }
+.preview-brand, .preview-tools { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.preview-brand { font-size: 13px; }
+.preview-brand strong { white-space: nowrap; }
+.preview-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+.preview-badge { color: var(--muted); font-size: 11px; }
+.preview-tools { gap: 10px; }
+.scenario-control { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; }
+.scenario-control > span { white-space: nowrap; }
+.scenario-control select { min-height: 44px; max-width: 170px; padding: 0 25px 0 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); font-size: 12px; }
+.device-switch { display: flex; flex: none; gap: 2px; padding: 3px; border-radius: 10px; background: var(--warm); }
+.device-switch button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 7px; color: var(--muted); font-size: 12px; }
+.device-switch button svg { width: 16px; height: 16px; }
+.device-switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgb(48 49 56 / 5%); }
+.locale-button { min-width: 44px; min-height: 44px; padding: 0 8px; border-radius: 8px; font-size: 12px; font-weight: 550; }
+.locale-button:hover, .dialog-close:hover { background: var(--warm); }
+
+/* Container queries let the phone preview work inside a desktop window. */
+.app-frame { container: app / inline-size; width: 100%; min-height: calc(100dvh - 64px); background: var(--bg); }
+body[data-device="phone"] .app-frame { max-width: 390px; margin: 24px auto; border: 1px solid var(--line-strong); border-radius: 24px 24px 0 0; }
+.app-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); min-height: inherit; }
+.sidebar { position: sticky; top: 64px; align-self: start; display: flex; flex-direction: column; min-height: 600px; height: calc(100dvh - 64px); padding: 35px 14px 22px; border-right: 1px solid var(--line); background: #f8f7f5; }
+.brand-block { padding: 0 16px 35px; }
+.wordmark { font-size: 23px; font-weight: 600; }
+.wordmark-dot { color: var(--primary); }
+.tagline { margin-top: 7px; font-size: 11px; color: var(--muted); }
+.side-nav { display: grid; gap: 5px; }
+.nav-item { display: flex; align-items: center; gap: 11px; min-height: 48px; padding: 11px 16px; border-radius: 11px; color: var(--muted); font-size: 13px; }
+.nav-item svg { width: 18px; height: 18px; }
+.nav-item.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 550; }
+.sidebar-foot { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 26px 10px 0; }
+.avatar { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border: 1px solid var(--line-strong); border-radius: 50%; background: var(--surface); color: var(--muted); font-size: 12px; }
+.sidebar-foot p { font-size: 12px; }
+.sidebar-foot div > span { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+.workspace { width: 100%; min-width: 0; max-width: 1240px; margin: 0 auto; padding: 32px 36px 40px; }
+.mobile-brand { display: none; }
+.home-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.range-control { position: relative; display: inline-flex; align-items: center; gap: 10px; min-width: 0; max-width: calc(100% - 75px); min-height: 44px; color: var(--ink); font-size: 25px; font-weight: 500; }
+.range-control > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.range-control > svg { width: 18px; height: 18px; color: var(--muted); }
+.range-control select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.range-control:has(select:focus-visible), .ledger-control:has(select:focus-visible), .member-control:has(select:focus-visible) { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 7px; }
+.member-control { display: inline-flex; align-items: center; gap: 6px; flex: none; min-height: 44px; }
+.member-control select { appearance: none; width: auto; max-width: 92px; min-height: 44px; padding: 0 0 0 7px; border: 0; background: transparent; font-size: 12px; }
+.member-control svg { width: 13px; height: 13px; color: var(--muted); }
+.scope-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; margin-bottom: 22px; }
+.ledger-control { display: inline-flex; align-items: center; gap: 7px; min-width: 0; max-width: 100%; min-height: 44px; color: var(--muted); }
+.ledger-control svg { width: 16px; height: 16px; }
+.ledger-control .chevron-small { width: 12px; height: 12px; }
+.ledger-control select { appearance: none; max-width: 235px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: 12px; }
+.range-caption { color: var(--muted); font-size: 11px; }
+.panel { min-width: 0; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: var(--shadow); }
+.kicker { color: var(--muted); font-size: 12px; font-weight: 400; }
+.summary-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 26px 23px; }
+.summary-main > div { min-width: 0; }
+.summary-value { display: flex; align-items: baseline; gap: 7px; margin-top: 7px; font-size: clamp(28px, 3.2vw, 36px); font-weight: 450; line-height: 1.25; white-space: nowrap; }
+.currency { font-size: .7em; font-weight: 400; }
+.record-count { padding-top: 4px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+.summary-secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.summary-secondary > div { min-width: 0; padding: 17px 26px 19px; }
+.summary-secondary > div + div { border-left: 1px solid var(--line); }
+.secondary-value { display: flex; align-items: baseline; gap: 5px; margin-top: 6px; font-size: 20px; font-weight: 450; line-height: 1.25; white-space: nowrap; }
+
+.report-grid { display: grid; grid-template-columns: minmax(0, 1fr) 284px; align-items: start; gap: 18px; margin-top: 20px; }
+.trend-card { padding: 21px 22px 18px; }
+.trend-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+.trend-header h2, .category-header h2 { font-size: 15px; font-weight: 500; }
+.view-switch { display: inline-grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 100%; gap: 3px; padding: 3px; border-radius: 11px; background: var(--warm); }
+.view-switch button { min-width: 0; min-height: 44px; padding: 7px 11px; border-radius: 8px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.view-switch button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgb(48 49 56 / 5%); }
+.view-switch button:hover:not([aria-pressed="true"]) { color: var(--ink); }
+.trend-overview { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-top: 26px; }
+.trend-overview > div:first-child { min-width: 0; }
+.trend-value { margin-top: 4px; font-size: 28px; font-weight: 450; line-height: 1.3; overflow-wrap: anywhere; }
+.trend-value .currency { margin-right: 5px; }
+.chart-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding-bottom: 6px; font-size: 11px; color: var(--muted); }
+.chart-legend > span, .legend-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.chart-legend i, .legend-dot { display: inline-block; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+.chart-legend .income i, .chart-legend i.income, .legend-dot.income, .legend-dot.income-dot { background: var(--income); }
+.chart-legend .expense i, .chart-legend i.expense, .legend-dot.expense, .legend-dot.expense-dot { background: var(--coral); }
+.chart-explanation { min-height: 35px; margin-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.chart-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 15px; color: var(--muted); font-size: 10px; }
+.plot-wrap { position: relative; width: 100%; min-width: 0; height: 238px; margin-top: 9px; border-radius: 5px; }
+.plot-wrap:has(.chart-picker:focus-visible) { outline: 2px solid var(--primary); outline-offset: 4px; }
+.trend-svg { display: block; width: 100%; height: 100%; overflow: visible; stroke: none; }
+.chart-picker { position: absolute; inset: 14px 18px 32px 52px; width: calc(100% - 70px); height: calc(100% - 46px); margin: 0; opacity: 0; cursor: crosshair; touch-action: pan-y; }
+.grid-line { stroke: var(--line); stroke-width: 1; }
+.zero-line { stroke: var(--line-strong); stroke-width: 1.15; }
+.axis-label { fill: var(--muted); stroke: none; font-family: inherit; font-size: 11px; font-variant-numeric: tabular-nums; }
+.axis-label.selected { fill: var(--accent-ink); font-weight: 600; }
+.series-income, .series-expense, .series-balance, .series-cumulative { fill: none; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.series-income { stroke: var(--income); }
+.series-expense { stroke: var(--coral); }
+.series-balance, .series-cumulative { stroke: var(--primary); }
+.selection-line { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 4; }
+.selected-dot { fill: var(--surface); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.empty-note { padding: 8px 0 12px; color: var(--muted); font-size: 12px; text-align: center; }
+.point-detail { margin-top: 15px; padding: 15px 16px 8px; border-radius: 12px; background: var(--warm); }
+.detail-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.detail-header strong { font-size: 13px; font-weight: 550; }
+.detail-header > span { color: var(--muted); font-size: 11px; }
+.detail-dates { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.detail-values { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; margin-top: 15px; }
+.detail-stat { min-width: 0; }
+.detail-stat dt { color: var(--muted); font-size: 10px; }
+.detail-stat dd { margin-top: 3px; font-size: 14px; font-weight: 450; overflow-wrap: anywhere; }
+.detail-stat.emphasis dd { font-weight: 550; }
+.detail-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0 12px; margin-top: 10px; }
+.text-link { display: inline-flex; align-items: center; justify-content: center; gap: 3px; min-height: 44px; padding: 3px 0; color: var(--accent-ink); font-size: 11px; font-weight: 550; }
+.text-link svg { width: 13px; height: 13px; }
+.chart-footer { display: flex; align-items: flex-start; gap: 7px; margin-top: 15px; color: var(--muted); font-size: 10px; line-height: 1.7; }
+.footer-mark { flex: none; width: 4px; height: 4px; margin-top: 6px; border-radius: 50%; background: var(--line-strong); }
+
+.categories-card { padding: 23px 20px 18px; }
+.category-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.category-kind { padding: 4px 9px; border-radius: 7px; background: var(--warm); color: var(--muted); font-size: 11px; }
+.donut-wrap { position: relative; width: 190px; height: 190px; margin: 22px auto 19px; }
+#category-svg { display: block; width: 100%; height: 100%; stroke: none; }
+#category-svg circle { fill: none; }
+.donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; pointer-events: none; }
+.donut-center > span { color: var(--muted); font-size: 10px; }
+.donut-center strong { max-width: 125px; font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.category-list { display: grid; }
+.category-item { display: grid; grid-template-columns: minmax(0, 1fr) auto 34px; align-items: center; gap: 8px; padding: 11px 0; border-top: 1px solid var(--line); font-size: 11px; }
+.category-label { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.category-swatch { display: inline-block; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+.category-amount { text-align: right; white-space: nowrap; }
+.category-share { color: var(--muted); text-align: right; font-size: 10px; white-space: nowrap; }
+.category-empty { padding: 8px 0 15px; color: var(--muted); font-size: 12px; text-align: center; }
+.preview-footnote { margin-top: 24px; color: var(--muted); font-size: 10px; text-align: center; }
+.bottom-nav { display: none; }
+
+.records-dialog { width: min(520px, calc(100% - 32px)); max-height: min(700px, 85dvh); margin: auto; padding: 0; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); color: var(--ink); box-shadow: 0 18px 60px rgb(48 49 56 / 15%); overscroll-behavior: contain; }
+.records-dialog::backdrop { background: rgb(48 49 56 / 32%); }
+.dialog-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 22px 20px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.dialog-header h2 { font-size: 17px; }
+.dialog-header p { margin-top: 6px; color: var(--muted); font-size: 11px; }
+.dialog-close { display: grid; place-items: center; flex: none; min-width: 44px; min-height: 44px; margin: -8px -8px 0 0; border-radius: 10px; color: var(--muted); }
+.dialog-close svg { width: 18px; height: 18px; }
+.record-list { padding: 0 20px 16px; }
+.record-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 76px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.record-row:last-child { border-bottom: 0; }
+.record-copy { min-width: 0; }
+.record-note { font-size: 13px; overflow-wrap: anywhere; }
+.record-meta { margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+.record-amount { flex: none; font-size: 14px; white-space: nowrap; }
+.record-amount.expense { color: var(--ink); }
+.noscript-note { position: fixed; inset: 20px; z-index: 40; height: fit-content; margin: auto; padding: 24px; border: 1px solid var(--line-strong); border-radius: 16px; background: var(--surface); font-size: 14px; }
+
+@container app (max-width: 1100px) {
+  .workspace { padding-right: 28px; padding-left: 28px; }
+  .report-grid { grid-template-columns: minmax(0, 1fr); }
+  .categories-card { display: grid; grid-template-columns: 190px minmax(0, 1fr); column-gap: 30px; align-items: center; }
+  .category-header { grid-column: 1 / -1; }
+  .donut-wrap { grid-column: 1; grid-row: 2; margin-top: 12px; margin-bottom: 0; }
+  .category-list { grid-column: 2; grid-row: 2; margin-top: 13px; }
+  .category-empty { grid-column: 2; grid-row: 2; }
+}
+
+@container app (max-width: 760px) {
+  .app-layout { display: block; }
+  .sidebar { display: none; }
+  .workspace { padding: 20px 20px calc(112px + env(safe-area-inset-bottom)); }
+  .mobile-brand { display: block; margin-bottom: 19px; font-size: 18px; font-weight: 600; }
+  .mobile-brand > span { color: var(--primary); }
+  .range-control { font-size: 23px; }
+  .scope-row { margin-top: 3px; margin-bottom: 16px; }
+  .range-caption { font-size: 10px; }
+  .summary-main { gap: 8px; padding: 20px 18px; }
+  .summary-value { gap: 5px; margin-top: 8px; font-size: 30px; }
+  .record-count { padding-top: 3px; font-size: 10px; }
+  .summary-secondary > div { padding: 16px 18px 18px; }
+  .secondary-value { font-size: 18px; }
+  .report-grid { gap: 16px; margin-top: 16px; }
+  .trend-card { padding: 18px 16px 16px; }
+  .trend-header { display: block; }
+  .view-switch { display: grid; width: 100%; margin-top: 14px; }
+  .view-switch button { padding: 7px 5px; font-size: 11px; }
+  .trend-overview { gap: 10px; margin-top: 22px; }
+  .trend-value { font-size: 26px; }
+  .chart-legend { gap: 6px 10px; font-size: 10px; }
+  .chart-explanation { min-height: 38px; font-size: 10px; }
+  .chart-meta { margin-top: 12px; font-size: 9px; }
+  .plot-wrap { height: 220px; }
+  .point-detail { margin-top: 12px; padding: 13px 12px 6px; }
+  .detail-values { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 10px; }
+  .detail-stat dd { font-size: 14px; }
+  .categories-card { display: block; padding: 19px 18px 13px; }
+  .donut-wrap { margin: 16px auto; }
+  .category-list { margin-top: 0; }
+  .category-item { grid-template-columns: minmax(0, 1fr) auto 40px; padding: 12px 0; font-size: 12px; }
+  .category-share { font-size: 10px; }
+  .preview-footnote { margin: 21px 8px 0; font-size: 9px; }
+  .bottom-nav { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); left: 50%; z-index: 20; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(310px, calc(100vw - 40px)); padding: 8px 12px; border: 1px solid rgb(229 225 221 / 85%); border-radius: 999px; background: rgb(255 255 255 / 96%); box-shadow: 0 8px 30px rgb(48 49 56 / 9%); transform: translateX(-50%); }
+  .bottom-nav > span { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; color: var(--muted); font-size: 11px; }
+  .bottom-nav > span.active { color: var(--primary); }
+  .bottom-nav svg { width: 18px; height: 18px; }
+}
+
+@container app (max-width: 350px) {
+  .workspace { padding-right: 14px; padding-left: 14px; }
+  .trend-card { padding-right: 12px; padding-left: 12px; }
+  .summary-value { font-size: 27px; }
+  .secondary-value { font-size: 16px; }
+  .summary-secondary > div { padding-right: 14px; padding-left: 14px; }
+  .trend-overview { display: block; }
+  .chart-legend { padding-top: 11px; padding-bottom: 0; }
+}
+
+body[data-device="phone"] .records-dialog { inset: auto 0 0; width: min(390px, 100%); max-height: 85dvh; margin: 0 auto; border-radius: 20px 20px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+
+@media (max-width: 760px) {
+  .preview-bar { gap: 7px; min-height: 64px; padding: 9px 15px; }
+  .preview-brand { gap: 8px; font-size: 12px; }
+  .preview-badge { font-size: 10px; }
+  .preview-tools { justify-content: space-between; width: 100%; gap: 6px; }
+  .scenario-control { flex: 1; gap: 7px; font-size: 11px; }
+  .scenario-control select { flex: 1; max-width: 170px; min-height: 44px; font-size: 12px; }
+  .device-switch { margin-left: auto; }
+  .device-switch button { padding-right: 9px; padding-left: 9px; }
+  .device-switch button span { display: none; }
+  .locale-button { flex: none; }
+  body[data-device="phone"] .app-frame { max-width: 390px; margin-top: 16px; margin-bottom: 0; }
+  .records-dialog { inset: auto 0 0; width: 100%; max-height: 85dvh; margin: 0 auto; border-radius: 20px 20px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+}
+
+@media (max-width: 350px) {
+  .preview-bar { padding-right: 10px; padding-left: 10px; }
+  .scenario-control > span { display: none; }
+  .scenario-control select { width: 100%; max-width: 140px; }
+  .preview-tools { gap: 4px; }
+  .preview-badge { font-size: 9px; }
+}
+
+@media (prefers-contrast: more) {
+  :root { --muted: #454750; --line: #b5b3b0; --line-strong: #96938f; }
+  .bottom-nav { background: var(--surface); border-color: var(--line-strong); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}
+
+@media print {
+  .preview-bar, .sidebar, .bottom-nav { display: none; }
+  .app-layout { display: block; }
+  .workspace { max-width: none; padding: 0; }
+  .panel { box-shadow: none; break-inside: avoid; }
+  body[data-device="phone"] .app-frame { max-width: none; margin: 0; border: 0; }
+}
+  </style>
+</head>
+<body data-device="desktop">
+  <svg class="svg-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/></symbol>
+      <symbol id="icon-records" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+      <symbol id="icon-account" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+      <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+      <symbol id="icon-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="icon-book" viewBox="0 0 24 24"><path d="M5 3h14v18H5a2 2 0 0 1 0-4h14M5 3v14M9 7h6"/></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+      <symbol id="icon-desktop" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+      <symbol id="icon-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10 18h4"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="preview-bar">
+    <div class="preview-brand"><span class="preview-dot" aria-hidden="true"></span><strong data-i18n="previewTitle">首页趋势</strong><span class="preview-badge" data-i18n="offline">离线预览 · 示例数据</span></div>
+    <div class="preview-tools">
+      <label class="scenario-control"><span data-i18n="scenarioLabel">示例</span><select id="scenario-select" aria-label="示例数据场景" data-i18n-label="scenarioAria"><option value="normal" data-i18n="normal">日常收支</option><option value="deficit" data-i18n="deficit">负结余</option><option value="gaps" data-i18n="gaps">含空月份</option><option value="empty" data-i18n="empty">无记录</option></select></label>
+      <div class="device-switch" role="group" aria-label="预览尺寸" data-i18n-label="deviceAria">
+        <button type="button" data-device="desktop" aria-pressed="true" aria-label="桌面视图" data-i18n-label="desktop"><svg aria-hidden="true"><use href="#icon-desktop"/></svg><span data-i18n="desktop">桌面</span></button>
+        <button type="button" data-device="phone" aria-pressed="false" aria-label="手机视图" data-i18n-label="phone"><svg aria-hidden="true"><use href="#icon-phone"/></svg><span data-i18n="phone">手机</span></button>
+      </div>
+      <button type="button" class="locale-button" id="locale-button" aria-label="Switch to English">EN</button>
+    </div>
+  </header>
+
+  <div class="app-frame" id="app-frame">
+    <div class="app-layout">
+      <aside class="sidebar" aria-label="应用外观示意" data-i18n-label="shellAria">
+        <div class="brand-block"><div class="wordmark">BillBoard<span class="wordmark-dot">.</span></div><p class="tagline" data-i18n="tagline">把日子记清楚。</p></div>
+        <nav class="side-nav" aria-label="页面位置示意" data-i18n-label="navAria">
+          <span class="nav-item active" aria-current="page"><svg aria-hidden="true"><use href="#icon-home"/></svg><span data-i18n="home">首页</span></span>
+          <span class="nav-item"><svg aria-hidden="true"><use href="#icon-records"/></svg><span data-i18n="records">记录</span></span>
+          <span class="nav-item"><svg aria-hidden="true"><use href="#icon-account"/></svg><span data-i18n="account">账号</span></span>
+        </nav>
+        <div class="sidebar-foot"><span class="avatar" aria-hidden="true">L</span><div><p data-i18n="householdName">小林的家庭</p><span data-i18n="twoMembers">2 位成员 · 示例家庭</span></div></div>
+      </aside>
+
+      <main class="workspace" id="overview">
+        <div class="mobile-brand" aria-hidden="true">BillBoard<span>.</span></div>
+        <header class="home-heading">
+          <h1 class="sr-only" data-i18n="home">首页</h1>
+          <label class="range-control"><span id="range-heading">2026 年</span><svg aria-hidden="true"><use href="#icon-down"/></svg><select id="range-select" aria-label="统计时间范围" data-i18n-label="rangeAria"><option value="year" data-i18n="rangeYear">2026 年 · 按月查看</option><option value="recent" data-i18n="rangeRecent">最近三个月</option><option value="month" data-i18n="rangeMonth">2026 年 11 月 · 截至 6 日</option><option value="custom" data-i18n="rangeCustom">自定义 · 5 月 10 日至 6 月 6 日</option><option value="all" data-i18n="rangeAll">全部记录</option></select></label>
+          <label class="member-control"><span class="sr-only" data-i18n="memberAria">归属成员</span><select id="member-select"><option value="all" data-i18n="household">全家</option><option value="lin" data-i18n="lin">小林</option><option value="xia" data-i18n="xia">小夏</option></select><svg aria-hidden="true"><use href="#icon-down"/></svg></label>
+        </header>
+        <div class="scope-row"><label class="ledger-control"><svg aria-hidden="true"><use href="#icon-book"/></svg><select id="ledger-select" aria-label="查看账本" data-i18n-label="ledgerAria"><option value="all" data-i18n="allLedgers">全部账本</option><option value="daily" data-i18n="dailyLedger">日常账本</option><option value="travel" data-i18n="travelLedger">旅行账本 · 已归档</option></select><svg class="chevron-small" aria-hidden="true"><use href="#icon-down"/></svg></label><p class="range-caption" id="range-caption"></p></div>
+
+        <section class="panel summary-card" aria-labelledby="summary-title">
+          <div class="summary-main"><div><h2 id="summary-title" class="kicker" data-i18n="selectedExpense">所选范围支出</h2><p class="summary-value"><span class="currency">¥</span><span id="total-expense">0.00</span></p></div><span class="record-count" id="total-count"></span></div>
+          <div class="summary-secondary"><div><p class="kicker" data-i18n="income">收入</p><p class="secondary-value income"><span class="currency">¥</span><span id="total-income">0.00</span></p></div><div><p class="kicker" data-i18n="net">结余</p><p class="secondary-value" id="net-summary"><span class="currency">¥</span><span id="total-net">0.00</span></p></div></div>
+        </section>
+
+        <div class="report-grid">
+          <section class="panel trend-card" id="trend-card" aria-labelledby="trend-title">
+            <div class="trend-header"><h2 id="trend-title" data-i18n="trend">趋势</h2><div class="view-switch" role="group" aria-label="趋势视图" data-i18n-label="viewAria"><button type="button" data-view="cashflow" aria-pressed="true" data-i18n="cashflow">收支趋势</button><button type="button" data-view="balance" aria-pressed="false" data-i18n="balance">结余趋势</button><button type="button" data-view="cumulative" aria-pressed="false" data-i18n="cumulative">累计结余</button></div></div>
+            <div class="trend-overview"><div><p class="kicker" id="metric-label"></p><p class="trend-value" id="metric-value"></p></div><div class="chart-legend" id="chart-legend"></div></div>
+            <p class="chart-explanation" id="chart-explanation"></p>
+            <div class="chart-meta"><span id="chart-hint" data-i18n="pickMonth">点选月份查看详情</span><span data-i18n="unit">单位：元</span></div>
+            <div class="plot-wrap" id="plot-wrap"><svg id="trend-svg" class="trend-svg" aria-hidden="true"></svg><input id="chart-picker" class="chart-picker" type="range" min="0" max="10" value="0" step="1" aria-label="选择月份，方向键切换" data-i18n-label="pickerAria" aria-describedby="chart-explanation"><p class="sr-only" id="chart-summary"></p></div>
+            <p id="empty-note" class="empty-note" hidden></p>
+            <div class="point-detail" id="point-detail" aria-live="polite" aria-atomic="true" hidden><div class="detail-header"><strong id="point-title"></strong><span id="point-count"></span></div><p class="detail-dates" id="point-dates"></p><dl class="detail-values" id="point-values"></dl><div class="detail-bottom"><button type="button" class="text-link" id="records-open"><span data-i18n="viewMonthRecords">查看当月记录</span><svg aria-hidden="true"><use href="#icon-chevron"/></svg></button></div></div>
+            <div class="chart-footer"><span class="footer-mark" aria-hidden="true"></span><span id="chart-footer"></span></div>
+          </section>
+
+          <section class="panel categories-card" aria-labelledby="categories-title"><div class="category-header"><h2 id="categories-title" data-i18n="categories">分类分析</h2><span class="category-kind" data-i18n="expense">支出</span></div><div class="donut-wrap"><svg id="category-svg" viewBox="0 0 200 200" aria-hidden="true"></svg><div class="donut-center"><span data-i18n="totalExpense">总支出</span><strong id="category-total"></strong></div></div><ul class="category-list" id="category-list"></ul><p class="category-empty" id="category-empty" hidden data-i18n="noExpense">这个范围内没有支出记录</p></section>
+        </div>
+
+        <p class="preview-footnote" data-i18n="footnote">示例日期 2026-11-06 · 数据均为虚构，仅供界面预览。</p>
+        <nav class="bottom-nav" aria-label="页面位置示意" data-i18n-label="navAria"><span class="active" aria-current="page"><svg aria-hidden="true"><use href="#icon-home"/></svg><span data-i18n="home">首页</span></span><span><svg aria-hidden="true"><use href="#icon-records"/></svg><span data-i18n="records">记录</span></span><span><svg aria-hidden="true"><use href="#icon-account"/></svg><span data-i18n="account">账号</span></span></nav>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="records-dialog" class="records-dialog" aria-labelledby="records-title"><div class="dialog-header"><div><h2 id="records-title"></h2><p data-i18n="sampleRecords">虚构示例明细，不连接真实账本</p></div><button type="button" id="dialog-close" class="dialog-close" aria-label="关闭明细" data-i18n-label="close"><svg aria-hidden="true"><use href="#icon-close"/></svg></button></div><ul id="record-list" class="record-list"></ul></dialog>
+  <noscript><p class="noscript-note">请在浏览器中启用 JavaScript，以查看离线图表和切换效果。此预览不会连接网络。</p></noscript>
+  <!-- Editable behavior source: home-monthly-balance-preview.js. Embedded for standalone previews. -->
+  <script id="preview-script">
+/* Offline, fictional fixtures. No application services or stored user data are used. */
+(() => {
+  "use strict";
+
+  const TODAY = "2026-11-06";
+  const state = { locale: "zh-CN", range: "year", scenario: "normal", member: "all", ledger: "all", view: "cashflow", selected: null };
+  const $ = (id) => document.getElementById(id);
+  const dictionary = {
+    previewTitle: ["首页趋势", "Home trends"], offline: ["离线预览 · 示例数据", "Offline preview · Sample data"],
+    scenarioLabel: ["示例", "Data"], scenarioAria: ["示例数据场景", "Sample data scenario"], normal: ["日常收支", "Everyday spending"], deficit: ["负结余", "Negative balance"], gaps: ["含空月份", "Months with no records"], empty: ["无记录", "No records"],
+    deviceAria: ["预览尺寸", "Preview size"], desktop: ["桌面", "Desktop"], phone: ["手机", "Phone"], shellAria: ["应用外观示意", "Application context"], navAria: ["页面位置示意", "Page context"],
+    tagline: ["把日子记清楚。", "A clearer picture of daily life."], home: ["首页", "Home"], records: ["记录", "Records"], account: ["账号", "Account"], householdName: ["小林的家庭", "Lin’s household"], twoMembers: ["2 位成员 · 示例家庭", "2 members · Sample household"],
+    rangeAria: ["统计时间范围", "Report date range"], rangeYear: ["2026 年 · 按月查看", "2026 · Monthly view"], rangeRecent: ["最近三个月", "Last 3 months"], rangeMonth: ["2026 年 11 月 · 截至 6 日", "November 2026 · Through Nov 6"], rangeCustom: ["自定义 · 5 月 10 日至 6 月 6 日", "Custom · May 10 – Jun 6"], rangeAll: ["全部记录", "All records"],
+    memberAria: ["归属成员", "Attributed member"], household: ["全家", "Household"], lin: ["小林", "Lin"], xia: ["小夏", "Xia"], ledgerAria: ["查看账本", "Ledger scope"], allLedgers: ["全部账本", "All ledgers"], dailyLedger: ["日常账本", "Everyday ledger"], travelLedger: ["旅行账本 · 已归档", "Travel ledger · Archived"],
+    selectedExpense: ["所选范围支出", "Expenses in this period"], income: ["收入", "Income"], expense: ["支出", "Expenses"], net: ["结余", "Net"], trend: ["趋势", "Trends"], viewAria: ["趋势视图", "Trend view"], cashflow: ["收支趋势", "Cash flow"], balance: ["结余趋势", "Net trend"], cumulative: ["累计结余", "Cumulative net"],
+    pickMonth: ["点选月份查看详情", "Select a month for details"], pickDay: ["点选日期查看详情", "Select a day for details"], unit: ["单位：元", "Unit: CNY"], pickerAria: ["选择数据点，方向键切换", "Choose a data point using the arrow keys"], viewMonthRecords: ["查看当月记录", "View month’s records"], viewDayRecords: ["查看当日记录", "View day’s records"],
+    categories: ["分类分析", "Categories"], totalExpense: ["总支出", "Total expenses"], noExpense: ["这个范围内没有支出记录", "No expenses in this period"], footnote: ["示例日期 2026-11-06 · 数据均为虚构，仅供界面预览。", "Sample date: Nov 6, 2026 · All data is fictional, for visual preview only."],
+    sampleRecords: ["虚构示例明细，不连接真实账本", "Fictional records. No connection to a real ledger."], close: ["关闭明细", "Close records"],
+    food: ["餐饮", "Food & dining"], householdCategory: ["居家", "Household"], shopping: ["购物", "Shopping"], transport: ["交通", "Transport"], leisure: ["休闲", "Leisure"], bills: ["生活缴费", "Bills"], other: ["其他", "Other"], salary: ["工资收入", "Salary"],
+    currentNet: ["当月结余", "Month’s net"], dayNet: ["当日结余", "Day’s net"], endNet: ["范围末累计结余", "Cumulative net at period end"],
+    cashflowMonthNote: ["按月汇总所选范围的收入与支出。", "Monthly income and expenses within the selected period."], cashflowDayNote: ["按日展示所选月份的收入与支出。", "Daily income and expenses in the selected month."], balanceNote: ["按月展示收入减支出的结余，各月独立统计。", "Each point is that month’s income minus expenses within the selected period."], cumulativeNote: ["从所选范围以 0 开始，逐月累计收入减支出。", "Starts at zero in the selected period. Adds each month’s income minus expenses."],
+    balanceFooter: ["每个点对应当月结余；部分月份仅统计所选日期。", "Each point shows that month’s net. Partial months include selected dates only."], cumulativeFooter: ["末点与上方结余一致，不含范围外的历史结余。", "The last point matches the net above. Earlier balances are excluded."], noRecords: ["所选范围暂无记录，结余按 0 计算。", "No records in this period. Recorded net is zero."],
+  };
+  const t = (key) => dictionary[key]?.[state.locale === "zh-CN" ? 0 : 1] ?? key;
+  const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+  const number = (fen) => new Intl.NumberFormat(state.locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(fen) / 100);
+  const money = (fen, signed = false) => `${fen < 0 ? "−" : signed && fen > 0 ? "+" : ""}¥${number(fen)}`;
+  const amount = (fen) => `${fen < 0 ? "−" : ""}${number(fen)}`;
+  const monthName = (key, year = false) => new Intl.DateTimeFormat(state.locale, { month: "short", ...(year ? { year: "numeric" } : {}), timeZone: "Asia/Shanghai" }).format(new Date(`${key}-01T12:00:00+08:00`));
+  const dateName = (date, year = false) => new Intl.DateTimeFormat(state.locale, { month: "short", day: "numeric", ...(year ? { year: "numeric" } : {}), timeZone: "Asia/Shanghai" }).format(new Date(`${date}T12:00:00+08:00`));
+  const dateRange = (from, to, year = false) => from === to ? dateName(from, year) : `${dateName(from, year)} – ${dateName(to, year)}`;
+  const countLabel = (count) => state.locale === "zh-CN" ? `${count} 笔记录` : `${count} ${count === 1 ? "record" : "records"}`;
+  const dateString = (year, month, day) => `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const lastDay = (year, month) => new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  function fixtures() {
+    if (state.scenario === "empty") return [];
+    const totals = [[2880000, 1945000], [2960000, 2086000], [3000000, 2384000], [3000000, 1786000], [3100000, 3195000], [3100000, 1968000], [3220000, 2146000], [3200000, 2878000], [3200000, 1912000], [3200000, 2206000], [3250000, 2280000], [1660000, 452000]];
+    const categories = ["food", "householdCategory", "shopping", "transport", "leisure", "bills", "other"];
+    const weights = [27, 22, 16, 12, 10, 7, 6];
+    const rows = [];
+    totals.forEach(([income, expense], index) => {
+      const year = index === 0 ? 2025 : 2026;
+      const month = index === 0 ? 12 : index;
+      if (state.scenario === "gaps" && year === 2026 && [4, 7].includes(month)) return;
+      if (state.scenario === "deficit") income = Math.round(income * 22 / 100);
+      const firstIncome = Math.round(income * 55 / 100);
+      [firstIncome, income - firstIncome].forEach((value, member) => rows.push({ date: dateString(year, month, member ? 5 : month === 11 ? 1 : 2), type: "income", amountFen: value, member: member ? "xia" : "lin", ledger: "daily", category: "salary" }));
+      let assigned = 0;
+      const days = month === 11 ? [1, 2, 3, 4, 5, 6, 6] : [3, 6, 9, 13, 18, 23, 28];
+      weights.forEach((weight, item) => {
+        const value = item === weights.length - 1 ? expense - assigned : Math.round(expense * weight / 100);
+        assigned += value;
+        rows.push({ date: dateString(year, month, days[item]), type: "expense", amountFen: value, member: item % 2 ? "xia" : "lin", ledger: year === 2026 && [2, 5, 7, 10].includes(month) && [3, 4].includes(item) ? "travel" : "daily", category: categories[item] });
+      });
+    });
+    return rows.sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  function getRange(allRows) {
+    if (state.range === "month") return { from: "2026-11-01", to: TODAY };
+    if (state.range === "recent") return { from: "2026-09-01", to: TODAY };
+    if (state.range === "custom") return { from: "2026-05-10", to: "2026-06-06" };
+    if (state.range === "all") return { from: allRows[0]?.date ?? "2026-11-01", to: TODAY };
+    return { from: "2026-01-01", to: TODAY };
+  }
+
+  function totals(rows, from, to) {
+    const result = { incomeFen: 0, expenseFen: 0, transactionCount: 0 };
+    rows.forEach((row) => {
+      if (row.date < from || row.date > to) return;
+      result[row.type === "income" ? "incomeFen" : "expenseFen"] += row.amountFen;
+      result.transactionCount++;
+    });
+    return { ...result, netFen: result.incomeFen - result.expenseFen };
+  }
+
+  function model() {
+    const ledgerRows = fixtures().filter((row) => state.ledger === "all" || row.ledger === state.ledger);
+    const rows = ledgerRows.filter((row) => state.member === "all" || row.member === state.member);
+    const range = getRange(ledgerRows);
+    const summary = totals(rows, range.from, range.to);
+    let effectiveFrom = range.from;
+    if (state.range === "custom") effectiveFrom = [range.from, `${(ledgerRows[0]?.date ?? range.to).slice(0, 7)}-01`].sort()[1];
+    const [firstYear, firstMonth] = effectiveFrom.split("-").map(Number);
+    const [finalYear, finalMonth] = range.to.split("-").map(Number);
+    const monthly = [];
+    let cumulativeNetFen = 0;
+    for (let index = firstYear * 12 + firstMonth - 1; index <= finalYear * 12 + finalMonth - 1; index++) {
+      const year = Math.floor(index / 12);
+      const month = index % 12 + 1;
+      const key = dateString(year, month, 1).slice(0, 7);
+      const from = [dateString(year, month, 1), effectiveFrom].sort()[1];
+      const to = [dateString(year, month, lastDay(year, month)), range.to].sort()[0];
+      const current = totals(rows, from, to);
+      cumulativeNetFen += current.netFen;
+      monthly.push({ key, from, to, ...current, cumulativeNetFen });
+    }
+    const daily = [];
+    if (state.range === "month") {
+      for (let day = 1; day <= 6; day++) {
+        const date = dateString(2026, 11, day);
+        daily.push({ key: date, from: date, to: date, ...totals(rows, date, date) });
+      }
+    }
+    return { range, rows, summary, monthly, points: state.view === "cashflow" && state.range === "month" ? daily : monthly };
+  }
+
+  function applyLocale() {
+    document.documentElement.lang = state.locale;
+    document.title = state.locale === "zh-CN" ? "BillBoard · 首页月度结余预览" : "BillBoard · Monthly balance preview";
+    document.querySelectorAll("[data-i18n]").forEach((node) => { node.textContent = t(node.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-label]").forEach((node) => { node.setAttribute("aria-label", t(node.dataset.i18nLabel)); });
+    $("locale-button").textContent = state.locale === "zh-CN" ? "EN" : "中文";
+    $("locale-button").setAttribute("aria-label", state.locale === "zh-CN" ? "Switch to English" : "切换为中文");
+  }
+
+  function render() {
+    applyLocale();
+    const data = model();
+    const heading = { year: state.locale === "zh-CN" ? "2026 年" : "2026", month: monthName("2026-11", true), recent: t("rangeRecent"), custom: state.locale === "zh-CN" ? "自定义范围" : "Custom range", all: t("rangeAll") };
+    $("range-heading").textContent = heading[state.range];
+    $("range-caption").textContent = dateRange(data.range.from, data.range.to, true);
+    $("total-expense").textContent = number(data.summary.expenseFen);
+    $("total-income").textContent = number(data.summary.incomeFen);
+    $("total-net").textContent = amount(data.summary.netFen);
+    $("net-summary").classList.toggle("deficit", data.summary.netFen < 0);
+    $("total-count").textContent = countLabel(data.summary.transactionCount);
+    document.querySelectorAll("[data-view]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.view === state.view)));
+    const last = data.monthly.at(-1);
+    let label = t("selectedExpense");
+    let value = money(data.summary.expenseFen);
+    let note = t(state.range === "month" ? "cashflowDayNote" : "cashflowMonthNote");
+    let legend = `<span><i class="legend-dot income-dot"></i>${t("income")}</span><span><i class="legend-dot expense-dot"></i>${t("expense")}</span>`;
+    if (state.view === "cumulative") {
+      label = t("endNet"); value = money(last?.cumulativeNetFen ?? 0); note = t("cumulativeNote");
+      legend = `<span><i class="legend-dot cumulative-dot"></i>${t("cumulative")}</span>`;
+    } else if (state.view === "balance") {
+      label = state.locale === "zh-CN" ? `${monthName(last.key)}结余` : `${monthName(last.key)} net`;
+      value = money(last.netFen); note = t("balanceNote");
+      legend = `<span><i class="legend-dot balance-dot"></i>${t("net")}</span>`;
+    }
+    $("metric-label").textContent = label;
+    $("metric-value").textContent = value;
+    $("metric-value").className = `trend-value${(state.view === "balance" && last.netFen < 0) || (state.view === "cumulative" && last.cumulativeNetFen < 0) ? " negative" : ""}`;
+    $("chart-explanation").textContent = note;
+    $("chart-legend").innerHTML = legend;
+    $("chart-hint").textContent = t(state.view === "cashflow" && state.range === "month" ? "pickDay" : "pickMonth");
+    $("chart-footer").textContent = state.view === "cashflow" ? `${t(state.member === "all" ? "household" : state.member)} · ${t({ all: "allLedgers", daily: "dailyLedger", travel: "travelLedger" }[state.ledger])}` : t(state.view === "cumulative" ? "cumulativeFooter" : "balanceFooter");
+    $("empty-note").hidden = data.summary.transactionCount !== 0;
+    $("empty-note").textContent = t("noRecords");
+    const picker = $("chart-picker");
+    picker.max = String(Math.max(0, data.points.length - 1));
+    picker.value = String(Math.max(0, data.points.findIndex((point) => point.key === state.selected)));
+    $("chart-summary").textContent = data.points.map((point) => `${point.key}: ${t(state.view)} ${money(state.view === "cumulative" ? point.cumulativeNetFen : point.netFen)}`).join("; ");
+    drawChart(data);
+    renderDetail(data);
+    renderCategories(data);
+  }
+
+  function svgNode(tag, attrs, text) {
+    const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, String(value)));
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function niceStep(value) {
+    const power = 10 ** Math.floor(Math.log10(value));
+    return [1, 2, 2.5, 5, 10].find((step) => step * power >= value) * power;
+  }
+
+  function drawChart(data) {
+    const svg = $("trend-svg");
+    const width = Math.max(220, $("plot-wrap").clientWidth);
+    const height = $("plot-wrap").clientHeight || 238;
+    const left = width < 330 ? 42 : 52;
+    const right = 16, top = 14, bottom = 32;
+    const plotWidth = width - left - right, plotHeight = height - top - bottom;
+    const values = data.points.flatMap((point) => state.view === "cashflow" ? [point.incomeFen, point.expenseFen] : [state.view === "cumulative" ? point.cumulativeNetFen : point.netFen]);
+    const low = Math.min(0, ...values), high = Math.max(0, ...values);
+    const step = niceStep(Math.max(10000, high - low) / 3);
+    const min = Math.floor(low / step) * step;
+    const max = Math.max(min + step, Math.ceil(high / step) * step);
+    const x = (index) => left + plotWidth * (index + 0.5) / data.points.length;
+    const y = (value) => top + (max - value) / (max - min) * plotHeight;
+    const compact = new Intl.NumberFormat(state.locale, { notation: "compact", maximumFractionDigits: 1 });
+    svg.replaceChildren();
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    for (let value = min; value <= max + step / 2; value += step) {
+      svg.append(svgNode("line", { x1: left, x2: width - right, y1: y(value), y2: y(value), class: value === 0 ? "zero-line" : "grid-line" }));
+      svg.append(svgNode("text", { x: left - 9, y: y(value) + 4, "text-anchor": "end", class: "axis-label" }, compact.format(value / 100)));
+    }
+    const tickCount = Math.min(width < 400 ? 4 : 6, data.points.length);
+    const ticks = new Set(Array.from({ length: tickCount }, (_, i) => tickCount === 1 ? 0 : Math.round(i * (data.points.length - 1) / (tickCount - 1))));
+    ticks.forEach((index) => {
+      const point = data.points[index];
+      const label = point.key.length === 10 ? state.locale === "zh-CN" ? `${Number(point.key.slice(-2))}日` : dateName(point.key) : state.range === "all" ? state.locale === "zh-CN" ? `${point.key.slice(2, 4)}/${Number(point.key.slice(-2))}` : monthName(point.key, true) : monthName(point.key);
+      svg.append(svgNode("text", { x: x(index), y: height - 8, "text-anchor": "middle", class: `axis-label${state.selected === point.key ? " selected" : ""}` }, label));
+    });
+    const series = state.view === "cashflow" ? [["incomeFen", "series-income"], ["expenseFen", "series-expense"]] : state.view === "cumulative" ? [["cumulativeNetFen", "series-cumulative"]] : [["netFen", "series-balance"]];
+    series.forEach(([key, className]) => {
+      svg.append(svgNode("path", { d: data.points.map((point, index) => `${index ? "L" : "M"}${x(index)} ${y(point[key])}`).join(" "), class: className }));
+      data.points.forEach((point, index) => svg.append(svgNode("circle", { cx: x(index), cy: y(point[key]), r: data.points.length === 1 ? 4 : 2.5, class: `${className} series-point` })));
+    });
+    const selectedIndex = data.points.findIndex((point) => point.key === state.selected);
+    if (selectedIndex >= 0) {
+      const selected = data.points[selectedIndex];
+      svg.append(svgNode("line", { x1: x(selectedIndex), x2: x(selectedIndex), y1: top, y2: height - bottom, class: "selection-line" }));
+      series.forEach(([key, className]) => svg.append(svgNode("circle", { cx: x(selectedIndex), cy: y(selected[key]), r: 5, class: `selected-dot ${className}` })));
+    }
+    const padding = data.points.length > 1 ? plotWidth / data.points.length / 2 : 0;
+    Object.assign($("chart-picker").style, { left: `${left + padding}px`, right: `${right + padding}px`, top: `${top}px`, bottom: `${bottom}px`, width: `${plotWidth - padding * 2}px`, height: `${plotHeight}px` });
+    const current = data.points[Math.max(0, selectedIndex)];
+    $("chart-picker").setAttribute("aria-valuetext", current ? `${current.key}, ${state.view === "cashflow" ? `${t("income")} ${money(current.incomeFen)}, ${t("expense")} ${money(current.expenseFen)}` : `${t(state.view)} ${money(state.view === "cumulative" ? current.cumulativeNetFen : current.netFen)}`}` : "");
+  }
+
+  function renderDetail(data) {
+    const point = data.points.find((item) => item.key === state.selected);
+    $("point-detail").hidden = !point;
+    if (!point) return;
+    const daily = point.key.length === 10;
+    $("point-title").textContent = daily ? dateName(point.key, true) : monthName(point.key, true);
+    $("point-count").textContent = countLabel(point.transactionCount);
+    $("point-dates").textContent = dateRange(point.from, point.to);
+    const fields = [[t("income"), money(point.incomeFen), "income"], [t("expense"), money(point.expenseFen), ""], [t(daily ? "dayNet" : "currentNet"), money(point.netFen), `${point.netFen < 0 ? "negative " : ""}${state.view === "balance" ? "emphasis" : ""}`]];
+    if (state.view === "cumulative") fields.push([t("cumulative"), money(point.cumulativeNetFen), "emphasis"]);
+    $("point-values").innerHTML = fields.map(([label, value, className]) => `<div class="detail-stat ${className}"><dt>${escape(label)}</dt><dd>${escape(value)}</dd></div>`).join("");
+    $("records-open").hidden = point.transactionCount === 0;
+    $("records-open").querySelector("span").textContent = t(daily ? "viewDayRecords" : "viewMonthRecords");
+  }
+
+  function renderCategories(data) {
+    const groups = new Map();
+    data.rows.filter((row) => row.type === "expense" && row.date >= data.range.from && row.date <= data.range.to).forEach((row) => groups.set(row.category, (groups.get(row.category) ?? 0) + row.amountFen));
+    const categories = [...groups.entries()].sort((a, b) => b[1] - a[1]);
+    const colors = ["#c64d3b", "#e99375", "#cbb29a", "#adbaa1", "#d7c99d", "#a1b7b7", "#c4c1bc"];
+    const svg = $("category-svg");
+    svg.replaceChildren(svgNode("circle", { cx: 100, cy: 100, r: 70, stroke: "#eeece9", "stroke-width": 15, fill: "none" }));
+    const circumference = 2 * Math.PI * 70;
+    let offset = 0;
+    categories.forEach(([, fen], index) => {
+      const length = fen / data.summary.expenseFen * circumference;
+      svg.append(svgNode("circle", { cx: 100, cy: 100, r: 70, fill: "none", stroke: colors[index], "stroke-width": 15, "stroke-dasharray": `${Math.max(0, length - 3)} ${circumference - Math.max(0, length - 3)}`, "stroke-dashoffset": -offset, transform: "rotate(-90 100 100)" }));
+      offset += length;
+    });
+    $("category-total").textContent = new Intl.NumberFormat(state.locale, { notation: "compact", maximumFractionDigits: 1 }).format(data.summary.expenseFen / 100);
+    $("category-list").innerHTML = categories.map(([key, fen], index) => `<li class="category-item"><span class="category-label"><i class="category-swatch" style="background:${colors[index]}"></i>${escape(t(key))}</span><span class="category-amount">${number(fen)}</span><span class="category-share">${Math.round(fen / data.summary.expenseFen * 100)}%</span></li>`).join("");
+    $("category-empty").hidden = categories.length !== 0;
+  }
+
+  function selectPoint(index) {
+    const data = model();
+    const safeIndex = Math.max(0, Math.min(data.points.length - 1, index));
+    state.selected = data.points[safeIndex]?.key ?? null;
+    $("chart-picker").value = String(safeIndex);
+    drawChart(data);
+    renderDetail(data);
+  }
+
+  function openRecords() {
+    const data = model();
+    const point = data.points.find((item) => item.key === state.selected);
+    if (!point?.transactionCount) return;
+    $("records-title").textContent = dateRange(point.from, point.to, true);
+    $("record-list").innerHTML = data.rows.filter((row) => row.date >= point.from && row.date <= point.to).map((row) => `<li class="record-row"><div class="record-copy"><p class="record-note">${escape(t(row.category))}</p><p class="record-meta">${escape(dateName(row.date))} · ${escape(t(row.member))} · ${escape(t(row.ledger === "daily" ? "dailyLedger" : "travelLedger"))}</p></div><span class="record-amount ${row.type}">${money(row.type === "income" ? row.amountFen : -row.amountFen, true)}</span></li>`).join("");
+    $("records-dialog").showModal();
+  }
+
+  document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => { state.view = button.dataset.view; state.selected = null; render(); }));
+  for (const key of ["range", "scenario", "member", "ledger"]) $(key + "-select").addEventListener("change", (event) => { state[key] = event.target.value; state.selected = null; render(); });
+  document.querySelectorAll("button[data-device]").forEach((button) => button.addEventListener("click", () => {
+    document.body.dataset.device = button.dataset.device;
+    document.querySelectorAll("button[data-device]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+  }));
+  $("locale-button").addEventListener("click", () => { state.locale = state.locale === "zh-CN" ? "en" : "zh-CN"; render(); });
+  $("chart-picker").addEventListener("input", (event) => selectPoint(Number(event.target.value)));
+  $("chart-picker").addEventListener("pointerdown", (event) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    selectPoint(Math.round((event.clientX - box.left) / Math.max(1, box.width) * (model().points.length - 1)));
+  });
+  $("chart-picker").addEventListener("keydown", (event) => {
+    const points = model().points;
+    const current = Math.max(0, points.findIndex((point) => point.key === state.selected));
+    const next = event.key === "Home" ? 0 : event.key === "End" ? points.length - 1 : ["ArrowLeft", "ArrowDown"].includes(event.key) ? current - 1 : ["ArrowRight", "ArrowUp"].includes(event.key) ? current + 1 : null;
+    if (next !== null) { event.preventDefault(); selectPoint(next); }
+  });
+  $("records-open").addEventListener("click", openRecords);
+  $("dialog-close").addEventListener("click", () => $("records-dialog").close());
+  $("records-dialog").addEventListener("click", (event) => {
+    if (event.target !== event.currentTarget) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) event.currentTarget.close();
+  });
+  new ResizeObserver(() => drawChart(model())).observe($("plot-wrap"));
+  render();
+})();
+  </script>
+</body>
+</html>

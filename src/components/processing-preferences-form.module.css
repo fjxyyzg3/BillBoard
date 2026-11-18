@@ -1,0 +1,66 @@
+.choiceRow {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.choice {
+  position: relative;
+  order: 1;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 1.5rem;
+  margin-top: 0.125rem;
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  background: var(--bb-line-strong);
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.choice::before {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px #00000012;
+  content: "";
+  transition: transform 160ms ease;
+}
+
+.choice:checked {
+  background: var(--bb-primary);
+}
+
+.choice:checked::before {
+  transform: translateX(1rem);
+}
+
+.choice:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice,
+  .choice::before {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .choice {
+    appearance: auto;
+  }
+
+  .choice::before {
+    display: none;
+  }
+}

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>BillBoard Windows validation</title></head>
+<body>
+  <h1>Isolated Windows validation</h1>
+  <p>Only synthetic session and encryption materials are used.</p>
+  <output id="state">Waiting for the native bridge</output>
+  <iframe title="Untrusted subframe boundary" src="/iframe"></iframe>
+  <script>
+    const fixture = window.fixture = {
+      state: null, events: [], ready: true, busy: false, dirty: false, documentNonce: crypto.randomUUID(),
+      identity: '["synthetic-account","synthetic-household","synthetic-member"]',
+      post(command, fields = {}) {
+        window.BillBoardDesktop.postMessage(JSON.stringify({ command, locale: "en-US", ...fields }));
+      },
+      heartbeat() {
+        this.post("safety", { ready: this.ready, busy: this.busy, dirty: this.dirty, identity: this.identity });
+      },
+      setSafety(patch) { Object.assign(this, patch); this.heartbeat(); },
+      async login(next = false) {
+        const response = await fetch(next ? "/fixture/login-next" : "/fixture/login", { method: "POST" });
+        if (!response.ok) throw new Error("Synthetic login failed");
+      },
+      async database() {
+        return new Promise((resolve, reject) => {
+          const opening = indexedDB.open("billboard-windows-validation", 1);
+          opening.onupgradeneeded = () => opening.result.createObjectStore("materials");
+          opening.onerror = () => reject(opening.error);
+          opening.onsuccess = () => resolve(opening.result);
+        });
+      },
+      async seedMaterials(uuid) {
+        const database = await this.database();
+        const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode("synthetic-protected-family-material"));
+        await new Promise((resolve, reject) => {
+          const transaction = database.transaction("materials", "readwrite");
+          transaction.objectStore("materials").put({ key, iv, encrypted, uuid }, "saved");
+          transaction.oncomplete = resolve;
+          transaction.onerror = () => reject(transaction.error);
+        });
+        database.close();
+        return this.readMaterials();
+      },
+      async readMaterials() {
+        const database = await this.database();
+        const value = await new Promise((resolve, reject) => {
+          const request = database.transaction("materials").objectStore("materials").get("saved");
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        database.close();
+        if (!value) return null;
+        const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv: value.iv }, value.key, value.encrypted);
+        let exportRejected = false;
+        try { await crypto.subtle.exportKey("raw", value.key); } catch { exportRejected = true; }
+        return { uuid: value.uuid, nonExportable: value.key.extractable === false && exportRejected,
+          plaintextMatches: new TextDecoder().decode(plaintext) === "synthetic-protected-family-material" };
+      },
+    };
+    window.BillBoardDesktop.subscribe(event => {
+      const message = JSON.parse(event.data);
+      fixture.events.push(message);
+      if (fixture.events.length > 128) fixture.events.shift();
+      if (message.type === "prepare") {
+        fixture.post("prepared", { requestId: message.requestId, ready: fixture.ready, busy: fixture.busy,
+          dirty: fixture.dirty, identity: fixture.identity });
+      } else if (!message.type) {
+        fixture.state = message;
+        document.querySelector("#state").textContent = JSON.stringify(message);
+      }
+    });
+    fixture.heartbeat();
+    fixture.post("status");
+    setInterval(() => fixture.heartbeat(), 500);
+  </script>
+</body>
+</html>

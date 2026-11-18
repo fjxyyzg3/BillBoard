@@ -1,0 +1,147 @@
+name: billboard
+
+services:
+  web:
+    image: billboard-web:${APP_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        APP_BASE_PATH: ${APP_BASE_PATH:-}
+        APP_IMAGE_TAG: ${APP_IMAGE_TAG:-latest}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-billboard}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-billboard}?schema=public}
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
+      AUTH_URL: ${APP_PUBLIC_ORIGIN:-}
+      IMPORT_AGENT_URL: http://import-agent:3100
+      IMPORT_AGENT_TOKEN: ${IMPORT_AGENT_TOKEN:?IMPORT_AGENT_TOKEN is required}
+      VOLCENGINE_ASR_API_KEY: ${VOLCENGINE_ASR_API_KEY:-}
+      VOICE_AUDIO_PUBLIC_ORIGIN: ${VOICE_AUDIO_PUBLIC_ORIGIN:-}
+      APP_PUBLIC_ORIGIN: ${APP_PUBLIC_ORIGIN:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      APP_BASE_PATH: ${APP_BASE_PATH:-}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    tmpfs:
+      - /tmp/billboard-voice:rw,nosuid,nodev,noexec,size=40m,mode=0700
+    volumes:
+      - type: bind
+        source: ./tmp/releases/android/published
+        target: /var/lib/billboard/android-updates
+        read_only: true
+      - type: bind
+        source: ./tmp/releases/windows/published
+        target: /var/lib/billboard/windows-updates
+        read_only: true
+    networks:
+      - default
+      - agent-backend
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/' + (process.env.APP_BASE_PATH || '').split('/').filter(Boolean).concat('login').join('/'), { signal: AbortSignal.timeout(4000) }).then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  import-agent:
+    image: billboard-import-agent:${APP_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Containerfile
+      target: agent
+      args:
+        APP_IMAGE_TAG: ${APP_IMAGE_TAG:-latest}
+    environment:
+      NODE_ENV: production
+      IMPORT_AGENT_TOKEN: ${IMPORT_AGENT_TOKEN:?IMPORT_AGENT_TOKEN is required}
+      WHEELMAKER_BASE_URL: ${WHEELMAKER_BASE_URL:?WHEELMAKER_BASE_URL is required}
+      WHEELMAKER_API_KEY: ${WHEELMAKER_API_KEY:?WHEELMAKER_API_KEY is required}
+      IMPORT_AGENT_MODEL: ${IMPORT_AGENT_MODEL:-gpt-6-luna}
+      IMPORT_AGENT_REASONING_EFFORT: ${IMPORT_AGENT_REASONING_EFFORT:-high}
+      BILL_ANALYSIS_AGENT_MODEL: ${BILL_ANALYSIS_AGENT_MODEL:-gpt-6-astra}
+      BILL_ANALYSIS_AGENT_REASONING_EFFORT: ${BILL_ANALYSIS_AGENT_REASONING_EFFORT:-high}
+    networks:
+      - agent-backend
+      - agent-egress
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=256m,uid=1000,gid=1000,mode=1770
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 768m
+    init: true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3100/health', { signal: AbortSignal.timeout(3000) }).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  bootstrap:
+    image: billboard-tools:${APP_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Containerfile
+      target: tools
+      args:
+        APP_IMAGE_TAG: ${APP_IMAGE_TAG:-latest}
+    command: >-
+      sh -lc "npx prisma migrate deploy && node --import tsx prisma/seed.ts"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-billboard}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-billboard}?schema=public}
+      SEED_HOUSEHOLD_NAME: ${SEED_HOUSEHOLD_NAME:-Household}
+      SEED_USER_A_EMAIL: ${SEED_USER_A_EMAIL:-}
+      SEED_USER_A_PASSWORD: ${SEED_USER_A_PASSWORD:-}
+      SEED_USER_A_NAME: ${SEED_USER_A_NAME:-老公}
+      SEED_USER_B_EMAIL: ${SEED_USER_B_EMAIL:-}
+      SEED_USER_B_PASSWORD: ${SEED_USER_B_PASSWORD:-}
+      SEED_USER_B_NAME: ${SEED_USER_B_NAME:-老婆}
+    profiles:
+      - bootstrap
+    restart: "no"
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-billboard}
+      POSTGRES_USER: ${POSTGRES_USER:-billboard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-billboard} -d ${POSTGRES_DB:-billboard}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+
+networks:
+  default:
+  agent-backend:
+    internal: true
+  agent-egress:
