@@ -70,7 +70,7 @@ AI 选择覆盖自然语言记账、导入智能推荐和 AI 对账；语音记�
 
 首次使用可在本页提交邮箱申请，按邮件提示确认后进入本机 OPS 审批。获批后会收到用于建立独立家庭的平台注册邀请，仍须本人完成邀请注册／接受流程；提交申请或确认邮件不会直接取得账号和家庭访问。
 
-教程与已发布安装包均无需登录。`GET /api/downloads` 提供各平台当前发布版本、大小等下载信息，`GET /api/downloads/android` 与 `GET /api/downloads/windows` 分别下载当前 APK 和 x64 EXE；页面复用各自发布清单，新包发布后自动更新，不以网页版本代替安装包版本。某个平台没有可用安装包时明确提示，教程和另一平台仍可使用。
+教程、Android APK 和 Windows EXE 公开提供。`GET /api/downloads` 提供这两个平台的版本及大小，`GET /api/downloads/android` 和 `GET /api/downloads/windows` 分别下载对应安装包。iPhone 的 Ad Hoc 安装区要求指定家庭的有效会话，系统安装链接有效期为 10 分钟。
 
 首次安装请用浏览器打开帮助页；原生壳限制普通安装包下载，已安装客户端使用 Android“应用更新”或 Windows“客户端更新”。安装包包含服务地址，公开范围限于已发布的正式产物；真实入口仍不得写入 Git 跟踪文件或历史，私钥、本地配置和未发布产物不公开，不新增第三方托管。公开下载不授予账号、家庭或账务权限。帮助页随服务端部署更新，不要求重建两端客户端。
 
@@ -85,6 +85,10 @@ Windows x64 家庭客户端通过 Electron 独立窗口连接现有 HTTPS 服务
 客户端支持应用内检查、下载和确认安装；原生更新的 `/api/windows/update` 及其摘要下载路径需要有效原 `AppSession`，并以独立 Ed25519 签名、大小和摘要校验。录音、记账、导入导出及家庭加密操作未完成时阻止安装，安装器等待正常退出，不强杀客户端。覆盖升级保留已持久化资料；首版未购买 Windows 发布者证书，系统可能显示发布者未知。
 
 正式安装包从公开帮助页下载，构建与签名材料继续私下保管。独立依赖、签名备份、`npm run desktop:check` / `npm run desktop:test:windows` / `npm run desktop:build` 及发布步骤见 [Windows 安装包构建与家庭分发](docs/runbooks/windows-exe.md)。
+
+## iPhone 客户端构建和发布
+
+使用 GitHub 托管 macOS runner 构建 `ios/BillBoard.xcodeproj`。Windows 生产机核对发布提交的验收回执及 GitHub 来源证明，再解密并对指定家庭提供安装包。Apple 签名材料、部署配置及实际操作见 [iPhone Ad Hoc 构建和家庭分发](docs/runbooks/ios-ad-hoc.md)。
 
 ## Local Setup
 

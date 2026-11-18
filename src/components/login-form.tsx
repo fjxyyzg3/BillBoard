@@ -8,6 +8,7 @@ import type { Messages } from "@/lib/i18n";
 type LoginFormProps = {
   authBasePath: string;
   labels: Messages["login"];
+  forIosInstall?: boolean;
 };
 
 function subscribeToHydration() {
@@ -22,7 +23,7 @@ function getServerHydrationSnapshot() {
   return false;
 }
 
-export function LoginForm({ authBasePath, labels }: LoginFormProps) {
+export function LoginForm({ authBasePath, labels, forIosInstall }: LoginFormProps) {
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const submittingRef = useRef(false);
@@ -65,7 +66,8 @@ export function LoginForm({ authBasePath, labels }: LoginFormProps) {
               return;
             }
 
-            router.replace("/home");
+            if (forIosInstall) router.replace("/help#ios-install");
+            else router.replace("/home");
           } catch {
             setError(labels.unavailable);
           } finally {

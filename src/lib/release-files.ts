@@ -13,13 +13,16 @@ export const releaseHeaders = {
 
 export type ReleaseFailure = { status: "missing" | "busy" | "cancelled" };
 export type ReleaseFile = { handle: FileHandle; info: Stats; path: string; directory: string };
+type ReleasePlatform = DownloadPlatform | "ios";
+type ByteRange = { start: number; end: number };
+const extensions = { android: "apk", windows: "exe", ios: "ipa" };
 const chunkBytes = 64 * 1024;
 const processState = globalThis as typeof globalThis & { billboardReleaseFiles?: { active: number } };
 const releaseFiles = processState.billboardReleaseFiles ??= { active: 0 };
 
-function releaseDirectory(platform: DownloadPlatform) {
+function releaseDirectory(platform: ReleasePlatform) {
   return resolve(process.env.NODE_ENV === "production"
-    ? `/var/lib/billboard/${platform === "android" ? "android" : "windows"}-updates`
+    ? `/var/lib/billboard/${platform}-updates`
     : join(process.cwd(), `tmp/releases/${platform}/published`));
 }
 
@@ -43,7 +46,7 @@ async function unchanged(file: ReleaseFile) {
     && await validDirectory(file.directory) && samePath(await realpath(file.path), file.path);
 }
 
-async function openReleaseFile(platform: DownloadPlatform, filename: string, maximumBytes: number, signal: AbortSignal): Promise<ReleaseFile> {
+async function openReleaseFile(platform: ReleasePlatform, filename: string, maximumBytes: number, signal: AbortSignal): Promise<ReleaseFile> {
   signal.throwIfAborted();
   const directory = releaseDirectory(platform);
   if (!await validDirectory(directory)) throw new Error("Unavailable release file");
@@ -63,9 +66,9 @@ async function openReleaseFile(platform: DownloadPlatform, filename: string, max
   }
 }
 
-export function openReleaseArtifact(platform: DownloadPlatform, sha256: string, maximumBytes: number, signal: AbortSignal) {
+export function openReleaseArtifact(platform: ReleasePlatform, sha256: string, maximumBytes: number, signal: AbortSignal) {
   if (!/^[a-f0-9]{64}$/.test(sha256)) throw new Error("Unavailable release file");
-  return openReleaseFile(platform, `${sha256}.${platform === "android" ? "apk" : "exe"}`, maximumBytes, signal);
+  return openReleaseFile(platform, `${sha256}.${extensions[platform]}`, maximumBytes, signal);
 }
 
 export function reserveReleaseFile() {
@@ -87,8 +90,9 @@ export function releaseDeadline(requestSignal: AbortSignal, milliseconds: number
   return { signal: AbortSignal.any([requestSignal, expiry.signal]), clear: () => clearTimeout(timer) };
 }
 
-export async function readReleaseManifest(platform: DownloadPlatform, maximumBytes: number, signal: AbortSignal) {
-  const file = await openReleaseFile(platform, "latest.json", maximumBytes, signal);
+export async function readReleaseManifest(platform: ReleasePlatform, maximumBytes: number, signal: AbortSignal, sha256?: string) {
+  if (sha256 !== undefined && !/^[a-f0-9]{64}$/.test(sha256)) throw new Error("Unavailable release file");
+  const file = await openReleaseFile(platform, sha256 ? `${sha256}.json` : "latest.json", maximumBytes, signal);
   try {
     const bytes = Buffer.alloc(file.info.size);
     let offset = 0;
@@ -121,13 +125,14 @@ export async function verifyReleaseArtifact(file: ReleaseFile, sha256: string, s
   return hash.digest("hex") === sha256 && await unchanged(file);
 }
 
-export function streamReleaseArtifact(file: ReleaseFile, sha256: string, operation: ReturnType<typeof releaseDeadline>, releaseSlot: () => void) {
+export function streamReleaseArtifact(file: ReleaseFile, sha256: string, operation: ReturnType<typeof releaseDeadline>, releaseSlot: () => void, range?: ByteRange) {
   let controller: ReadableStreamDefaultController<Uint8Array>;
   let pendingRead: Promise<unknown> | undefined;
   let finishing: Promise<void> | undefined;
   let stopped = false;
-  let offset = 0;
-  const hash = createHash("sha256");
+  let offset = range?.start ?? 0;
+  const limit = range ? range.end + 1 : file.info.size;
+  const hash = range ? undefined : createHash("sha256");
   const onAbort = () => { void finish(new Error("Release request aborted or timed out")); };
 
   function finish(error?: Error): Promise<void> {
@@ -153,7 +158,7 @@ export function streamReleaseArtifact(file: ReleaseFile, sha256: string, operati
       if (stopped) return;
       try {
         operation.signal.throwIfAborted();
-        const bytes = new Uint8Array(Math.min(chunkBytes, file.info.size - offset));
+        const bytes = new Uint8Array(Math.min(chunkBytes, limit - offset));
         pendingRead = file.handle.read(bytes, 0, bytes.length, offset);
         const { bytesRead } = await pendingRead as Awaited<ReturnType<FileHandle["read"]>>;
         pendingRead = undefined;
@@ -161,10 +166,10 @@ export function streamReleaseArtifact(file: ReleaseFile, sha256: string, operati
         operation.signal.throwIfAborted();
         if (!bytesRead) throw new Error("Unavailable release file");
         offset += bytesRead;
-        hash.update(bytes.subarray(0, bytesRead));
+        hash?.update(bytes.subarray(0, bytesRead));
         controller.enqueue(bytes.subarray(0, bytesRead));
-        if (offset === file.info.size) {
-          if (hash.digest("hex") !== sha256 || !await unchanged(file)) throw new Error("Unavailable release file");
+        if (offset === limit) {
+          if ((hash && hash.digest("hex") !== sha256) || !await unchanged(file)) throw new Error("Unavailable release file");
           if (stopped) return;
           await finish();
           controller.close();

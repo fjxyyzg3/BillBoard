@@ -2,7 +2,8 @@ param(
   [switch] $StayAttached,
   [switch] $SkipBuild,
   [switch] $BuildOnly,
-  [int] $PrivateSmokePort = 0
+  [int] $PrivateSmokePort = 0,
+  [string[]] $IosVerificationReports = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -70,7 +71,7 @@ function Set-LogRedactions {
   param([hashtable] $EnvValues)
 
   $values = @($EnvValues.Values | Where-Object { $_.Length -ge 4 })
-  foreach ($name in @("AUTH_SECRET", "POSTGRES_PASSWORD", "DATABASE_URL", "IMPORT_AGENT_TOKEN", "WHEELMAKER_API_KEY", "WHEELMAKER_BASE_URL", "VOLCENGINE_ASR_API_KEY", "VOICE_AUDIO_PUBLIC_ORIGIN", "APP_PUBLIC_ORIGIN", "SMTP_HOST", "SMTP_PORT", "SMTP_SECURE", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM_EMAIL", "OPS_ADMIN_PASSWORD_HASH", "OPS_ADMIN_PASSWORD_HASH_BASE64")) {
+  foreach ($name in @("AUTH_SECRET", "POSTGRES_PASSWORD", "DATABASE_URL", "IMPORT_AGENT_TOKEN", "WHEELMAKER_API_KEY", "WHEELMAKER_BASE_URL", "VOLCENGINE_ASR_API_KEY", "VOICE_AUDIO_PUBLIC_ORIGIN", "APP_PUBLIC_ORIGIN", "IOS_INSTALL_HOUSEHOLD_ID", "SMTP_HOST", "SMTP_PORT", "SMTP_SECURE", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM_EMAIL", "OPS_ADMIN_PASSWORD_HASH", "OPS_ADMIN_PASSWORD_HASH_BASE64")) {
     $value = [Environment]::GetEnvironmentVariable($name, "Process")
     if ($value) {
       $values += @($value, [Uri]::EscapeDataString($value))
@@ -373,6 +374,14 @@ try {
     throw "APP_PORT must be a valid local TCP port"
   }
   $revision = Assert-PublishedCheckout
+  if ($IosVerificationReports.Count) {
+    Push-Location -LiteralPath $repoRoot
+    try {
+      $null = Invoke-Logged -FilePath "node" -Arguments (@("ops/ios/record-verification.mjs") + $IosVerificationReports)
+    } finally {
+      Pop-Location
+    }
+  }
   $env:APP_IMAGE_TAG = $revision
   $webImage = "billboard-web:$revision"
   $toolsImage = "billboard-tools:$revision"

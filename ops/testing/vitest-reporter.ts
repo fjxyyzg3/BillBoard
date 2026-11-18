@@ -7,6 +7,8 @@ export default class TimingReporter implements Reporter {
     writeFileTimings(modules.map((module) => ({
       file: module.moduleId,
       durationMs: module.diagnostic().duration,
+      passed: module.state() === "passed" || module.state() === "skipped",
+      tests: [...module.children.allTests()].length,
     })));
   }
 }

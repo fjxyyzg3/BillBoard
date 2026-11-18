@@ -23,6 +23,9 @@ tmp
 **/*.dump
 android
 desktop
+ios
+ops/ios/*
+!ops/ios/*.d.mts
 ops/desktop/*
 # Next type-checks test imports; declarations contain no executable tooling.
 !ops/desktop/*.d.mts
@@ -31,3 +34,5 @@ ops/desktop/*
 **/*.p12
 **/*.apk
 **/*.aab
+**/*.ipa
+**/*.mobileprovision

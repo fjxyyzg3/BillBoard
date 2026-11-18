@@ -205,13 +205,19 @@ describe("production network security config", () => {
       "source: ./tmp/releases/windows/published",
       "target: /var/lib/billboard/windows-updates",
       "read_only: true",
+      "- type: bind",
+      "source: ./tmp/releases/ios/published",
+      "target: /var/lib/billboard/ios-updates",
+      "read_only: true",
     ]);
     expect(web).not.toMatch(/^ {4}volumes_from:/m);
-    expect(mounts).not.toMatch(/voice|\.env|keystore|\.jks|\.p12|signing/i);
+    expect(mounts).not.toMatch(/voice|\.env|keystore|\.jks|\.p12|signing|mobileprovision|identity\.txt/i);
     const ignored = readRepoFile(".dockerignore");
     expect(ignored).toMatch(/^desktop$/m);
     expect(ignored).toMatch(/^ops\/desktop\/\*$/m);
     expect(ignored).toMatch(/^!ops\/desktop\/\*\.d\.mts$/m);
+    expect(ignored).toMatch(/^ios$/m);
+    expect(ignored).toMatch(/^ops\/ios\/\*$/m);
   });
 
   test("Next development logs omit audio capabilities while retaining other request logs", async () => {

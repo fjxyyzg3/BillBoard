@@ -22,6 +22,7 @@ services:
       VOLCENGINE_ASR_API_KEY: ${VOLCENGINE_ASR_API_KEY:-}
       VOICE_AUDIO_PUBLIC_ORIGIN: ${VOICE_AUDIO_PUBLIC_ORIGIN:-}
       APP_PUBLIC_ORIGIN: ${APP_PUBLIC_ORIGIN:-}
+      IOS_INSTALL_HOUSEHOLD_ID: ${IOS_INSTALL_HOUSEHOLD_ID:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
       SMTP_SECURE: ${SMTP_SECURE:-}
@@ -42,6 +43,10 @@ services:
       - type: bind
         source: ./tmp/releases/windows/published
         target: /var/lib/billboard/windows-updates
+        read_only: true
+      - type: bind
+        source: ./tmp/releases/ios/published
+        target: /var/lib/billboard/ios-updates
         read_only: true
     networks:
       - default

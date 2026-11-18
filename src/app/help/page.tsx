@@ -6,10 +6,12 @@ import { ArrowUpRight } from "lucide-react";
 import { AccessApplication } from "@/components/access-application";
 import { HelpDownloads } from "@/components/help-downloads";
 import { HelpShowcase } from "@/components/help-showcase";
+import { IosInstall } from "@/components/ios-install";
 import { LanguageToggle } from "@/components/language-toggle";
 import { withAppBasePath } from "@/lib/base-path";
 import { getMessages } from "@/lib/i18n";
 import { getServerLocale } from "@/lib/i18n-server";
+import { getIosInstallOffer } from "@/lib/ios-install";
 import { isOpsAdminInstance } from "@/lib/ops/config";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HelpPage() {
   if (isOpsAdminInstance()) redirect("/ops");
-  const locale = await getServerLocale();
+  const [locale, iosOffer] = await Promise.all([getServerLocale(), getIosInstallOffer()]);
   const messages = getMessages(locale);
   const labels = messages.help;
 
@@ -49,6 +51,7 @@ export default async function HelpPage() {
 
       <HelpDownloads downloadUrls={{ android: withAppBasePath("/api/downloads/android"), windows: withAppBasePath("/api/downloads/windows") }}
         labels={labels.downloads} locale={locale} metadataUrl={withAppBasePath("/api/downloads")} />
+      <IosInstall grantUrl={withAppBasePath("/api/ios/install")} labels={labels.iosInstall} offer={iosOffer} />
 
       <AccessApplication locale={locale} />
 

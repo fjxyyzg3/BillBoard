@@ -4,6 +4,7 @@ import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadTestEnvironment } from "./environment";
 import { runTimedCommand, type SuiteTiming } from "./timing";
+import { captureVerificationTree } from "./verification-tree";
 
 const commands = {
   lint: ["node_modules/eslint/bin/eslint.js", ".", "--max-warnings=0"],
@@ -20,6 +21,7 @@ async function main() {
 
   const start = performance.now();
   const startedAt = new Date().toISOString();
+  const initialTree = captureVerificationTree();
   const directory = join("tmp", "verification", `${Date.now()}-${randomUUID()}`);
   mkdirSync(directory, { recursive: true });
   const results: SuiteTiming[] = [];
@@ -46,8 +48,9 @@ async function main() {
       sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", windowsHide: true }).trim();
       sourceDirty = Boolean(execFileSync("git", ["status", "--porcelain"], { encoding: "utf8", windowsHide: true }).trim());
     } catch { /* Git metadata is optional. */ }
+    const sourceTree = initialTree && initialTree === captureVerificationTree() ? initialTree : null;
     const report = {
-      mode, scope: args.length ? "focused" : "full", passed, sourceCommit, sourceDirty, startedAt,
+      mode, scope: args.length ? "focused" : "full", passed, sourceCommit, sourceDirty, sourceTree, startedAt,
       finishedAt: new Date().toISOString(), durationMs: Math.round(performance.now() - start),
       suites: results, slowestFiles: results.flatMap((result) => result.files.map((file) => ({ suite: result.suite, ...file })))
         .sort((a, b) => b.durationMs - a.durationMs).slice(0, 10),

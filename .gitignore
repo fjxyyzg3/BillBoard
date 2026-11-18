@@ -25,4 +25,9 @@ android/**/build/
 *.p12
 *.apk
 *.aab
+*.ipa
+*.mobileprovision
+*.xcarchive/
+ios/**/xcuserdata/
+ios/build/
 .superpowers

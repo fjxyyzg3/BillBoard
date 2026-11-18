@@ -1,0 +1,70 @@
+name: Build BillBoard for iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      simulator_only:
+        description: Run the unsigned simulator checks
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.5.app/Contents/Developer
+
+jobs:
+  simulator:
+    if: github.event_name == 'workflow_dispatch' && github.repository_id == '1462445518' && github.ref == 'refs/heads/master'
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Test the iPhone client
+        run: |
+          xcodebuild -quiet -project ios/BillBoard.xcodeproj -scheme BillBoard \
+            -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5' \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
+
+  release:
+    if: github.event_name == 'workflow_dispatch' && github.repository_id == '1462445518' && github.ref == 'refs/heads/master' && !inputs.simulator_only
+    needs: simulator
+    environment: ios-release
+    runs-on: macos-26
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      attestations: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Sign and encrypt the Ad Hoc package
+        run: bash ops/ios/sign-release.sh
+        env:
+          IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+          IOS_TEAM_ID: ${{ vars.IOS_TEAM_ID }}
+          IOS_AGE_RECIPIENT: ${{ vars.IOS_AGE_RECIPIENT }}
+          IOS_PUBLIC_ORIGIN: ${{ secrets.IOS_PUBLIC_ORIGIN }}
+          IOS_P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+      - name: Attest ciphertext
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: ${{ runner.temp }}/billboard-ios-artifact/release.age
+          show-summary: false
+      - name: Upload encrypted IPA
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ios-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/billboard-ios-artifact/release.age
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

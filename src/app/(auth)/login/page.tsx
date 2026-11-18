@@ -48,7 +48,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps = {}) {
           {messages.login.sessionExpired}
         </p>
       ) : null}
-      <LoginForm authBasePath={withAppBasePath("/api/auth")} labels={messages.login} />
+      <LoginForm authBasePath={withAppBasePath("/api/auth")} labels={messages.login}
+        forIosInstall={resolvedSearchParams?.intent === "ios-install"} />
       {reason === "account-updated" ? <p className="mt-3 text-sm text-[var(--bb-muted)]" role="status">{messages.identity.reauthenticate}</p> : null}
       <Link className="mt-3 inline-flex min-h-11 items-center text-sm text-[var(--bb-muted)]" href="/forgot-password">{messages.identity.forgotPassword}</Link>
       <p className="mt-2 text-xs leading-5 text-[var(--bb-muted)]">{messages.identity.invitationOnly}</p>

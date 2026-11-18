@@ -200,9 +200,22 @@ export const messages = {
           dayAmount: (day: number, amount: string) => `${day} 日支出 ${amount}`,
         },
       },
+      iosInstall: {
+        title: "安装 iOS 版",
+        description: "已登记的 iPhone 可在 Safari 登录后安装或更新。",
+        signIn: "登录以安装",
+        unavailable: "当前账号暂无可领取的 iOS 版。",
+        version: "发布版本",
+        request: "领取安装链接",
+        preparing: "正在准备安装链接…",
+        ready: "安装链接已就绪。",
+        install: "安装 iOS 版",
+        expired: "安装链接已过期，请重新领取。",
+        failed: "暂时无法领取，请稍后重试。"
+      },
       downloads: {
         title: "下载客户端",
-        description: "选择适合设备的安装包。两个平台独立发布，版本号可能不同。",
+        description: "选择适合设备的安装包。各平台独立发布，版本号可能不同。",
         android: "Android APK",
         windows: "Windows x64 EXE",
         androidDescription: "在 Android 手机浏览器下载，打开 APK 并按系统提示安装。",
@@ -1660,6 +1673,19 @@ export const messages = {
           emptyAmount: "—",
           dayAmount: (day: number, amount: string) => `Day ${day} expense ${amount}`,
         },
+      },
+      iosInstall: {
+        title: "Install the iOS app",
+        description: "Sign in to Safari on a registered iPhone to install or update the app.",
+        signIn: "Sign in to install",
+        unavailable: "The iOS app is currently unavailable for this account.",
+        version: "Published version",
+        request: "Get an installation link",
+        preparing: "Preparing an installation link…",
+        ready: "The installation link is ready.",
+        install: "Install the iOS app",
+        expired: "The installation link expired. Request a new link.",
+        failed: "Could not get an installation link. Try again."
       },
       downloads: {
         title: "Download a client",

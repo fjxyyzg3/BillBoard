@@ -152,3 +152,8 @@ NAS 不可用时命令返回非零并保留本地备份；脚本不删除旧备�
 
 Linux/Bash 备份和恢复脚本默认加载存在的 `.env.production.local`；可用 `COMPOSE_ENV_FILE` 指定其他私有 env 文件。
 Windows 上通过 Bash 调用时显式设置 `DOCKER_CONTEXT=desktop-linux`。不要使用 `docker compose config` 的完整输出记录生产环境变量。
+## iOS OTA 回源与日志
+
+- 清单和 IPA 走现有 HTTPS 域名转发、frps、frpc 和 Windows loopback。核对实际入口 TLS、回源段的加密传输或可信网络，以及远端 3000 的真实访问来源。
+- 核对转发前端和日志采集对 `/api/ios/install` 及下级路径的策略。用合成标记观察正常与失败请求，确认完整 URL、安装凭据和文件正文未进日志。
+- 从实际入口验证获准会话领取、无 Safari Cookie 的系统读取、HEAD、整包 GET、范围重试的 206 与对应字节，以及凭据过期拒绝。检查 IPA 只读挂载；设备签名与真实首装另记录证据。[iPhone 分发运行手册](ios-ad-hoc.md)

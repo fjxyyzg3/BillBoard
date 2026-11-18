@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
-export type FileTiming = { file: string; durationMs: number };
+export type FileTiming = { file: string; durationMs: number; passed?: boolean; tests?: number };
 export type SuiteTiming = {
   suite: string;
   scope: "full" | "focused";
@@ -17,9 +17,9 @@ export type SuiteTiming = {
 export function writeFileTimings(files: FileTiming[]) {
   const target = process.env.BILLBOARD_TEST_TIMING_FILE;
   if (!target) return;
-  const safeFiles = files.map(({ file, durationMs }) => ({
+  const safeFiles = files.map(({ file, durationMs, passed, tests }) => ({
     file: relative(process.cwd(), file).replaceAll("\\", "/"),
-    durationMs: Math.round(durationMs),
+    durationMs: Math.round(durationMs), passed, tests,
   })).filter(({ file }) => file.startsWith("tests/"));
   writeFileSync(target, JSON.stringify(safeFiles));
 }

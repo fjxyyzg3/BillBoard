@@ -2,6 +2,7 @@
 
 import { getEncryptionInput } from "@/lib/encryption/client";
 import { beginDesktopOperation } from "@/lib/desktop-updater";
+import { saveIosExport } from "@/lib/ios-export";
 
 import { Download } from "lucide-react";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
@@ -83,10 +84,17 @@ export function RecordExport({ ledgerId, actorMemberId: currentActorMemberId, me
       if (response.headers.get("content-type")?.split(";", 1)[0] !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") throw new Error("invalid_response");
       const blob = await response.blob();
       if (!mounted.current || pending.signal.aborted) return;
+      const filename = `billboard-records_${from}_${to}.xlsx`;
+      const nativeResult = await saveIosExport(blob, filename, pending.signal);
+      if (!mounted.current || pending.signal.aborted) return;
+      if (nativeResult) {
+        setStatus(nativeResult === "saved" ? labels.complete : "");
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `billboard-records_${from}_${to}.xlsx`;
+      link.download = filename;
       document.body.append(link);
       link.click();
       link.remove();

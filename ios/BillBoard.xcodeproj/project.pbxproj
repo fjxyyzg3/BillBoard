@@ -1,0 +1,109 @@
+// !$*UTF8*$!
+{
+    archiveVersion = 1;
+    classes = {};
+    objectVersion = 56;
+    objects = {
+        000000000000000000000001 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BillBoardApp.swift"; sourceTree = "<group>"; };
+        000000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrustedOrigin.swift"; sourceTree = "<group>"; };
+        000000000000000000000003 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ExportFile.swift"; sourceTree = "<group>"; };
+        000000000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ExportBridge.swift"; sourceTree = "<group>"; };
+        000000000000000000000005 = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info.plist"; sourceTree = "<group>"; };
+        000000000000000000000006 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets.xcassets"; sourceTree = "<group>"; };
+        000000000000000000000007 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ClientTests.swift"; sourceTree = "<group>"; };
+        000000000000000000000008 = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "en.lproj/Localizable.strings"; sourceTree = "<group>"; };
+        000000000000000000000009 = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+        00000000000000000000000A = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en"; path = "en.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+        00000000000000000000000B = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+        00000000000000000000000C = {isa = PBXVariantGroup; name = Localizable.strings; children = (000000000000000000000008, 000000000000000000000009); sourceTree = "<group>"; };
+        00000000000000000000000D = {isa = PBXVariantGroup; name = InfoPlist.strings; children = (00000000000000000000000A, 00000000000000000000000B); sourceTree = "<group>"; };
+        00000000000000000000000E = {isa = PBXFileReference; explicitFileType = wrapper.application; path = BillBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+        00000000000000000000000F = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = BillBoardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+        000000000000000000000065 = {isa = PBXBuildFile; fileRef = 000000000000000000000001; };
+        000000000000000000000066 = {isa = PBXBuildFile; fileRef = 000000000000000000000002; };
+        000000000000000000000067 = {isa = PBXBuildFile; fileRef = 000000000000000000000003; };
+        000000000000000000000068 = {isa = PBXBuildFile; fileRef = 000000000000000000000004; };
+        00000000000000000000006A = {isa = PBXBuildFile; fileRef = 000000000000000000000006; };
+        00000000000000000000006B = {isa = PBXBuildFile; fileRef = 000000000000000000000007; };
+        000000000000000000000070 = {isa = PBXBuildFile; fileRef = 00000000000000000000000C; };
+        000000000000000000000071 = {isa = PBXBuildFile; fileRef = 00000000000000000000000D; };
+        000000000000000000000014 = {isa = PBXGroup; children = (000000000000000000000015, 000000000000000000000016, 000000000000000000000017); sourceTree = "<group>"; };
+        000000000000000000000015 = {isa = PBXGroup; path = BillBoard; children = (000000000000000000000001, 000000000000000000000002, 000000000000000000000003, 000000000000000000000004, 000000000000000000000005, 000000000000000000000006, 00000000000000000000000C, 00000000000000000000000D); sourceTree = "<group>"; };
+        000000000000000000000016 = {isa = PBXGroup; path = BillBoardTests; children = (000000000000000000000007); sourceTree = "<group>"; };
+        000000000000000000000017 = {isa = PBXGroup; name = Products; children = (00000000000000000000000E, 00000000000000000000000F); sourceTree = "<group>"; };
+        00000000000000000000001E = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (000000000000000000000065, 000000000000000000000066, 000000000000000000000067, 000000000000000000000068); runOnlyForDeploymentPostprocessing = 0; };
+        00000000000000000000001F = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (00000000000000000000006A, 000000000000000000000070, 000000000000000000000071); runOnlyForDeploymentPostprocessing = 0; };
+        000000000000000000000020 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (00000000000000000000006B); runOnlyForDeploymentPostprocessing = 0; };
+        000000000000000000000028 = {
+            isa = PBXProject;
+            attributes = { LastUpgradeCheck = 2650; TargetAttributes = { 00000000000000000000002A = { TestTargetID = 000000000000000000000029; }; }; };
+            buildConfigurationList = 000000000000000000000032;
+            compatibilityVersion = "Xcode 14.0";
+            developmentRegion = "zh-Hans";
+            knownRegions = ("zh-Hans", en, Base);
+            mainGroup = 000000000000000000000014;
+            productRefGroup = 000000000000000000000017;
+            projectDirPath = "";
+            projectRoot = "";
+            targets = (000000000000000000000029, 00000000000000000000002A);
+        };
+        000000000000000000000029 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = 000000000000000000000033;
+            buildPhases = (00000000000000000000001E, 00000000000000000000001F);
+            buildRules = ();
+            dependencies = ();
+            name = BillBoard;
+            productName = BillBoard;
+            productReference = 00000000000000000000000E;
+            productType = "com.apple.product-type.application";
+        };
+        00000000000000000000002A = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = 000000000000000000000034;
+            buildPhases = (000000000000000000000020);
+            buildRules = ();
+            dependencies = (00000000000000000000002B);
+            name = BillBoardTests;
+            productName = BillBoardTests;
+            productReference = 00000000000000000000000F;
+            productType = "com.apple.product-type.bundle.unit-test";
+        };
+        00000000000000000000002B = {isa = PBXTargetDependency; target = 000000000000000000000029; targetProxy = 00000000000000000000002C; };
+        00000000000000000000002C = {isa = PBXContainerItemProxy; containerPortal = 000000000000000000000028; proxyType = 1; remoteGlobalIDString = 000000000000000000000029; remoteInfo = BillBoard; };
+        000000000000000000000032 = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000003C, 00000000000000000000003D); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+        000000000000000000000033 = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000003E, 00000000000000000000003F); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+        000000000000000000000034 = {isa = XCConfigurationList; buildConfigurations = (000000000000000000000040, 000000000000000000000041); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+        00000000000000000000003C = {
+            isa = XCBuildConfiguration;
+            name = Debug;
+            buildSettings = { IPHONEOS_DEPLOYMENT_TARGET = 16.4; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; TARGETED_DEVICE_FAMILY = 1; SWIFT_VERSION = 5.0; SWIFT_APPROACHABLE_CONCURRENCY = YES; ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; };
+        };
+        00000000000000000000003D = {
+            isa = XCBuildConfiguration;
+            name = Release;
+            buildSettings = { IPHONEOS_DEPLOYMENT_TARGET = 16.4; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; TARGETED_DEVICE_FAMILY = 1; SWIFT_VERSION = 5.0; SWIFT_APPROACHABLE_CONCURRENCY = YES;  };
+        };
+        00000000000000000000003E = {
+            isa = XCBuildConfiguration;
+            name = Debug;
+            buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = BillBoard/Info.plist; MARKETING_VERSION = 1.0.0; CURRENT_PROJECT_VERSION = 1; PRODUCT_BUNDLE_IDENTIFIER = com.example.billboard; PRODUCT_NAME = "$(TARGET_NAME)";  };
+        };
+        00000000000000000000003F = {
+            isa = XCBuildConfiguration;
+            name = Release;
+            buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = BillBoard/Info.plist; MARKETING_VERSION = 1.0.0; CURRENT_PROJECT_VERSION = 1; PRODUCT_BUNDLE_IDENTIFIER = com.example.billboard; PRODUCT_NAME = "$(TARGET_NAME)";  };
+        };
+        000000000000000000000040 = {
+            isa = XCBuildConfiguration;
+            name = Debug;
+            buildSettings = { BUNDLE_LOADER = "$(TEST_HOST)"; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.example.billboard.tests; PRODUCT_NAME = "$(TARGET_NAME)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BillBoard.app/BillBoard";  };
+        };
+        000000000000000000000041 = {
+            isa = XCBuildConfiguration;
+            name = Release;
+            buildSettings = { BUNDLE_LOADER = "$(TEST_HOST)"; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = com.example.billboard.tests; PRODUCT_NAME = "$(TARGET_NAME)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BillBoard.app/BillBoard";  };
+        };
+    };
+    rootObject = 000000000000000000000028;
+}

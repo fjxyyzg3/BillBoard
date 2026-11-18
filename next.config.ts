@@ -67,7 +67,7 @@ const nextConfig: NextConfig = {
     // Server Function arguments may contain credentials or private transaction transcripts.
     serverFunctions: false,
     // The provider-only audio URL contains a short-lived bearer capability.
-    incomingRequests: { ignore: [/^\/api\/voice\/audio\/?(?:\?|$)/] },
+    incomingRequests: { ignore: [/^\/api\/voice\/audio\/?(?:\?|$)/, /^\/api\/ios\/install(?:[/?]|$)/] },
   },
   // The development indicator otherwise covers the mobile navigation in E2E.
   devIndicators: process.env.PLAYWRIGHT_TEST_BASE_URL ? false : undefined,
