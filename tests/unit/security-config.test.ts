@@ -12,6 +12,16 @@ function readRepoFile(path: string) {
   return readFileSync(join(repoRoot, path), "utf8");
 }
 
+test("locks Next.js to a stable version with the root-parameter cache fixes", () => {
+  const packageLock = JSON.parse(readRepoFile("package-lock.json"));
+  const lockedVersion: string = packageLock.packages["node_modules/next"].version;
+  const installedVersion: string = JSON.parse(readRepoFile("node_modules/next/package.json")).version;
+
+  expect(installedVersion).toBe(lockedVersion);
+  expect(lockedVersion).toMatch(/^\d+\.\d+\.\d+$/);
+  expect(lockedVersion.localeCompare("16.4.5", "en", { numeric: true })).toBeGreaterThanOrEqual(0);
+});
+
 describe("local ops admin config", () => {
   test("package metadata exposes a loopback-only ops start script", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
