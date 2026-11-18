@@ -1,7 +1,11 @@
 {
   "name": "billboard",
-  "version": "1.67.13",
+  "version": "1.67.14",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fjxyyzg3/BillBoard-public.git"
+  },
   "scripts": {
     "dev": "next dev --port 2500",
     "build": "next build",

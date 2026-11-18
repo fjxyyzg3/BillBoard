@@ -2,6 +2,8 @@
 
 BillBoard 是移动优先的家庭共享记账应用。核心流程是快速记录、按整个家庭查看和按时间范围复盘；不同家庭相互隔离，现有两人家庭账目与归属继续保留。
 
+正式版本的源码来自 [BillBoard-public 的 master 分支](https://github.com/fjxyyzg3/BillBoard-public/tree/master)。
+
 ## Current Product Shape
 
 - `/login`：账号密码登录，支持原家庭账号和本人完成邀请验证后的账号。
