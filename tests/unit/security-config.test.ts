@@ -22,6 +22,23 @@ test("locks Next.js to a stable version with the root-parameter cache fixes", ()
   expect(lockedVersion.localeCompare("16.4.5", "en", { numeric: true })).toBeGreaterThanOrEqual(0);
 });
 
+test.each(["package-lock.json", "desktop/package-lock.json"])(
+  "%s uses the reviewed picomatch fix for GHSA-fc5q-39xc-vjpf across the dev toolchain",
+  (lockPath) => {
+    const lock = JSON.parse(readRepoFile(lockPath)) as {
+      packages: Record<string, { name?: string; version?: string; dev?: boolean }>;
+    };
+    const matchers = Object.entries(lock.packages).filter(
+      ([path, entry]) => path.endsWith("/picomatch") || entry.name === "picomatch",
+    );
+
+    expect(matchers.length).toBeGreaterThan(0);
+    for (const [path, entry] of matchers) {
+      expect(entry, path).toMatchObject({ name: "@ryotsu/picomatch", version: "4.0.7-a", dev: true });
+    }
+  },
+);
+
 describe("local ops admin config", () => {
   test("package metadata exposes a loopback-only ops start script", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {

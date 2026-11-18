@@ -1,6 +1,6 @@
 {
   "name": "billboard",
-  "version": "1.67.12",
+  "version": "1.67.13",
   "private": true,
   "scripts": {
     "dev": "next dev --port 2500",
@@ -73,6 +73,7 @@
     },
     "next": {
       "postcss": "8.5.31"
-    }
+    },
+    "picomatch": "npm:@ryotsu/picomatch@4.0.7-a"
   }
 }
