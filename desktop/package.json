@@ -1,6 +1,6 @@
 {
   "name": "billboard-desktop",
-  "version": "1.67.14",
+  "version": "1.69.3",
   "private": true,
   "description": "BillBoard Windows desktop client",
   "author": "BillBoard",
@@ -15,6 +15,7 @@
     "electron-builder": "26.15.3"
   },
   "overrides": {
+    "minimatch@>=7 <11.0.1": "11.0.9",
     "picomatch": "npm:@ryotsu/picomatch@4.0.7-a"
   }
 }
