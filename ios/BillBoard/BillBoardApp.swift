@@ -115,6 +115,7 @@ final class LedgerViewController: UIViewController, WKNavigationDelegate, WKUIDe
                  decisionHandler: @escaping (WKPermissionDecision) -> Void) {
         let allowed = type == .microphone && frame.isMainFrame && origin?.allows(frame.request.url) == true
             && origin?.matches(scheme: source.protocol, host: source.host, port: source.port) == true
-        decisionHandler(allowed ? .prompt : .deny)
+        // WebKit checks the app's system microphone permission before asking this delegate.
+        decisionHandler(allowed ? .grant : .deny)
     }
 }
