@@ -760,6 +760,15 @@ export const messages = {
         busy: "更新操作正在进行，请稍候。",
       },
     },
+    iosUpdate: {
+      title: "检查更新", current: "当前版本", published: "已发布版本", close: "关闭", recheck: "重新检查",
+      checking: "正在检查更新…", latest: "已是最新版本", preparing: "正在准备安装…", install: "安装更新",
+      handedOff: "已交给 iOS，请确认安装。", safari: "在 Safari 中打开", signIn: "重新登录",
+      blocked: "有尚未处理的记账任务或未保存的草稿。请处理后重试。",
+      auth: "登录已失效，请重新登录。", unavailable: "暂时没有可领取的 iOS 版本。",
+      offline: "无法连接更新服务，请检查网络后重试。", changed: "可安装的版本已变化，请重新检查。",
+      openFailed: "无法打开安装入口。可用 Safari 打开帮助页的 iOS 安装区，或重新检查。",
+    },
     desktopUpdate: {
       title: "Windows 客户端更新", entry: "客户端更新", available: "有新版本", current: "当前客户端", latest: "新版本", size: "下载大小",
       check: "检查更新", checking: "正在检查更新…", upToDate: "客户端已是最新版本", download: "下载更新",
@@ -2233,6 +2242,15 @@ export const messages = {
         permission: "Installation permission was not granted. Tap Install update to try again.", cancelled: "Cancelled. You can keep using the current version.",
         busy: "An update operation is in progress. Please wait.",
       },
+    },
+    iosUpdate: {
+      title: "Check for updates", current: "Installed version", published: "Published version", close: "Close", recheck: "Check again",
+      checking: "Checking for updates…", latest: "You’re up to date", preparing: "Preparing installation…", install: "Install update",
+      handedOff: "Confirm the installation in iOS.", safari: "Open in Safari", signIn: "Sign in again",
+      blocked: "Finish pending entries or save your drafts, then try again.",
+      auth: "Your session expired. Sign in again.", unavailable: "No iOS release is available to install.",
+      offline: "Cannot reach the update service. Check your connection and try again.", changed: "The available build changed. Check again.",
+      openFailed: "Could not open the installer. Open the iOS section of Help in Safari or check again.",
     },
     desktopUpdate: {
       title: "Windows client updates", entry: "Client updates", available: "Update available", current: "Installed client", latest: "New version", size: "Download size",

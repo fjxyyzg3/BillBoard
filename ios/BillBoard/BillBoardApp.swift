@@ -29,6 +29,11 @@ final class LedgerViewController: UIViewController, WKNavigationDelegate, WKUIDe
             configuration.websiteDataStore = .default()
             let bridge = ExportBridge(origin: origin, presenter: self)
             configuration.userContentController.addScriptMessageHandler(bridge, contentWorld: .page, name: "billboardExport")
+            if let installed = InstalledAppVersion(bundle: .main) {
+                configuration.userContentController.addScriptMessageHandler(
+                    UpdateBridge(origin: origin, installed: installed), contentWorld: .page, name: "billboardUpdate"
+                )
+            }
             self.bridge = bridge
             let web = WKWebView(frame: .zero, configuration: configuration)
             self.web = web

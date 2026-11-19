@@ -28,6 +28,7 @@ const nextConfig: NextConfig = {
       "/api/voice/audio", "/api/records/export", "/api/household/view", "/api/household/encryption",
       "/api/reports/analyze", "/api/reports/reconcile",
       "/api/downloads/:path*", "/api/android/update/:path*", "/api/windows/update/:path*",
+      "/api/ios/update", "/api/ios/install/:path*",
     ];
     return [{
       source: "/:path*",

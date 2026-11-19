@@ -1,4 +1,4 @@
-> 摘要：iPhone 客户端复用 HTTPS 账本，使用 GitHub Actions 签名，经 Windows 取包后由指定家庭在 Safari 从帮助页领取。
+> 摘要：iPhone 客户端复用 HTTPS 账本，使用 GitHub Actions 签名，经 Windows 取包后由指定家庭从 App 或 Safari 发起安装。
 
 # iPhone 家庭客户端
 
@@ -6,4 +6,6 @@ App 以 `WKWebView` 打开固定的 HTTPS 根入口，使用独立持久的 WebK
 
 正式构建由 `master` 上的手动 GitHub 工作流签名为 Ad Hoc IPA。Windows 校验构建来源和本机的提交验证回执，解密验包后切换当前发布清单。构件的真实源站和 Apple 描述文件随密文交付。Help 只向指定家庭的有效成员签发安装凭据，由 iOS 系统读取绑定原会话和不可变摘要的文件。
 
-新设备在 Apple 端登记并更新描述文件后可重新签名。iPhone 端通过同一个 Safari 入口更新，Bundle ID 和团队标识保持稳定。实际签名、生产回源和设备验收见发布运行手册。[发布运行手册](../runbooks/ios-ad-hoc.md) · [设计与验收](../scope/2026-11-18-ios-ad-hoc-release.md)
+新设备在 Apple 端登记并更新描述文件后可重新签名。首次安装和升级到支持 App 内更新的构建时，用 Safari 打开帮助页。之后在账本菜单点「检查更新」，App 显示已安装和可领取的构建号。点「安装更新」交给系统确认。安装交接和 Safari 备用入口都会先检查未保存草稿、录音及在途任务。
+
+覆盖更新沿用 Bundle ID、团队标识和持久化 WebKit 数据。重开后显示系统实际安装的构建，有效会话可继续访问账本。实际签名、生产回源和设备验收见发布运行手册。[发布运行手册](../runbooks/ios-ad-hoc.md) · [App 内更新设计](../scope/2026-11-19-ios-in-app-update.md)

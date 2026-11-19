@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { db } from "@/lib/db";
 import { POST } from "@/app/api/ios/install/route";
 import { GET } from "@/app/api/ios/install/[resource]/[ticket]/route";
+import { GET as getUpdate, POST as postUpdate } from "@/app/api/ios/update/route";
 import { getIosInstallOffer } from "@/lib/ios-install";
 import { iosBuildNumber, IOS_INSTALL_TTL_MS } from "@/lib/ios-release-manifest.mjs";
 
@@ -33,6 +34,18 @@ async function publish(bytes: Buffer, runNumber: number) {
 
 async function grant(requestOrigin = origin) {
   return POST(new Request(origin + "/api/ios/install", { method: "POST", headers: { Origin: requestOrigin } }));
+}
+
+function checkUpdate(headers?: HeadersInit) {
+  return getUpdate(new Request(origin + "/api/ios/update", { headers }));
+}
+
+function grantUpdate(currentBuild: string, targetBuild: string, requestOrigin = origin) {
+  return postUpdate(new Request(origin + "/api/ios/update", {
+    method: "POST",
+    headers: { Origin: requestOrigin, "Content-Type": "application/json" },
+    body: JSON.stringify({ currentBuild, targetBuild }),
+  }));
 }
 
 async function resource(url: URL, options?: RequestInit, override?: string) {
@@ -96,6 +109,54 @@ it("issues a grant only to the configured household from the trusted origin", as
   expect((await grant()).status).toBe(404);
   vi.stubEnv("OPS_ADMIN_INSTANCE", "true");
   expect((await grant()).status).toBe(404);
+});
+
+it("keeps available update metadata private and rechecks the original session", async () => {
+  expect((await checkUpdate()).status).toBe(404);
+  const release = await publish(Buffer.from("approved update"), 11);
+  const response = await checkUpdate();
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(await response.json()).toEqual({ version: release.version, build: release.build });
+  expect((await checkUpdate({ "Sec-Fetch-Site": "cross-site" })).status).toBe(404);
+  expect((await grantUpdate("1.9.99", release.build, "https://another.example")).status).toBe(404);
+
+  session.mockRejectedValueOnce(new Error("No cookie"));
+  expect((await checkUpdate()).status).toBe(401);
+  session.mockRejectedValueOnce(new Error("No cookie"));
+  expect((await grantUpdate("1.9.99", release.build)).status).toBe(401);
+  session.mockResolvedValue({ ...identity, householdId: "other-household" });
+  expect((await checkUpdate()).status).toBe(404);
+  expect((await grantUpdate("1.9.99", release.build)).status).toBe(404);
+
+  session.mockResolvedValue(identity);
+  await db.appSession.update({ where: { id: appSessionId }, data: { revokedAt: new Date() } });
+  expect((await checkUpdate()).status).toBe(401);
+  expect((await grantUpdate("1.9.99", release.build)).status).toBe(401);
+});
+
+it("grants only the displayed newer build and keeps its package immutable after publication changes", async () => {
+  const earlier = await publish(Buffer.from("previous update"), 10);
+  expect(await (await checkUpdate()).json()).toEqual({ version: earlier.version, build: earlier.build });
+  const bytes = Buffer.from("target update");
+  const newer = await publish(bytes, 11);
+
+  expect((await grantUpdate("1.8.1", earlier.build)).status).toBe(409);
+  expect((await grantUpdate(newer.build, newer.build)).status).toBe(409);
+  expect((await grantUpdate("2.0.1", newer.build)).status).toBe(409);
+  expect((await grantUpdate("1.09.1", newer.build)).status).toBe(400);
+  expect((await grantUpdate("9".repeat(1024), newer.build)).status).toBe(400);
+
+  const response = await grantUpdate("1.9.99", newer.build);
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  const link = await response.json() as { url: string; build: string; expiresAt: number };
+  expect(link.build).toBe("1.10.1");
+  expect(link.expiresAt).toBeGreaterThan(Date.now());
+  const manifest = new URL(new URL(link.url).searchParams.get("url")!);
+  await publish(Buffer.from("later update"), 12);
+  const ipa = await resource(await packageUrl(manifest));
+  expect(Buffer.from(await ipa.arrayBuffer())).toEqual(bytes);
 });
 
 it("serves the originally authorized immutable package without Safari cookies", async () => {

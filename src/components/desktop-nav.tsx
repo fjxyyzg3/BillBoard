@@ -5,6 +5,7 @@ import Link from "next/link";
 import { VoiceEntryLink } from "@/components/voice-entry-link";
 import { AndroidUpdateButton } from "@/components/android-update-controls";
 import { DesktopUpdateButton } from "@/components/desktop-update-controls";
+import { IosUpdateButton } from "@/components/ios-update-controls";
 import { usePathname } from "next/navigation";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useAppFilters } from "@/components/app-filters-provider";
@@ -101,6 +102,7 @@ export function DesktopNav({ labels, locale, versionLabel }: DesktopNavProps) {
         <Link className="flex min-h-11 items-center gap-3 text-sm text-[var(--bb-muted)] hover:text-[var(--bb-ink)]" href="/help"><CircleHelp aria-hidden="true" className="h-4 w-4" strokeWidth={1.6} />{labels.nav.help}</Link>
         <AndroidUpdateButton />
         <DesktopUpdateButton />
+        <IosUpdateButton />
         <p className="text-xs text-[var(--bb-muted)]">{versionLabel}</p>
       </div>
     </aside>

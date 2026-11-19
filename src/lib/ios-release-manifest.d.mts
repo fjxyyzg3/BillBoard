@@ -20,4 +20,6 @@ export declare const IOS_DOWNLOAD_TIMEOUT_MS: number;
 export declare const IOS_REPOSITORY_ID: number;
 export declare const IOS_WORKFLOW: string;
 export declare function iosBuildNumber(runNumber: number, attempt: number): string;
+export declare function isIosBuild(value: unknown): value is string;
+export declare function compareIosBuilds(left: string, right: string): number;
 export declare function parseIosRelease(value: unknown): IosRelease;

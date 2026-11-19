@@ -104,6 +104,7 @@ describe("production network security config", () => {
       "/account-link", "/forgot-password", "/account/:path*",
       "/api/voice/audio", "/api/records/export", "/api/household/view", "/api/household/encryption",
       "/api/downloads/:path*", "/api/android/update/:path*", "/api/windows/update/:path*",
+      "/api/ios/update", "/api/ios/install/:path*",
     ]) {
       const index = rules.findIndex((rule) => rule.source === source);
       expect(index).toBeGreaterThan(globalIndex);

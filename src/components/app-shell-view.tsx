@@ -4,6 +4,7 @@ import packageJson from "../../package.json";
 import { AppFiltersProvider } from "@/components/app-filters-provider";
 import { AndroidUpdateProvider } from "@/components/android-update-provider";
 import { DesktopUpdateProvider } from "@/components/desktop-update-provider";
+import { IosUpdateProvider } from "@/components/ios-update-provider";
 import { NaturalLanguageProvider } from "@/components/natural-language-provider";
 import { BillAnalysisProvider } from "@/components/bill-analysis-provider";
 import { LedgerProvider, type LedgerCatalog } from "@/components/ledger-provider";
@@ -39,6 +40,7 @@ export function AppShellView({ children, currentMemberId, catalog, initialPrefer
         <VoiceAccountingProvider locale={locale}>
           <AndroidUpdateProvider locale={locale}>
           <DesktopUpdateProvider locale={locale}>
+          <IosUpdateProvider locale={locale} key={JSON.stringify([catalog.identity.householdId, currentMemberId])}>
           <div className="mx-auto flex min-h-dvh w-full max-w-[1440px] md:flex-row">
             <a className="sr-only rounded-lg bg-[var(--bb-surface)] px-4 py-3 text-sm font-medium text-[var(--bb-ink)] shadow-[var(--bb-shadow-lg)] focus:not-sr-only focus:fixed focus:left-4 focus:top-[calc(1rem+env(safe-area-inset-top))] focus:z-[100]" href="#main-content">
               {messages.ui.skipToContent}
@@ -62,6 +64,7 @@ export function AppShellView({ children, currentMemberId, catalog, initialPrefer
               />
             </div>
           </div>
+          </IosUpdateProvider>
           </DesktopUpdateProvider>
           </AndroidUpdateProvider>
         </VoiceAccountingProvider>

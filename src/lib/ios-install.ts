@@ -3,8 +3,9 @@ import type { AppSessionUser } from "@/auth";
 import { loadValidAppSessionUser } from "@/lib/auth/app-sessions";
 import { requireAppSession } from "@/lib/auth/session";
 import { normalizeAppBasePath } from "@/lib/base-path";
+import { readEncryptionBody } from "@/lib/encryption/body";
 import {
-  IOS_DOWNLOAD_TIMEOUT_MS, IOS_INSTALL_TTL_MS, MAX_IOS_IPA_BYTES, MAX_IOS_METADATA_BYTES, parseIosRelease,
+  compareIosBuilds, isIosBuild, IOS_DOWNLOAD_TIMEOUT_MS, IOS_INSTALL_TTL_MS, MAX_IOS_IPA_BYTES, MAX_IOS_METADATA_BYTES, parseIosRelease,
   type IosRelease,
 } from "@/lib/ios-release-manifest.mjs";
 import { isOpsAdminInstance } from "@/lib/ops/config";
@@ -18,6 +19,7 @@ type Resource = "manifest" | "package";
 type Ticket = {
   session: string; user: string; member: string; household: string; sha256: string; expires: number;
 };
+type UpdateTarget = { currentBuild: string; targetBuild: string };
 
 export type IosInstallOffer = { status: "sign-in" | "unavailable" } | { status: "available"; version: string; build: string };
 
@@ -104,31 +106,84 @@ function toTicket(user: AppSessionUser, release: IosRelease): Ticket {
   };
 }
 
-async function stillAuthorized(ticket: Ticket) {
+async function originalMemberIsValid(ticket: Ticket) {
   const user = await loadValidAppSessionUser(ticket.session);
-  return ticket.expires > Date.now() && user?.id === ticket.user
+  return user?.id === ticket.user
     && user.memberId === ticket.member && user.householdId === ticket.household;
+}
+
+async function stillAuthorized(ticket: Ticket) {
+  return await originalMemberIsValid(ticket) && ticket.expires > Date.now();
 }
 
 function urlFor(ticket: Ticket, resource: Resource, settings: Config) {
   return new URL(`/api/ios/install/${resource}/${seal(ticket, resource, settings)}`, settings.origin).href;
 }
 
+function sameOriginRequest(request: Request, settings: Config, requireOrigin: boolean) {
+  const origin = request.headers.get("origin");
+  const site = request.headers.get("sec-fetch-site");
+  return !request.signal.aborted && (!site || site === "same-origin")
+    && (origin === settings.origin || (!requireOrigin && origin === null));
+}
+
+function installGrant(ticket: Ticket, settings: Config) {
+  return {
+    url: `itms-services://?action=download-manifest&url=${encodeURIComponent(urlFor(ticket, "manifest", settings))}`,
+    expiresAt: ticket.expires,
+  };
+}
+
 export async function grantIosInstall(request: Request) {
   const settings = config();
-  if (!settings || request.headers.get("origin") !== settings.origin || request.signal.aborted) return releaseFailure("missing");
-  const site = request.headers.get("sec-fetch-site");
-  if (site && site !== "same-origin") return releaseFailure("missing");
+  if (!settings || !sameOriginRequest(request, settings, true)) return releaseFailure("missing");
   const user = await getMember();
   if (!user || user.householdId !== settings.householdId) return releaseFailure("missing");
   const release = await availableRelease(request.signal);
   if (!release) return releaseFailure("missing");
   const ticket = toTicket(user, release);
   if (!await stillAuthorized(ticket) || request.signal.aborted) return releaseFailure("missing");
-  return Response.json({
-    url: `itms-services://?action=download-manifest&url=${encodeURIComponent(urlFor(ticket, "manifest", settings))}`,
-    expiresAt: ticket.expires,
-  }, { headers: releaseHeaders });
+  return Response.json(installGrant(ticket, settings), { headers: releaseHeaders });
+}
+
+async function readUpdateTarget(request: Request): Promise<UpdateTarget | null> {
+  if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") return null;
+  try {
+    const bytes = await readEncryptionBody(request, 1024, AbortSignal.any([request.signal, AbortSignal.timeout(5_000)]));
+    const input: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    if (!input || typeof input !== "object" || !("currentBuild" in input) || !("targetBuild" in input)
+      || !isIosBuild(input.currentBuild) || !isIosBuild(input.targetBuild)) return null;
+    return { currentBuild: input.currentBuild, targetBuild: input.targetBuild };
+  } catch {
+    return null;
+  }
+}
+
+export async function handleIosUpdate(request: Request, action: "check" | "grant") {
+  const settings = config();
+  if (!settings || !sameOriginRequest(request, settings, action === "grant")) return releaseFailure("missing");
+  const user = await getMember();
+  if (!user) return new Response(null, { status: 401, headers: releaseHeaders });
+  if (user.householdId !== settings.householdId) return releaseFailure("missing");
+
+  let target: UpdateTarget | null = null;
+  if (action === "grant") {
+    target = await readUpdateTarget(request);
+    if (!target) return new Response(null, { status: 400, headers: releaseHeaders });
+  }
+  const release = await availableRelease(request.signal);
+  if (!release) return releaseFailure("missing");
+  const ticket = toTicket(user, release);
+  if (!await originalMemberIsValid(ticket)) return new Response(null, { status: 401, headers: releaseHeaders });
+  if (request.signal.aborted || ticket.expires <= Date.now()) return releaseFailure("missing");
+
+  if (target) {
+    if (target.targetBuild !== release.build || compareIosBuilds(release.build, target.currentBuild) <= 0) {
+      return new Response(null, { status: 409, headers: releaseHeaders });
+    }
+    return Response.json({ ...installGrant(ticket, settings), build: release.build }, { headers: releaseHeaders });
+  }
+  return Response.json({ version: release.version, build: release.build }, { headers: releaseHeaders });
 }
 
 function manifest(release: IosRelease, packageUrl: string) {

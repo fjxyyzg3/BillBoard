@@ -13,6 +13,17 @@ export function iosBuildNumber(runNumber, attempt) {
   return [Math.floor((runNumber - 1) / 100) + 1, (runNumber - 1) % 100, attempt].join(".");
 }
 
+export function isIosBuild(value) {
+  return typeof value === "string" && /^[1-9]\d{0,3}\.(?:0|[1-9]\d?)\.[1-9]\d?$/.test(value);
+}
+
+export function compareIosBuilds(left, right) {
+  if (!isIosBuild(left) || !isIosBuild(right)) throw new Error("Invalid iOS build number");
+  const [leftMajor, leftMinor, leftAttempt] = left.split(".").map(Number);
+  const [rightMajor, rightMinor, rightAttempt] = right.split(".").map(Number);
+  return leftMajor - rightMajor || leftMinor - rightMinor || leftAttempt - rightAttempt;
+}
+
 export function parseIosRelease(value) {
   const { schema, version, build, bundleId, teamId, sourceCommit, runId, runNumber, attempt, sha256, size, validUntil } = value ?? {};
   if (schema !== 1 || typeof version !== "string" || !/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(version)

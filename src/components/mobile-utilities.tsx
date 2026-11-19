@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { AndroidUpdateButton, useAndroidUpdate } from "@/components/android-update-controls";
 import { DesktopUpdateButton, useDesktopUpdate } from "@/components/desktop-update-controls";
+import { IosUpdateButton } from "@/components/ios-update-controls";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useAppFilters } from "@/components/app-filters-provider";
 import { getMessages, type Locale } from "@/lib/i18n";
@@ -83,6 +84,7 @@ export function MobileUtilities({ locale, versionLabel }: { locale: Locale; vers
             <Link className="flex min-h-11 items-center gap-3 rounded-xl px-2 text-sm text-[var(--bb-ink)] hover:bg-[var(--bb-warm-surface)]" href="/help"><CircleHelp aria-hidden="true" className="h-4 w-4 text-[var(--bb-muted)]" strokeWidth={1.6} />{messages.nav.help}</Link>
             <AndroidUpdateButton onOpen={() => { setMenuState({ pathname, open: false }); triggerRef.current?.focus(); }} />
             <DesktopUpdateButton onOpen={() => { setMenuState({ pathname, open: false }); triggerRef.current?.focus(); }} />
+            <IosUpdateButton onOpen={() => { setMenuState({ pathname, open: false }); triggerRef.current?.focus(); }} />
             <p className="border-t border-[var(--bb-warm-line)] pt-3 text-xs text-[var(--bb-muted)]">{versionLabel}</p>
           </motion.div>
         ) : null}
