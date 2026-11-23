@@ -1,6 +1,6 @@
 # BillBoard 仓库公开与历史审查
 
-执行[通用仓库公开与历史审查](../../security-review/references/repository-exposure.md)，并应用以下 BillBoard 规则。
+执行已安装的 `$security-review` 中 `references/repository-exposure.md` 的通用流程，并应用以下 BillBoard 规则。
 
 - 工作区有多个远端时，使用只连接目标远端的干净审查副本。定向检查生产入口、私有附件直链、备份标识、生产统计、家庭姓名、账号和订单标识，以及文档中指向旧快照的 SHA 或链接。
 - 公开样本使用合成数据。核对原始姓名、卡尾、订单号等可猜测字段的摘要和原始长度。更改样本时，运行包括 `tests/unit/sensitive-fixtures.test.ts` 在内的相关脱敏检查。

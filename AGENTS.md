@@ -107,7 +107,7 @@
 - 正式交付完整验证入口为 `npm run verify:full`：先执行全量 lint 和 unit，两者通过后并行执行全量 integration 与 E2E；也可分别运行 `npm run lint`、`npm run test:unit`、`npm run test:integration`、`npm run test:e2e` 并汇总仍有效的证据。按实际影响补充必要检查；缺少、失败或筛选后的测试不能作为全量通过，不通过削弱测试或验收来消除失败。
 - 上述命令自动在忽略目录 `tmp/verification/<run-id>/` 记录套件墙钟耗时、退出码及测试文件执行耗时，`summary.json` 包含最慢十个文件；`tmp/verification/latest.json` 仅指向最后完成的一次记录，须检查 `mode`、`scope`、`passed` 和实际改动范围，不能把局部 PASS 当成正式验收。报告不保存命令参数、env、测试正文或 stdout/stderr，不自动缓存或跳过测试。
 - 文档-only（含 `AGENTS.md`、流程约定及附带的根版本字段同步）执行路径、命令、环境变量、禁提真实入口标识与凭据的针对性文本检查，并核验版本一致性，不要求应用测试。该例外不包含依赖、scripts、应用逻辑或运行配置变化。
-- 验收任何变更前以 `skills/billboard-security-review/SKILL.md` 为入口，应用仓库内的通用安全审查流程和 BillBoard 项目规则。审查实际变更面，包括文档-only，结果包含 Findings、Verification、Residual Risk。其他工作流所称“完整验证”按本节对应变更类型解释，文档-only 使用针对性文本检查。
+- 验收任何变更前以 `skills/billboard-security-review/SKILL.md` 为入口，应用用户手动安装的 `$security-review` 和 BillBoard 项目规则。审查实际变更面，包括文档-only，结果包含 Findings、Verification、Residual Risk。其他工作流所称“完整验证”按本节对应变更类型解释，文档-only 使用针对性文本检查。
 - 对最终改动仍有效的验证和安全审查证据在提交、推送、发布各阶段复用；只有新增改动、环境变化、失败或未解决疑点使证据失效时才重跑或扩展检查。不为低影响可逆修改新增只复述实现的测试。
 - 全量运行中个别文件失败时，修复后重跑失败文件及受影响范围，其他已通过且输入未变化的证据可复用。正式验收须汇总原始运行和补跑记录，证明完整范围均通过；不得隐藏原失败、只保留最后一次局部 PASS，或在共享基础变更后假定其他文件仍有效。
 

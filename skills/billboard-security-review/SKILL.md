@@ -7,7 +7,7 @@ description: 验收、审查、发布或提交 BillBoard 变更时使用。覆�
 
 ## 审查入口
 
-验收 BillBoard 变更时，先读取仓库内的[通用安全审查 Skill](../security-review/SKILL.md)，再应用本文件和 [AGENTS.md](../../AGENTS.md) 的项目规则。仓库内版本随受审提交生效，无需安装用户级 Skill。
+验收 BillBoard 变更时，先读取用户手动安装的 `$security-review`，再应用本文件和 [AGENTS.md](../../AGENTS.md) 的项目规则。通用 Skill 在 Skills 仓库的 `Skills/security-review/` 维护。当前环境无法读取该 Skill 时，继续执行可完成的项目检查，并将通用审查标为待验证。
 
 拟改变仓库可见性、发布公开副本或核实历史泄露时，叠加 [BillBoard 仓库公开与历史规则](references/repository-exposure.md)。涉及依赖公告、依赖解析结果或 npm 构建工具变更时，叠加 [BillBoard npm 依赖规则](references/dependency-review.md)。
 
